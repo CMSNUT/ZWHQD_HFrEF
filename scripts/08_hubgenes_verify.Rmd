@@ -1,0 +1,40 @@
+---
+title: "08 Core Hub Gene Expression Validation"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(limma)
+library(pheatmap)
+
+# Global Parameters
+logfc_cut <- 1
+p_cut <- 0.05
+
+# Data Import
+# Import preprocessed expression matrix and hub gene list
+
+# Data Analysis
+# 1. Group differential expression analysis
+# 2. Inter-group expression verification of core genes
+# 3. Core gene correlation analysis
+
+# Visualization
+# Heatmap, box plot, correlation scatter plot
+
+# Result Export
+# Output differential expression statistics and visualization figures
+
+# Result Description
+# Explain differential screening thresholds and validation logic

@@ -1,0 +1,91 @@
+---
+title: "Therapeutic Mechanism of Zhenwu Huangqi Decoction on Chronic Heart Failure with Reduced Ejection Fraction"
+subtitle: "A Reproducible Computational Pharmacology Study"
+authors:
+  - name: "Donghui Xia"
+    email: "dhxia@snut.edu.cn"
+    orcid: "0000-0002-2664-7596"
+    affiliations:
+      - name: "School of Chemical and Environmental science, Shaanxi University of Technology"
+  - name: "Kun Hou"
+    email: "kunh@snut.edu.cn"
+    orcid: ""
+    affiliations:
+      - name: "School of Traditional Chinese Medicine"
+date: last-modified
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    smooth-scroll: true
+    page-layout: full
+    fig-dpi: 300
+    fig-align: center
+    
+execute:
+  eval: false
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r global-setup, include=FALSE}
+# 全站统一渲染配置，与所有Rmd模块参数完全对齐
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+## 项目简介
+本项目基于网络药理学、生物信息学、实验验证思路，以ZWHQD中药复方为研究对象，系统性挖掘复方活性成分、靶基因，结合GEO公共数据集、单细胞测序数据、机器学习模型、免疫浸润分析、因果推断、分子对接等多维度生物信息学方法，阐明中药复方治疗HFrEF的潜在分子机制，为后续基础实验与临床转化提供理论依据。
+
+## 整体技术路线
+本研究遵循 **成分筛选→靶点预测→疾病靶点获取→网络构建→功能富集→数据集验证→多维度机制挖掘→模型构建→因果验证→分子对接→结果汇总与讨论** 的研究逻辑。
+
+全项目所有分析模块均基于纯R语言实现，无Python代码，所有参数标准化、可复现。
+
+## 项目文件结构
+```
+docs/
+├── index.qmd                 # 网站唯一首页、项目总览
+├── 00_technical_scheme.Rmd   # 项目总体技术方案说明
+├── 01_ingredient_screen.Rmd
+├── 02_ingredient_target.Rmd
+├── 03_disease_target.Rmd
+├── 04_drug_target_network.Rmd
+├── 05_ppi_hubgene.Rmd
+├── 06_function_enrichment.Rmd
+├── 07_geo_preprocess.Rmd
+├── 08_hubgene_verify.Rmd
+├── 09_wgcna_analysis.Rmd
+├── 10_immune_infiltration.Rmd
+├── 11_consensus_cluster.Rmd
+├── 12_diagnosis_model.Rmd
+├── 13_scrna_analysis.Rmd
+├── 14_regulation_network.Rmd
+├── 15_mr_causality.Rmd
+├── 16_molecular_docking.Rmd
+├── 17_result_summary.Rmd        # 全局结果汇总展示
+└── 18_discussion_conclusion.Rmd   # 讨论及结论
+```
+
+## 项目规范说明
+1. **语言规范**：全站所有数据分析代码仅使用R语言，无Python依赖。
+2. **文件后缀规范**：仅首页为 `.qmd`，所有功能模块、结果、结论文档统一为 `.Rmd`。
+3. **渲染规范**：全站统一图片分辨率300dpi、图片居中、隐藏警告与提示信息、代码默认展示。
+4. **命名规范**：双数字序号+英文小写+下划线命名，格式统一标准化。
+
+## 研究创新点
+1. 整合多维度生物信息学分析，从物质基础、靶点互作、功能通路、表达验证、免疫微环境、疾病分型、预测模型、上游调控、因果验证、分子对接多层解析复方药理机制。
+2. 引入机器学习模型、孟德尔随机化因果推断，摆脱传统网络药理学纯相关性分析的局限性，提升研究证据等级。
+3. 结合单细胞测序数据，精准定位核心基因的细胞特异性表达，细化药物作用细胞机制。
+
+## 研究局限与展望
+本研究为生物信息学数据分析研究，后续可结合体外细胞实验、体内动物实验进一步验证核心靶点与通路的药理作用，完善ZWHQD治疗HFrEF的分子机制验证体系。

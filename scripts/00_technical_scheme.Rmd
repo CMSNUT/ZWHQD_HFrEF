@@ -1,0 +1,17 @@
+---
+title: "Overall Technical Scheme"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Module Description
+Pure report document without analysis code. Records overall research design, technical workflow, unified screening thresholds, universal parameters, module analysis standards, research innovations, limitations and schematic interpretation.

@@ -1,0 +1,50 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "ZWHQD_HFrEF"
+  repo-url: https://github.com/CMSNUT/ZWHQD_HFrEF
+  repo-branch: main
+  sidebar:
+    style: docked
+    collapse-level: 1
+    contents:
+      - scripts/00_technical_scheme.Rmd
+      - scripts/01_herb_compounds.Rmd
+      - scripts/02_compounds_targets.Rmd
+      - scripts/03_disease_targets.Rmd
+      - scripts/04_herbs_compounds_targets_network.Rmd
+      - scripts/05_ppi_hubgenes.Rmd
+      - scripts/06_enrichment.Rmd
+      - scripts/07_geo_preprocess.Rmd
+      - scripts/08_hubgenes_verify.Rmd
+      - scripts/09_wgcna_analysis.Rmd
+      - scripts/10_immune_infiltration.Rmd
+      - scripts/11_consensus_cluster.Rmd
+      - scripts/12_diagnosis_model.Rmd
+      - scripts/13_scrna_analysis.Rmd
+      - scripts/14_regulation_network.Rmd
+      - scripts/15_mr_causality.Rmd
+      - scripts/16_molecular_docking.Rmd
+      - scripts/17_results_summary.Rmd
+      - scripts/18_discussion_conclusion.Rmd
+      
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    smooth-scroll: true
+    page-layout: full
+    fig-dpi: 300
+    fig-align: center
+
+execute:
+  eval: false
+  echo: true
+  warning: false
+  message: false
+
+    

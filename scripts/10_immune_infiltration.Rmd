@@ -1,0 +1,39 @@
+---
+title: "10 Immune Infiltration Analysis"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(GSVA)
+library(immunedeconv)
+
+# Global Parameters
+# 22 standard immune cell subtypes
+
+# Data Import
+# Import standardized expression matrix and group file
+
+# Data Analysis
+# 1. Calculation of immune cell infiltration scores
+# 2. Inter-group differential analysis of immune infiltration
+# 3. Correlation analysis between core genes and immune cells
+
+# Visualization
+# Immune infiltration heatmap, differential box plot, correlation plot
+
+# Result Export
+# Output immune score matrix and statistical table
+
+# Result Description
+# Explain immune analysis algorithm and subtype criteria

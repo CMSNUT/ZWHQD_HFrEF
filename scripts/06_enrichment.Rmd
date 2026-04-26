@@ -1,0 +1,41 @@
+---
+title: "06 GO/KEGG Functional Enrichment Analysis"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+
+# Global Parameters
+p_cutoff <- 0.05
+fdr_cutoff <- 0.01
+
+# Data Import
+# Import core hub gene list
+
+# Data Analysis
+# 1. Gene ID conversion
+# 2. GO/KEGG ORA enrichment analysis
+# 3. GSEA gene set enrichment analysis
+# 4. Pathway filtering and ranking
+
+# Visualization
+# Bubble plot, bar plot, enrichment network plot
+
+# Result Export
+# Output enrichment statistics tables and high-resolution figures
+
+# Result Description
+# Explain enrichment parameters, correction methods and annotation library

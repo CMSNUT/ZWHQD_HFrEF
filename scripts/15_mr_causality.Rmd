@@ -1,0 +1,39 @@
+---
+title: "15 MR Causal Inference Analysis"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(TwoSampleMR)
+
+# Global Parameters
+ld_r2 <- 0.001
+
+# Data Import
+# Import gene exposure dataset and HFrEF outcome dataset
+
+# Data Analysis
+# 1. SNP filtering and linkage disequilibrium pruning
+# 2. Causal estimation via IVW, MR-Egger and weighted median methods
+# 3. Heterogeneity test and horizontal pleiotropy test
+# 4. Sensitivity analysis
+
+# Visualization
+# Scatter plot, forest plot, funnel plot
+
+# Result Export
+# Output MR causal inference statistical table
+
+# Result Description
+# Explain MR parameters and evidence grading standards

@@ -1,0 +1,43 @@
+---
+title: "12 Diagnostic Prediction Model Construction"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(glmnet)
+library(randomForest)
+library(e1071)
+library(xgboost)
+library(pROC)
+
+# Global Parameters
+train_ratio <- 0.7
+
+# Data Import
+# Import core gene expression dataset and grouping labels
+
+# Data Analysis
+# 1. Feature gene selection via LASSO regression
+# 2. 7:3 train/test dataset division
+# 3. Multi-model construction (Random Forest, SVM, XGBoost)
+# 4. Model evaluation via AUC, calibration curve and decision curve
+
+# Visualization
+# ROC curve, calibration plot, decision curve plot
+
+# Result Export
+# Output model files and evaluation index table
+
+# Result Description
+# Explain feature selection rules and multi-dimensional model evaluation criteria

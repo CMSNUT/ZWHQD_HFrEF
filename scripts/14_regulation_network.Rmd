@@ -1,0 +1,42 @@
+---
+title: "14 Regulatory Network Analysis"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+```{r}
+library(tidyverse)
+library(igraph)
+```
+
+# Global Parameters
+# Regulatory confidence screening criteria
+
+# Data Import
+# Import regulatory data from TRRUST, miRTarBase, StarBase
+# Import core hub gene list
+
+# Data Analysis
+# 1. TF-gene regulatory data sorting and deduplication
+# 2. miRNA-gene regulatory data sorting and deduplication
+# 3. Construction of integrated upstream and downstream regulatory network
+# 4. Screening of core regulatory miRNA and transcription factors
+
+# Visualization
+# Regulatory network visualization
+
+# Result Export
+# Output regulatory network node and edge information table
+
+# Result Description
+# Explain database screening standards and upstream regulatory mechanism

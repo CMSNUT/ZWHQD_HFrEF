@@ -1,0 +1,38 @@
+---
+title: "16 Molecular Docking"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+
+# Global Parameters
+affinity_cut <- -5.0 # Binding energy threshold
+
+# Data Import
+# Import core protein structure and active ingredient structure files
+
+# Data Analysis
+# 1. Protein pretreatment (dehydration and hydrogenation)
+# 2. Compound structure optimization
+# 3. Molecular docking calculation
+# 4. Binding energy screening and hydrogen bond/hydrophobic statistics
+
+# Visualization
+# 2D & 3D molecular docking interaction plots
+
+# Result Export
+# Output docking score statistical table
+
+# Result Description
+# Explain structural pretreatment standards and effective binding criteria

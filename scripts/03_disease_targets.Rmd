@@ -1,0 +1,35 @@
+---
+title: "03 Disease Target Screening"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+
+# Global Parameters
+geneCards_score <- 5 # Screening threshold
+
+# Data Import
+# Import HFrEF target data from GeneCards, OMIM, DisGeNET, TTD
+
+# Data Analysis
+# 1. Expand HFrEF disease keywords and synonyms
+# 2. Aggregate and deduplicate multi-database disease targets
+# 3. Filter targets based on GeneCards score threshold
+# 4. Standardize final disease target pool
+
+# Result Export
+# Output standardized HFrEF disease target dataset
+
+# Result Description
+# Record retrieval strategy, screening criteria and database specification

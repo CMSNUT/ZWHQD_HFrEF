@@ -1,0 +1,39 @@
+---
+title: "07 GEO Dataset Acquisition and Preprocessing"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(GEOquery)
+library(sva)
+library(limma)
+
+# Global Parameters
+# Dataset assignment and batch correction parameters
+
+# Data Download & Import
+# Bulk download specified GSE datasets
+
+# Data Analysis
+# 1. Extract expression matrix and sample annotation information
+# 2. Standardization and missing value processing
+# 3. Batch effect correction via SVA
+# 4. Classify count matrix, WGCNA matrix and validation matrix
+# 5. Divide training set, internal validation set and external validation set
+
+# Result Export
+# Output standardized expression matrix and sample grouping file
+
+# Result Description
+# Explain dataset functions and preprocessing quality control standards

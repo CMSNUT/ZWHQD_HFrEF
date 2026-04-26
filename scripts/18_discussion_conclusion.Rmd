@@ -1,0 +1,17 @@
+---
+title: "18 Discussion and Conclusion"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Module Description
+No analytical code. Contains overall research mechanism summary, module result review, literature comparison, innovation elaboration, research limitation analysis, future prospects and clinical transformation value discussion, serving as the final conclusion chapter of the project.

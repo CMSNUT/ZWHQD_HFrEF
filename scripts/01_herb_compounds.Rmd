@@ -1,0 +1,255 @@
+---
+title: "01. Active Ingredients"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+# Global settings (avoid timeout/garbled text)
+options(timeout = 36000)                # The overtime has been extended to 10 hours
+options(stringsAsFactors = FALSE)     # Disable automatic factor conversion
+options(download.file.method = "curl")
+
+# Disable SSL verification
+options(download.file.extra = "-k -L")
+
+# Obtain the complete list of repositories recommended by Bioconductor, including CRAN and Bioconductor
+my_repos <- BiocManager::repositories()
+
+# Configure CRAN 
+my_repos["CRAN"] <- "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"
+
+# Set the repository options for R
+options(repos = my_repos)
+```
+
+# Package Loading
+```{r}
+library(tidyverse)
+library(data.table)
+library(openxlsx)
+
+library(furrr)
+library(progressr)
+
+library(kableExtra)
+```
+
+# Acquisition of Candidate Active Ingredients of Zhenwu Huangqi Decoction
+
+Zhenwu Huangqi Decoction (ZWHQD) consists of six medicinal herbs, including Aconiti Radix Lateralis Preparata (FU ZI), Poria Cocos (Fuling), Atractylodis Macrocephalae Rhizoma (Baizhu), Paeoniae Radix Alba (Baishao), Zingiberis Rhizoma Recens (Shengjiang), and Astragali Radix (Huangqi). We identified and collected blood-absorbed bioactive compounds from these six constituent herbs via Pinyin-based herb retrieval in the [DCABM-TCM database](http://bionet.ncpsb.org.cn/dcabm-tcm/). As a professional curated biomedical repository, this database systematically archives and organizes blood-derived chemical components isolated from single traditional Chinese medicinal herbs and compound formulas. 
+
+We then applied multiple stringent criteria to refine the candidate components. We discarded compounds without matched PubChem Compound Identifiers (CIDs) to ensure standardized uniform data annotation. We also removed highly toxic diester diterpenoid alkaloids (exemplified by aconitine) derived from Aconiti Radix Lateralis Preparata to exclude unsafe ingredients. We further excluded ubiquitous endogenous substances, including conventional saccharides, amino acids, organic acids and their metabolites, as well as common nutritional components. These universal metabolites lack target-specific pharmacological functions and barely contribute to the therapeutic properties of ZWHQD.
+
+Notably, considering the crucial pharmacological bioactivity of Astragali Radix-derived components, we manually supplemented cycloastragenol into the active compounds dataset. As a verified in vivo bioactive metabolite and derivative of astragaloside IV, cycloastragenol possesses well-documented pharmacological activities. Upon completion of systematic data filtration and manual component supplementation, we defined the remaining compounds as the final candidate active ingredients of ZWHQD.
+
+Finally, to further characterize the molecular properties of the candidate active ingredients, we queried all qualified candidate compounds in [PubChem](https://pubchem.ncbi.nlm.nih.gov/), a comprehensive open-access database for biomedical and chemical information. We extracted core chemical information including IUPAC names, molecular formulas, molecular weights, SMILES strings, InChI, and InChIKey.
+
+
+## Loading and Archiving DCABM-TCM Raw Compounds Data
+
+The downloaded raw herbal ingredient file `zwhqd_compound_dcabm.xlsx` from the DCABM-TCM database was imported as the data frame `compounds_raw` and archived in RData format for subsequent standardized data cleaning and structural parsing.
+
+```{r}
+rm(list=ls())
+
+compounds_raw <- openxlsx::read.xlsx("../data/01compounds/zwhqd_compound_dcabm.xlsx")
+
+save(compounds_raw,file = "../data/01compounds/compounds_raw.Rdata")
+```
+
+## Preprocessing of Raw Herbal Compound Data from DCABM-TCM
+
+This module performs standardized cleaning on original DCABM-TCM herbal ingredients data, including whitespace trimming, compound splitting, extraction of PubChem CID and molecular formula, data restructuring, and saves structured datasets in RData and Excel formats for subsequent screening analysis.
+
+```{r}
+compounds_raw_preprocess <- compounds_raw %>%
+  mutate(across(where(is.character), trimws)) %>%
+  tidyr::separate_rows(Compounds, sep = "\\|") %>%
+  mutate(across(where(is.character), trimws)) %>%
+  mutate(
+    CID = str_extract(Compounds, "(?<=Pubchem CID:)[^)]+") %>% str_trim(),
+    DCABM.ID = str_extract(Compounds, "(?<=DCABM ID:)[^)]+") %>% str_trim(),
+    temp = str_remove(Compounds, "\\s+\\(Pubchem CID:[^)]+\\)")
+  ) %>%
+  mutate(across(where(is.character), trimws)) %>%
+  mutate(
+    temp2 = str_remove(temp, "\\([^)]+\\)$") %>% str_trim()
+  ) %>%
+  mutate(across(where(is.character), trimws)) %>%
+  mutate(
+    Compound = str_remove(temp2, "\\([^)]+\\)$") %>% str_trim(),
+    Formula = str_match(temp2, "\\(([^)]+)\\)$")[,2] %>% str_trim()
+  ) %>%
+  dplyr::select(-Compounds, -temp, -temp2, -DCABM.ID) %>%
+  mutate(across(where(is.character), trimws))
+
+save(compounds_raw_preprocess,file = "../data/01compounds/compounds_raw_preprocess.Rdata")
+
+openxlsx::write.xlsx(compounds_raw_preprocess,"../data/01compounds/compounds_raw_preprocess.xlsx")
+```
+
+## Supplement of Astragalus Active Metabolite Cycloastragenol
+
+Cycloastragenol, a vital in vivo active metabolite of astragaloside IV derived from Astragali Radix, was manually supplemented to the candidate compound dataset. The updated dataset was sorted and standardized, then exported as an Excel file to enrich active ingredient resources for subsequent pharmacological mechanism exploration.
+
+```{r}
+compounds_add <- compounds_raw_preprocess %>%
+  add_row(
+    Herb.Name.Chinese = "黄芪",
+    Herb.Name.Pinyin = "HUANG QI",
+    Herb.Name.English = "Astragali Radix",
+    Herb.Name.Latin = "Astragalus membranaceus (Fisch.) Bunge",
+    Type = "Metabolite",
+    CID = "13943286",
+    Compound = "cycloastragenol",
+    Formula = "C30H50O5"
+  ) %>%
+  arrange(Herb.Name.Pinyin,CID) %>%
+  mutate(across(where(is.character), trimws))
+
+openxlsx::write.xlsx(compounds_add,"../data/01compounds/compounds_add.xlsx")
+```
+
+## Preprocessing of Manually Revised Herbal Compounds Data
+
+The manually corrected dataset with updated PubChem CIDs and compound nomenclatures was imported. Standardized preprocessing procedures including whitespace trimming, invalid CID removal, duplicate deduplication, data type conversion, and dataset sorting were performed to obtain high-quality, standardized candidate herbal compound data for follow-up analysis.
+
+```{r}
+compounds_properties_manu <- openxlsx::read.xlsx("../data/01compounds/compounds_add_manu.xlsx")
+
+compounds_filtered <- compounds_properties_manu %>%
+  mutate(across(where(is.character), trimws)) %>%
+  dplyr::filter(CID!="-") %>%
+  arrange(Herb.Name.Pinyin,CID,desc(Type)) %>%
+  distinct(Herb.Name.Chinese,CID,.keep_all = TRUE) %>%
+  distinct(Herb.Name.Chinese,Compound,.keep_all = TRUE) %>%
+  mutate(CID = as.numeric(CID)) %>%
+  arrange(Herb.Name.Pinyin,CID,desc(Type)) %>%
+  mutate(CID = as.character(CID)) %>%
+  mutate(across(where(is.character), trimws))
+
+```
+
+## Import of Manually Supplemented Compound Property Data
+
+Manually curated compound physicochemical property data were imported from local Excel files. Supplementary compound attribute information was provided for subsequent compound screening, ADME evaluation and pharmacological characteristic analysis.
+
+```{r}
+compounds_properties_manu <- openxlsx::read.xlsx("../data/01compounds/compounds_properties_manu.xlsx")
+```
+
+## Filtering and Standardization of Candidate Active Compounds
+
+Compound property annotation files were merged with standardized herbal compound data. Compounds were strictly screened according to pharmacological characteristics: highly toxic diester-type alkaloids, saccharides, amino acids, basic organic acids and corresponding metabolites, as well as endogenous metabolites and common nutrients were excluded due to non-specific therapeutic effects or potential pathogenicity. In contrast, phenolic acids, flavonoids/isoflavonoids, triterpenic acids/saponins, paeoniflorin derivatives, monoester/amine alcohol-type aconitines, and gingerols were retained, which possess well-documented heart failure-related activities, including anti-myocardial remodeling, anti-oxidation, anti-inflammation, improved myocardial energy metabolism, and cardiomyocyte protection. After manual annotation filtering, redundant fields and duplicate compounds were removed to generate the final standardized candidate active compound dataset and summarize the quantity of eligible herbal ingredients.
+
+```{r}
+compounds_properties_filtered <- compounds_properties_manu %>%
+  dplyr::filter(Drop!="Yes") %>%
+  dplyr::select(-c(原因1,原因2,Compound.Toxic.Chinese,Compound.Toxic.English,Drop,Compound.Category.Chinese,Compound.Name.Chinese)) %>%
+  dplyr::rename(Compound.Name = Compound.Name.English,
+                Compound.Category = Compound.Category.English) %>%
+  mutate(across(where(is.character),trimws)) %>%
+  distinct(Herb.Name.Chinese,CID,.keep_all = TRUE) %>%
+  distinct(Herb.Name.Chinese,Compound.Name,.keep_all = TRUE)
+
+save(compounds_properties_filtered,file = "../data/01compounds/compounds_properties_filtered.Rdata")
+openxlsx::write.xlsx(compounds_properties_filtered,"../data/01compounds/compounds_properties_filtered.xlsx")
+```
+
+## PubChem-Based Compound Property Retrieval
+
+The finalized candidate active compound dataset was loaded, and invalid and duplicate PubChem CIDs were removed after standardized cleaning. A batch parallel query strategy was adopted to efficiently retrieve core physicochemical descriptors from the PubChem database, including IUPAC name, molecular formula, molecular weight, SMILES, InChI, and InChIKey. Acquired chemical information was matched and integrated with curated herbal compound data. The dataset was standardized, field-unified, and deduplicated to construct the complete and definitive candidate compound information dataset for subsequent network pharmacology analysis.
+
+```{r}
+# Clear environment and load utilities
+rm(list = ls())
+source("../scripts/utils.R")
+
+# Load preprocessed compound properties
+load("../data/01compounds/compound_properties_final.Rdata")
+
+# Clean CID, trim whitespace, deduplicate by herb and CID
+compounds_pubchem <- compound_properties_final %>% 
+  mutate(CID = clean_cids(CID)) %>%
+  mutate(across(where(is.character), trimws)) %>%
+  dplyr::filter(!is.na(CID)) %>%
+  distinct(Herb.Name.Chinese, CID, .keep_all = TRUE)
+
+# Define chemical properties to retrieve from PubChem
+properties <- c("IUPACName", "MolecularFormula", "MolecularWeight", 
+                "SMILES", "InChI", "InChIKey")
+batch_size <- 20
+
+# Prepare unique CIDs and split into batches for API rate limiting
+compounds_pubchem$CID <- clean_cids(as.character(compounds_pubchem$CID))
+unique_cids <- as.character(unique(compounds_pubchem$CID))
+
+cid_batches <- split(unique_cids, ceiling(seq_along(unique_cids) / batch_size))
+
+# Set up parallel processing (leave one core free)
+plan(multisession, workers = availableCores() - 1)  
+
+# Fetch chemical info for all batches with progress bar
+with_progress({
+  p <- progressor(steps = length(cid_batches))
+  chem_info_df <- future_map_dfr(cid_batches, function(batch) {
+    p()
+    fetch_batch(properties, batch)
+  })
+})
+future::plan("sequential") 
+
+save(compounds_pubchem,"../data/01compounds/compounds_pubchem.Rdata")
+```
+
+
+```{r}
+load("../data/01compounds/compounds.Rdata")
+
+# Merge compound metadata with retrieved chemical info
+compounds_final <- compounds_pubchem %>%
+  left_join(chem_info_df, by = "CID") %>%
+  dplyr::select(Herb.Name.Chinese, Herb.Name.Pinyin, Herb.Name.English, 
+                Herb.Name.Latin, Compound.Name, IUPACName, Compound.Category, 
+                MolecularFormula, MolecularWeight, CID, SMILES, InChI, InChIKey) %>%
+  mutate(across(where(is.character), trimws))
+
+# Count number of distinct herbs per CID (compound)
+compound_sharing_stats <- compounds_final %>%
+  distinct(Herb.Name.Chinese, CID) %>%   # each herb-CID pair once
+  group_by(CID) %>%
+  summarise(Herb_Count = n(), 
+            Herbs = paste(unique(Herb.Name.Chinese), collapse = ", ")) %>%
+  filter(Herb_Count >= 2) %>%            # keep only compounds appearing in at least 2 herbs
+  arrange(desc(Herb_Count))
+
+# Save final dataset as RData and Excel
+save(compounds_final, compound_sharing_stats, file = "../data/01compounds/compounds_final.Rdata")
+openxlsx::write.xlsx(compounds_final, "../data/01compounds/compounds_final.xlsx")
+```
+
+# Results
+```{r eval=TRUE, echo=FALSE}
+rm(list = ls())
+
+load("../data/01compounds/compounds_final.Rdata")
+
+# Number of active ingredients per herb
+cat("\nNumber of active ingredients per herb:\n")
+table(compounds_final$Herb.Name.Pinyin)
+
+# Total number of active ingredients
+cat("\nTotal number of active ingredients：",length(unique(compounds_final$CID)),"\n")
+
+if (exists("compound_sharing_stats") && nrow(compound_sharing_stats) > 0) {
+  knitr::kable(compound_sharing_stats, caption = "Compound Sharing Statistics") 
+} 
+```

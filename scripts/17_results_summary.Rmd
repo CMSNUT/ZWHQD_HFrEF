@@ -1,0 +1,17 @@
+---
+title: "17 Global Result Summary"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Module Description
+No additional analysis code. Aggregate statistical tables and visualization figures from module 01 to 16. Unify global figure size, color scheme and font specifications. Integrate comprehensive research results for overall mechanism summary and thesis result presentation.

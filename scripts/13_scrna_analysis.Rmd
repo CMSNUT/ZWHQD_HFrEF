@@ -1,0 +1,40 @@
+---
+title: "13 Single-Cell RNA Sequencing Analysis"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(Seurat)
+
+# Global Parameters
+# Quality control threshold and clustering resolution
+
+# Data Import
+# Import single-cell GSE dataset
+
+# Data Analysis
+# 1. Single-cell data quality control and low-quality cell filtering
+# 2. Standardization, PCA dimensionality reduction and UMAP clustering
+# 3. Cell subtype annotation
+# 4. Subtype differential analysis and core gene localization
+# 5. Pseudotime trajectory analysis
+
+# Visualization
+# UMAP clustering plot, trajectory plot, gene distribution plot
+
+# Result Export
+# Output single-cell annotation results and gene localization statistics
+
+# Result Description
+# Explain cell annotation standards and trajectory mechanism

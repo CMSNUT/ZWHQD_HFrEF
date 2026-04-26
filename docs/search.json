@@ -1,0 +1,311 @@
+[
+  {
+    "objectID": "scripts/18_discussion_conclusion.html",
+    "href": "scripts/18_discussion_conclusion.html",
+    "title": "18 Discussion and Conclusion",
+    "section": "",
+    "text": "1 Module Description\nNo analytical code. Contains overall research mechanism summary, module result review, literature comparison, innovation elaboration, research limitation analysis, future prospects and clinical transformation value discussion, serving as the final conclusion chapter of the project.",
+    "crumbs": [
+      "18 Discussion and Conclusion"
+    ]
+  },
+  {
+    "objectID": "scripts/16_molecular_docking.html",
+    "href": "scripts/16_molecular_docking.html",
+    "title": "16 Molecular Docking",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse)\n\n\n2 Global Parameters\naffinity_cut &lt;- -5.0 # Binding energy threshold\n\n\n3 Data Import\n\n\n4 Import core protein structure and active ingredient structure files\n\n\n5 Data Analysis\n\n\n6 1. Protein pretreatment (dehydration and hydrogenation)\n\n\n7 2. Compound structure optimization\n\n\n8 3. Molecular docking calculation\n\n\n9 4. Binding energy screening and hydrogen bond/hydrophobic statistics\n\n\n10 Visualization\n\n\n11 2D & 3D molecular docking interaction plots\n\n\n12 Result Export\n\n\n13 Output docking score statistical table\n\n\n14 Result Description\n\n\n15 Explain structural pretreatment standards and effective binding criteria",
+    "crumbs": [
+      "16 Molecular Docking"
+    ]
+  },
+  {
+    "objectID": "scripts/14_regulation_network.html",
+    "href": "scripts/14_regulation_network.html",
+    "title": "14 Regulatory Network Analysis",
+    "section": "",
+    "text": "1 Package Loading\n\nlibrary(tidyverse)\nlibrary(igraph)\n\n\n\n2 Global Parameters\n\n\n3 Regulatory confidence screening criteria\n\n\n4 Data Import\n\n\n5 Import regulatory data from TRRUST, miRTarBase, StarBase\n\n\n6 Import core hub gene list\n\n\n7 Data Analysis\n\n\n8 1. TF-gene regulatory data sorting and deduplication\n\n\n9 2. miRNA-gene regulatory data sorting and deduplication\n\n\n10 3. Construction of integrated upstream and downstream regulatory network\n\n\n11 4. Screening of core regulatory miRNA and transcription factors\n\n\n12 Visualization\n\n\n13 Regulatory network visualization\n\n\n14 Result Export\n\n\n15 Output regulatory network node and edge information table\n\n\n16 Result Description\n\n\n17 Explain database screening standards and upstream regulatory mechanism",
+    "crumbs": [
+      "14 Regulatory Network Analysis"
+    ]
+  },
+  {
+    "objectID": "scripts/12_diagnosis_model.html",
+    "href": "scripts/12_diagnosis_model.html",
+    "title": "12 Diagnostic Prediction Model Construction",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(glmnet) library(randomForest) library(e1071) library(xgboost) library(pROC)\n\n\n2 Global Parameters\ntrain_ratio &lt;- 0.7\n\n\n3 Data Import\n\n\n4 Import core gene expression dataset and grouping labels\n\n\n5 Data Analysis\n\n\n6 1. Feature gene selection via LASSO regression\n\n\n7 2. 7:3 train/test dataset division\n\n\n8 3. Multi-model construction (Random Forest, SVM, XGBoost)\n\n\n9 4. Model evaluation via AUC, calibration curve and decision curve\n\n\n10 Visualization\n\n\n11 ROC curve, calibration plot, decision curve plot\n\n\n12 Result Export\n\n\n13 Output model files and evaluation index table\n\n\n14 Result Description\n\n\n15 Explain feature selection rules and multi-dimensional model evaluation criteria",
+    "crumbs": [
+      "12 Diagnostic Prediction Model Construction"
+    ]
+  },
+  {
+    "objectID": "scripts/10_immune_infiltration.html",
+    "href": "scripts/10_immune_infiltration.html",
+    "title": "10 Immune Infiltration Analysis",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(GSVA) library(immunedeconv)\n\n\n2 Global Parameters\n\n\n3 22 standard immune cell subtypes\n\n\n4 Data Import\n\n\n5 Import standardized expression matrix and group file\n\n\n6 Data Analysis\n\n\n7 1. Calculation of immune cell infiltration scores\n\n\n8 2. Inter-group differential analysis of immune infiltration\n\n\n9 3. Correlation analysis between core genes and immune cells\n\n\n10 Visualization\n\n\n11 Immune infiltration heatmap, differential box plot, correlation plot\n\n\n12 Result Export\n\n\n13 Output immune score matrix and statistical table\n\n\n14 Result Description\n\n\n15 Explain immune analysis algorithm and subtype criteria",
+    "crumbs": [
+      "10 Immune Infiltration Analysis"
+    ]
+  },
+  {
+    "objectID": "scripts/08_hubgenes_verify.html",
+    "href": "scripts/08_hubgenes_verify.html",
+    "title": "08 Core Hub Gene Expression Validation",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(limma) library(pheatmap)\n\n\n2 Global Parameters\nlogfc_cut &lt;- 1 p_cut &lt;- 0.05\n\n\n3 Data Import\n\n\n4 Import preprocessed expression matrix and hub gene list\n\n\n5 Data Analysis\n\n\n6 1. Group differential expression analysis\n\n\n7 2. Inter-group expression verification of core genes\n\n\n8 3. Core gene correlation analysis\n\n\n9 Visualization\n\n\n10 Heatmap, box plot, correlation scatter plot\n\n\n11 Result Export\n\n\n12 Output differential expression statistics and visualization figures\n\n\n13 Result Description\n\n\n14 Explain differential screening thresholds and validation logic",
+    "crumbs": [
+      "08 Core Hub Gene Expression Validation"
+    ]
+  },
+  {
+    "objectID": "scripts/06_enrichment.html",
+    "href": "scripts/06_enrichment.html",
+    "title": "06 GO/KEGG Functional Enrichment Analysis",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(clusterProfiler) library(org.Hs.eg.db)\n\n\n2 Global Parameters\np_cutoff &lt;- 0.05 fdr_cutoff &lt;- 0.01\n\n\n3 Data Import\n\n\n4 Import core hub gene list\n\n\n5 Data Analysis\n\n\n6 1. Gene ID conversion\n\n\n7 2. GO/KEGG ORA enrichment analysis\n\n\n8 3. GSEA gene set enrichment analysis\n\n\n9 4. Pathway filtering and ranking\n\n\n10 Visualization\n\n\n11 Bubble plot, bar plot, enrichment network plot\n\n\n12 Result Export\n\n\n13 Output enrichment statistics tables and high-resolution figures\n\n\n14 Result Description\n\n\n15 Explain enrichment parameters, correction methods and annotation library",
+    "crumbs": [
+      "06 GO/KEGG Functional Enrichment Analysis"
+    ]
+  },
+  {
+    "objectID": "scripts/04_herbs_compounds_targets_network.html",
+    "href": "scripts/04_herbs_compounds_targets_network.html",
+    "title": "04 Drug-Ingredient-Target Network Construction",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse)\n\n\n2 Global Parameters\ntop_ratio &lt;- 0.1 # Top 10% topological nodes\n\n\n3 Data Import\n\n\n4 Import drug target and disease target datasets\n\n\n5 Data Analysis\n\n\n6 1. Match drug, ingredient and target relationships\n\n\n7 2. Generate standard input files for Cytoscape\n\n\n8 3. Calculate topological parameters and screen core nodes\n\n\n9 Result Export\n\n\n10 Output network node and edge files for visualization\n\n\n11 Result Description\n\n\n12 Illustrate network construction rules and topological screening standards",
+    "crumbs": [
+      "04 Drug-Ingredient-Target Network Construction"
+    ]
+  },
+  {
+    "objectID": "scripts/02_compounds_targets.html",
+    "href": "scripts/02_compounds_targets.html",
+    "title": "02. Ingredient Targets Prediction",
+    "section": "",
+    "text": "# Global rendering configuration for the whole project\nknitr::opts_chunk$set(\n  echo = TRUE,\n  warning = FALSE,\n  message = FALSE,\n  fig.dpi = 300,\n  fig.align = \"center\"\n)\n\n# Global settings (avoid timeout/garbled text)\noptions(timeout = 36000)                # The overtime has been extended to 10 hours\noptions(stringsAsFactors = FALSE)     # Disable automatic factor conversion\noptions(download.file.method = \"curl\")\n\n# Disable SSL verification\noptions(download.file.extra = \"-k -L\")\n\n# Obtain the complete list of repositories recommended by Bioconductor, including CRAN and Bioconductor\nmy_repos &lt;- BiocManager::repositories()\n\n# Configure CRAN \nmy_repos[\"CRAN\"] &lt;- \"https://mirrors.tuna.tsinghua.edu.cn/CRAN/\"\n\n# Set the repository options for R\noptions(repos = my_repos)\n\n\n1 Package Loading\n\nlibrary(tidyverse)\nlibrary(openxlsx)\nlibrary(data.table)\nlibrary(kableExtra)\n\n\n\n2 Acquisition of Potential Targets of Active Compounds\nWe screened and identified potential therapeutic targets for the active ingredients of Zhenwu Huangqi Decoction (ZWHQD) using three authoritative bioinformatics databases, including BATMAN-TCM (http://bionet.ncpsb.org.cn/batman-tcm/), Super-Pred (https://prediction.charite.de/), and SwissTargetPrediction (https://www.swisstargetprediction.ch/). We acquired validated targets of qualified active compounds from BATMAN-TCM via corresponding PubChem compound IDs, and also retained predicted targets with high-confidence prediction scores no less than 0.84. We submitted the SMILES strings of eligible compounds to Super-Pred for target prediction, We submitted the SMILES strings of eligible compounds to Super-Pred for target prediction, which yielded known targets, and retained candidate targets with a probability ≥ 70% and model accuracy ≥ 90%. Similarly, we queried SwissTargetPrediction with the same SMILES structures and collected all predictive targets with a threshold score of 0.1 or above.\nWe then standardized all collected target identifiers against canonical entries in the UniProt database (https://www.uniprot.org/) to unify cross-database gene annotation specifications and resolve inherent data heterogeneity. Finally, we merged experimentally verified and in silico predicted targets to establish a comprehensive candidate dataset for bioactive ingredients of ZWHQD. With this refined dataset, we conducted systematic network pharmacology analyses to elucidate the molecular mechanisms underlying the therapeutic efficacy of Zhenwu Huangqi Decoction (ZWHQD).\n\n\n3 Import standardized active ingredient list\n\n\n4 Import raw target prediction data from multiple databases\n\n\n5 Data Analysis\n\n\n6 1. Merge target data from multi-database sources\n\n\n7 2. Filter human-derived targets\n\n\n8 3. HGNC gene name standardization and deduplication\n\n\n9 4. Credibility classification of predicted targets\n\n\n10 Results",
+    "crumbs": [
+      "02. Ingredient Targets Prediction"
+    ]
+  },
+  {
+    "objectID": "scripts/00_technical_scheme.html",
+    "href": "scripts/00_technical_scheme.html",
+    "title": "Overall Technical Scheme",
+    "section": "",
+    "text": "1 Module Description\nPure report document without analysis code. Records overall research design, technical workflow, unified screening thresholds, universal parameters, module analysis standards, research innovations, limitations and schematic interpretation.",
+    "crumbs": [
+      "Overall Technical Scheme"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Therapeutic Mechanism of Zhenwu Huangqi Decoction on Chronic Heart Failure with Reduced Ejection Fraction",
+    "section": "",
+    "text": "本项目基于网络药理学、生物信息学、实验验证思路，以ZWHQD中药复方为研究对象，系统性挖掘复方活性成分、靶基因，结合GEO公共数据集、单细胞测序数据、机器学习模型、免疫浸润分析、因果推断、分子对接等多维度生物信息学方法，阐明中药复方治疗HFrEF的潜在分子机制，为后续基础实验与临床转化提供理论依据。"
+  },
+  {
+    "objectID": "index.html#项目简介",
+    "href": "index.html#项目简介",
+    "title": "Therapeutic Mechanism of Zhenwu Huangqi Decoction on Chronic Heart Failure with Reduced Ejection Fraction",
+    "section": "",
+    "text": "本项目基于网络药理学、生物信息学、实验验证思路，以ZWHQD中药复方为研究对象，系统性挖掘复方活性成分、靶基因，结合GEO公共数据集、单细胞测序数据、机器学习模型、免疫浸润分析、因果推断、分子对接等多维度生物信息学方法，阐明中药复方治疗HFrEF的潜在分子机制，为后续基础实验与临床转化提供理论依据。"
+  },
+  {
+    "objectID": "index.html#整体技术路线",
+    "href": "index.html#整体技术路线",
+    "title": "Therapeutic Mechanism of Zhenwu Huangqi Decoction on Chronic Heart Failure with Reduced Ejection Fraction",
+    "section": "2 整体技术路线",
+    "text": "2 整体技术路线\n本研究遵循 成分筛选→靶点预测→疾病靶点获取→网络构建→功能富集→数据集验证→多维度机制挖掘→模型构建→因果验证→分子对接→结果汇总与讨论 的研究逻辑。\n全项目所有分析模块均基于纯R语言实现，无Python代码，所有参数标准化、可复现。"
+  },
+  {
+    "objectID": "index.html#项目文件结构",
+    "href": "index.html#项目文件结构",
+    "title": "Therapeutic Mechanism of Zhenwu Huangqi Decoction on Chronic Heart Failure with Reduced Ejection Fraction",
+    "section": "3 项目文件结构",
+    "text": "3 项目文件结构\ndocs/\n├── index.qmd                 # 网站唯一首页、项目总览\n├── 00_technical_scheme.Rmd   # 项目总体技术方案说明\n├── 01_ingredient_screen.Rmd\n├── 02_ingredient_target.Rmd\n├── 03_disease_target.Rmd\n├── 04_drug_target_network.Rmd\n├── 05_ppi_hubgene.Rmd\n├── 06_function_enrichment.Rmd\n├── 07_geo_preprocess.Rmd\n├── 08_hubgene_verify.Rmd\n├── 09_wgcna_analysis.Rmd\n├── 10_immune_infiltration.Rmd\n├── 11_consensus_cluster.Rmd\n├── 12_diagnosis_model.Rmd\n├── 13_scrna_analysis.Rmd\n├── 14_regulation_network.Rmd\n├── 15_mr_causality.Rmd\n├── 16_molecular_docking.Rmd\n├── 17_result_summary.Rmd        # 全局结果汇总展示\n└── 18_discussion_conclusion.Rmd   # 讨论及结论"
+  },
+  {
+    "objectID": "index.html#项目规范说明",
+    "href": "index.html#项目规范说明",
+    "title": "Therapeutic Mechanism of Zhenwu Huangqi Decoction on Chronic Heart Failure with Reduced Ejection Fraction",
+    "section": "4 项目规范说明",
+    "text": "4 项目规范说明\n\n语言规范：全站所有数据分析代码仅使用R语言，无Python依赖。\n文件后缀规范：仅首页为 .qmd，所有功能模块、结果、结论文档统一为 .Rmd。\n渲染规范：全站统一图片分辨率300dpi、图片居中、隐藏警告与提示信息、代码默认展示。\n命名规范：双数字序号+英文小写+下划线命名，格式统一标准化。"
+  },
+  {
+    "objectID": "index.html#研究创新点",
+    "href": "index.html#研究创新点",
+    "title": "Therapeutic Mechanism of Zhenwu Huangqi Decoction on Chronic Heart Failure with Reduced Ejection Fraction",
+    "section": "5 研究创新点",
+    "text": "5 研究创新点\n\n整合多维度生物信息学分析，从物质基础、靶点互作、功能通路、表达验证、免疫微环境、疾病分型、预测模型、上游调控、因果验证、分子对接多层解析复方药理机制。\n引入机器学习模型、孟德尔随机化因果推断，摆脱传统网络药理学纯相关性分析的局限性，提升研究证据等级。\n结合单细胞测序数据，精准定位核心基因的细胞特异性表达，细化药物作用细胞机制。"
+  },
+  {
+    "objectID": "index.html#研究局限与展望",
+    "href": "index.html#研究局限与展望",
+    "title": "Therapeutic Mechanism of Zhenwu Huangqi Decoction on Chronic Heart Failure with Reduced Ejection Fraction",
+    "section": "6 研究局限与展望",
+    "text": "6 研究局限与展望\n本研究为生物信息学数据分析研究，后续可结合体外细胞实验、体内动物实验进一步验证核心靶点与通路的药理作用，完善ZWHQD治疗HFrEF的分子机制验证体系。"
+  },
+  {
+    "objectID": "scripts/01_herb_compounds.html",
+    "href": "scripts/01_herb_compounds.html",
+    "title": "01. Active Ingredients",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(data.table)\nlibrary(openxlsx)\n\nlibrary(furrr)\nlibrary(progressr)\n\nlibrary(kableExtra)",
+    "crumbs": [
+      "01. Active Ingredients"
+    ]
+  },
+  {
+    "objectID": "scripts/01_herb_compounds.html#loading-and-archiving-dcabm-tcm-raw-compounds-data",
+    "href": "scripts/01_herb_compounds.html#loading-and-archiving-dcabm-tcm-raw-compounds-data",
+    "title": "01. Active Ingredients",
+    "section": "2.1 Loading and Archiving DCABM-TCM Raw Compounds Data",
+    "text": "2.1 Loading and Archiving DCABM-TCM Raw Compounds Data\nThe downloaded raw herbal ingredient file zwhqd_compound_dcabm.xlsx from the DCABM-TCM database was imported as the data frame compounds_raw and archived in RData format for subsequent standardized data cleaning and structural parsing.\n\nrm(list=ls())\n\ncompounds_raw &lt;- openxlsx::read.xlsx(\"../data/01compounds/zwhqd_compound_dcabm.xlsx\")\n\nsave(compounds_raw,file = \"../data/01compounds/compounds_raw.Rdata\")",
+    "crumbs": [
+      "01. Active Ingredients"
+    ]
+  },
+  {
+    "objectID": "scripts/01_herb_compounds.html#preprocessing-of-raw-herbal-compound-data-from-dcabm-tcm",
+    "href": "scripts/01_herb_compounds.html#preprocessing-of-raw-herbal-compound-data-from-dcabm-tcm",
+    "title": "01. Active Ingredients",
+    "section": "2.2 Preprocessing of Raw Herbal Compound Data from DCABM-TCM",
+    "text": "2.2 Preprocessing of Raw Herbal Compound Data from DCABM-TCM\nThis module performs standardized cleaning on original DCABM-TCM herbal ingredients data, including whitespace trimming, compound splitting, extraction of PubChem CID and molecular formula, data restructuring, and saves structured datasets in RData and Excel formats for subsequent screening analysis.\n\ncompounds_raw_preprocess &lt;- compounds_raw %&gt;%\n  mutate(across(where(is.character), trimws)) %&gt;%\n  tidyr::separate_rows(Compounds, sep = \"\\\\|\") %&gt;%\n  mutate(across(where(is.character), trimws)) %&gt;%\n  mutate(\n    CID = str_extract(Compounds, \"(?&lt;=Pubchem CID:)[^)]+\") %&gt;% str_trim(),\n    DCABM.ID = str_extract(Compounds, \"(?&lt;=DCABM ID:)[^)]+\") %&gt;% str_trim(),\n    temp = str_remove(Compounds, \"\\\\s+\\\\(Pubchem CID:[^)]+\\\\)\")\n  ) %&gt;%\n  mutate(across(where(is.character), trimws)) %&gt;%\n  mutate(\n    temp2 = str_remove(temp, \"\\\\([^)]+\\\\)$\") %&gt;% str_trim()\n  ) %&gt;%\n  mutate(across(where(is.character), trimws)) %&gt;%\n  mutate(\n    Compound = str_remove(temp2, \"\\\\([^)]+\\\\)$\") %&gt;% str_trim(),\n    Formula = str_match(temp2, \"\\\\(([^)]+)\\\\)$\")[,2] %&gt;% str_trim()\n  ) %&gt;%\n  dplyr::select(-Compounds, -temp, -temp2, -DCABM.ID) %&gt;%\n  mutate(across(where(is.character), trimws))\n\nsave(compounds_raw_preprocess,file = \"../data/01compounds/compounds_raw_preprocess.Rdata\")\n\nopenxlsx::write.xlsx(compounds_raw_preprocess,\"../data/01compounds/compounds_raw_preprocess.xlsx\")",
+    "crumbs": [
+      "01. Active Ingredients"
+    ]
+  },
+  {
+    "objectID": "scripts/01_herb_compounds.html#supplement-of-astragalus-active-metabolite-cycloastragenol",
+    "href": "scripts/01_herb_compounds.html#supplement-of-astragalus-active-metabolite-cycloastragenol",
+    "title": "01. Active Ingredients",
+    "section": "2.3 Supplement of Astragalus Active Metabolite Cycloastragenol",
+    "text": "2.3 Supplement of Astragalus Active Metabolite Cycloastragenol\nCycloastragenol, a vital in vivo active metabolite of astragaloside IV derived from Astragali Radix, was manually supplemented to the candidate compound dataset. The updated dataset was sorted and standardized, then exported as an Excel file to enrich active ingredient resources for subsequent pharmacological mechanism exploration.\n\ncompounds_add &lt;- compounds_raw_preprocess %&gt;%\n  add_row(\n    Herb.Name.Chinese = \"黄芪\",\n    Herb.Name.Pinyin = \"HUANG QI\",\n    Herb.Name.English = \"Astragali Radix\",\n    Herb.Name.Latin = \"Astragalus membranaceus (Fisch.) Bunge\",\n    Type = \"Metabolite\",\n    CID = \"13943286\",\n    Compound = \"cycloastragenol\",\n    Formula = \"C30H50O5\"\n  ) %&gt;%\n  arrange(Herb.Name.Pinyin,CID) %&gt;%\n  mutate(across(where(is.character), trimws))\n\nopenxlsx::write.xlsx(compounds_add,\"../data/01compounds/compounds_add.xlsx\")",
+    "crumbs": [
+      "01. Active Ingredients"
+    ]
+  },
+  {
+    "objectID": "scripts/01_herb_compounds.html#preprocessing-of-manually-revised-herbal-compounds-data",
+    "href": "scripts/01_herb_compounds.html#preprocessing-of-manually-revised-herbal-compounds-data",
+    "title": "01. Active Ingredients",
+    "section": "2.4 Preprocessing of Manually Revised Herbal Compounds Data",
+    "text": "2.4 Preprocessing of Manually Revised Herbal Compounds Data\nThe manually corrected dataset with updated PubChem CIDs and compound nomenclatures was imported. Standardized preprocessing procedures including whitespace trimming, invalid CID removal, duplicate deduplication, data type conversion, and dataset sorting were performed to obtain high-quality, standardized candidate herbal compound data for follow-up analysis.\n\ncompounds_properties_manu &lt;- openxlsx::read.xlsx(\"../data/01compounds/compounds_add_manu.xlsx\")\n\ncompounds_filtered &lt;- compounds_properties_manu %&gt;%\n  mutate(across(where(is.character), trimws)) %&gt;%\n  dplyr::filter(CID!=\"-\") %&gt;%\n  arrange(Herb.Name.Pinyin,CID,desc(Type)) %&gt;%\n  distinct(Herb.Name.Chinese,CID,.keep_all = TRUE) %&gt;%\n  distinct(Herb.Name.Chinese,Compound,.keep_all = TRUE) %&gt;%\n  mutate(CID = as.numeric(CID)) %&gt;%\n  arrange(Herb.Name.Pinyin,CID,desc(Type)) %&gt;%\n  mutate(CID = as.character(CID)) %&gt;%\n  mutate(across(where(is.character), trimws))",
+    "crumbs": [
+      "01. Active Ingredients"
+    ]
+  },
+  {
+    "objectID": "scripts/01_herb_compounds.html#import-of-manually-supplemented-compound-property-data",
+    "href": "scripts/01_herb_compounds.html#import-of-manually-supplemented-compound-property-data",
+    "title": "01. Active Ingredients",
+    "section": "2.5 Import of Manually Supplemented Compound Property Data",
+    "text": "2.5 Import of Manually Supplemented Compound Property Data\nManually curated compound physicochemical property data were imported from local Excel files. Supplementary compound attribute information was provided for subsequent compound screening, ADME evaluation and pharmacological characteristic analysis.\n\ncompounds_properties_manu &lt;- openxlsx::read.xlsx(\"../data/01compounds/compounds_properties_manu.xlsx\")",
+    "crumbs": [
+      "01. Active Ingredients"
+    ]
+  },
+  {
+    "objectID": "scripts/01_herb_compounds.html#filtering-and-standardization-of-candidate-active-compounds",
+    "href": "scripts/01_herb_compounds.html#filtering-and-standardization-of-candidate-active-compounds",
+    "title": "01. Active Ingredients",
+    "section": "2.6 Filtering and Standardization of Candidate Active Compounds",
+    "text": "2.6 Filtering and Standardization of Candidate Active Compounds\nCompound property annotation files were merged with standardized herbal compound data. Compounds were strictly screened according to pharmacological characteristics: highly toxic diester-type alkaloids, saccharides, amino acids, basic organic acids and corresponding metabolites, as well as endogenous metabolites and common nutrients were excluded due to non-specific therapeutic effects or potential pathogenicity. In contrast, phenolic acids, flavonoids/isoflavonoids, triterpenic acids/saponins, paeoniflorin derivatives, monoester/amine alcohol-type aconitines, and gingerols were retained, which possess well-documented heart failure-related activities, including anti-myocardial remodeling, anti-oxidation, anti-inflammation, improved myocardial energy metabolism, and cardiomyocyte protection. After manual annotation filtering, redundant fields and duplicate compounds were removed to generate the final standardized candidate active compound dataset and summarize the quantity of eligible herbal ingredients.\n\ncompounds_properties_filtered &lt;- compounds_properties_manu %&gt;%\n  dplyr::filter(Drop!=\"Yes\") %&gt;%\n  dplyr::select(-c(原因1,原因2,Compound.Toxic.Chinese,Compound.Toxic.English,Drop,Compound.Category.Chinese,Compound.Name.Chinese)) %&gt;%\n  dplyr::rename(Compound.Name = Compound.Name.English,\n                Compound.Category = Compound.Category.English) %&gt;%\n  mutate(across(where(is.character),trimws)) %&gt;%\n  distinct(Herb.Name.Chinese,CID,.keep_all = TRUE) %&gt;%\n  distinct(Herb.Name.Chinese,Compound.Name,.keep_all = TRUE)\n\nsave(compounds_properties_filtered,file = \"../data/01compounds/compounds_properties_filtered.Rdata\")\nopenxlsx::write.xlsx(compounds_properties_filtered,\"../data/01compounds/compounds_properties_filtered.xlsx\")",
+    "crumbs": [
+      "01. Active Ingredients"
+    ]
+  },
+  {
+    "objectID": "scripts/01_herb_compounds.html#pubchem-based-compound-property-retrieval",
+    "href": "scripts/01_herb_compounds.html#pubchem-based-compound-property-retrieval",
+    "title": "01. Active Ingredients",
+    "section": "2.7 PubChem-Based Compound Property Retrieval",
+    "text": "2.7 PubChem-Based Compound Property Retrieval\nThe finalized candidate active compound dataset was loaded, and invalid and duplicate PubChem CIDs were removed after standardized cleaning. A batch parallel query strategy was adopted to efficiently retrieve core physicochemical descriptors from the PubChem database, including IUPAC name, molecular formula, molecular weight, SMILES, InChI, and InChIKey. Acquired chemical information was matched and integrated with curated herbal compound data. The dataset was standardized, field-unified, and deduplicated to construct the complete and definitive candidate compound information dataset for subsequent network pharmacology analysis.\n\n# Clear environment and load utilities\nrm(list = ls())\nsource(\"../scripts/utils.R\")\n\n# Load preprocessed compound properties\nload(\"../data/01compounds/compound_properties_final.Rdata\")\n\n# Clean CID, trim whitespace, deduplicate by herb and CID\ncompounds_pubchem &lt;- compound_properties_final %&gt;% \n  mutate(CID = clean_cids(CID)) %&gt;%\n  mutate(across(where(is.character), trimws)) %&gt;%\n  dplyr::filter(!is.na(CID)) %&gt;%\n  distinct(Herb.Name.Chinese, CID, .keep_all = TRUE)\n\n# Define chemical properties to retrieve from PubChem\nproperties &lt;- c(\"IUPACName\", \"MolecularFormula\", \"MolecularWeight\", \n                \"SMILES\", \"InChI\", \"InChIKey\")\nbatch_size &lt;- 20\n\n# Prepare unique CIDs and split into batches for API rate limiting\ncompounds_pubchem$CID &lt;- clean_cids(as.character(compounds_pubchem$CID))\nunique_cids &lt;- as.character(unique(compounds_pubchem$CID))\n\ncid_batches &lt;- split(unique_cids, ceiling(seq_along(unique_cids) / batch_size))\n\n# Set up parallel processing (leave one core free)\nplan(multisession, workers = availableCores() - 1)  \n\n# Fetch chemical info for all batches with progress bar\nwith_progress({\n  p &lt;- progressor(steps = length(cid_batches))\n  chem_info_df &lt;- future_map_dfr(cid_batches, function(batch) {\n    p()\n    fetch_batch(properties, batch)\n  })\n})\nfuture::plan(\"sequential\") \n\nsave(compounds_pubchem,\"../data/01compounds/compounds_pubchem.Rdata\")\n\n\nload(\"../data/01compounds/compounds.Rdata\")\n\n# Merge compound metadata with retrieved chemical info\ncompounds_final &lt;- compounds_pubchem %&gt;%\n  left_join(chem_info_df, by = \"CID\") %&gt;%\n  dplyr::select(Herb.Name.Chinese, Herb.Name.Pinyin, Herb.Name.English, \n                Herb.Name.Latin, Compound.Name, IUPACName, Compound.Category, \n                MolecularFormula, MolecularWeight, CID, SMILES, InChI, InChIKey) %&gt;%\n  mutate(across(where(is.character), trimws))\n\n# Count number of distinct herbs per CID (compound)\ncompound_sharing_stats &lt;- compounds_final %&gt;%\n  distinct(Herb.Name.Chinese, CID) %&gt;%   # each herb-CID pair once\n  group_by(CID) %&gt;%\n  summarise(Herb_Count = n(), \n            Herbs = paste(unique(Herb.Name.Chinese), collapse = \", \")) %&gt;%\n  filter(Herb_Count &gt;= 2) %&gt;%            # keep only compounds appearing in at least 2 herbs\n  arrange(desc(Herb_Count))\n\n# Save final dataset as RData and Excel\nsave(compounds_final, compound_sharing_stats, file = \"../data/01compounds/compounds_final.Rdata\")\nopenxlsx::write.xlsx(compounds_final, \"../data/01compounds/compounds_final.xlsx\")",
+    "crumbs": [
+      "01. Active Ingredients"
+    ]
+  },
+  {
+    "objectID": "scripts/03_disease_targets.html",
+    "href": "scripts/03_disease_targets.html",
+    "title": "03 Disease Target Screening",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse)\n\n\n2 Global Parameters\ngeneCards_score &lt;- 5 # Screening threshold\n\n\n3 Data Import\n\n\n4 Import HFrEF target data from GeneCards, OMIM, DisGeNET, TTD\n\n\n5 Data Analysis\n\n\n6 1. Expand HFrEF disease keywords and synonyms\n\n\n7 2. Aggregate and deduplicate multi-database disease targets\n\n\n8 3. Filter targets based on GeneCards score threshold\n\n\n9 4. Standardize final disease target pool\n\n\n10 Result Export\n\n\n11 Output standardized HFrEF disease target dataset\n\n\n12 Result Description\n\n\n13 Record retrieval strategy, screening criteria and database specification",
+    "crumbs": [
+      "03 Disease Target Screening"
+    ]
+  },
+  {
+    "objectID": "scripts/05_ppi_hubgenes.html",
+    "href": "scripts/05_ppi_hubgenes.html",
+    "title": "05 PPI Network and Hub Gene Identification",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(STRINGdb) library(igraph)\n\n\n2 Global Parameters\nppi_score &lt;- 0.7 # PPI confidence score degree_cutoff &lt;- 2 k_core &lt;- 2\n\n\n3 Data Import\n\n\n4 Import intersecting drug-disease target genes\n\n\n5 Data Analysis\n\n\n6 1. Obtain protein-protein interaction data from STRING\n\n\n7 2. Remove low-confidence interactions and isolated nodes\n\n\n8 3. MCODE module clustering analysis\n\n\n9 4. Screen hub genes via Degree and MCC algorithm intersection\n\n\n10 Result Export\n\n\n11 Output PPI network data and final hub gene list\n\n\n12 Result Description\n\n\n13 Explain PPI filtering parameters and hub gene selection basis",
+    "crumbs": [
+      "05 PPI Network and Hub Gene Identification"
+    ]
+  },
+  {
+    "objectID": "scripts/07_geo_preprocess.html",
+    "href": "scripts/07_geo_preprocess.html",
+    "title": "07 GEO Dataset Acquisition and Preprocessing",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(GEOquery) library(sva) library(limma)\n\n\n2 Global Parameters\n\n\n3 Dataset assignment and batch correction parameters\n\n\n4 Data Download & Import\n\n\n5 Bulk download specified GSE datasets\n\n\n6 Data Analysis\n\n\n7 1. Extract expression matrix and sample annotation information\n\n\n8 2. Standardization and missing value processing\n\n\n9 3. Batch effect correction via SVA\n\n\n10 4. Classify count matrix, WGCNA matrix and validation matrix\n\n\n11 5. Divide training set, internal validation set and external validation set\n\n\n12 Result Export\n\n\n13 Output standardized expression matrix and sample grouping file\n\n\n14 Result Description\n\n\n15 Explain dataset functions and preprocessing quality control standards",
+    "crumbs": [
+      "07 GEO Dataset Acquisition and Preprocessing"
+    ]
+  },
+  {
+    "objectID": "scripts/09_wgcna_analysis.html",
+    "href": "scripts/09_wgcna_analysis.html",
+    "title": "09 Weighted Gene Co-expression Network Analysis",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(WGCNA)\n\n\n2 Global Parameters\n\n\n3 Soft threshold and module merging parameters\n\n\n4 Data Import\n\n\n5 Import cleaned expression matrix and clinical trait data\n\n\n6 Data Analysis\n\n\n7 1. Sample clustering and outlier removal\n\n\n8 2. Optimal soft threshold selection\n\n\n9 3. Gene co-expression module identification\n\n\n10 4. Module-trait correlation analysis\n\n\n11 5. Core gene screening of key modules\n\n\n12 Visualization\n\n\n13 Module clustering tree, trait correlation heatmap\n\n\n14 Result Export\n\n\n15 Output WGCNA module gene list and statistical results\n\n\n16 Result Description\n\n\n17 Explain module screening criteria and trait association mechanism",
+    "crumbs": [
+      "09 Weighted Gene Co-expression Network Analysis"
+    ]
+  },
+  {
+    "objectID": "scripts/11_consensus_cluster.html",
+    "href": "scripts/11_consensus_cluster.html",
+    "title": "11 Consensus Clustering Analysis",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(ConsensusClusterPlus)\n\n\n2 Global Parameters\nmax_k &lt;- 9\n\n\n3 Data Import\n\n\n4 Import core gene expression matrix\n\n\n5 Data Analysis\n\n\n6 1. Consensus clustering computation\n\n\n7 2. Optimal k-value determination via silhouette coefficient\n\n\n8 3. Immune and pathway difference analysis among subtypes\n\n\n9 Visualization\n\n\n10 Clustering heatmap, consensus curve, subtype difference plot\n\n\n11 Result Export\n\n\n12 Output sample typing results and subtype differential statistics\n\n\n13 Result Description\n\n\n14 Explain optimal typing basis and disease heterogeneity",
+    "crumbs": [
+      "11 Consensus Clustering Analysis"
+    ]
+  },
+  {
+    "objectID": "scripts/13_scrna_analysis.html",
+    "href": "scripts/13_scrna_analysis.html",
+    "title": "13 Single-Cell RNA Sequencing Analysis",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(Seurat)\n\n\n2 Global Parameters\n\n\n3 Quality control threshold and clustering resolution\n\n\n4 Data Import\n\n\n5 Import single-cell GSE dataset\n\n\n6 Data Analysis\n\n\n7 1. Single-cell data quality control and low-quality cell filtering\n\n\n8 2. Standardization, PCA dimensionality reduction and UMAP clustering\n\n\n9 3. Cell subtype annotation\n\n\n10 4. Subtype differential analysis and core gene localization\n\n\n11 5. Pseudotime trajectory analysis\n\n\n12 Visualization\n\n\n13 UMAP clustering plot, trajectory plot, gene distribution plot\n\n\n14 Result Export\n\n\n15 Output single-cell annotation results and gene localization statistics\n\n\n16 Result Description\n\n\n17 Explain cell annotation standards and trajectory mechanism",
+    "crumbs": [
+      "13 Single-Cell RNA Sequencing Analysis"
+    ]
+  },
+  {
+    "objectID": "scripts/15_mr_causality.html",
+    "href": "scripts/15_mr_causality.html",
+    "title": "15 MR Causal Inference Analysis",
+    "section": "",
+    "text": "1 Package Loading\nlibrary(tidyverse) library(TwoSampleMR)\n\n\n2 Global Parameters\nld_r2 &lt;- 0.001\n\n\n3 Data Import\n\n\n4 Import gene exposure dataset and HFrEF outcome dataset\n\n\n5 Data Analysis\n\n\n6 1. SNP filtering and linkage disequilibrium pruning\n\n\n7 2. Causal estimation via IVW, MR-Egger and weighted median methods\n\n\n8 3. Heterogeneity test and horizontal pleiotropy test\n\n\n9 4. Sensitivity analysis\n\n\n10 Visualization\n\n\n11 Scatter plot, forest plot, funnel plot\n\n\n12 Result Export\n\n\n13 Output MR causal inference statistical table\n\n\n14 Result Description\n\n\n15 Explain MR parameters and evidence grading standards",
+    "crumbs": [
+      "15 MR Causal Inference Analysis"
+    ]
+  },
+  {
+    "objectID": "scripts/17_results_summary.html",
+    "href": "scripts/17_results_summary.html",
+    "title": "17 Global Result Summary",
+    "section": "",
+    "text": "1 Module Description\nNo additional analysis code. Aggregate statistical tables and visualization figures from module 01 to 16. Unify global figure size, color scheme and font specifications. Integrate comprehensive research results for overall mechanism summary and thesis result presentation.",
+    "crumbs": [
+      "17 Global Result Summary"
+    ]
+  }
+]

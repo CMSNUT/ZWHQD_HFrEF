@@ -1,0 +1,34 @@
+---
+title: "04 Drug-Ingredient-Target Network Construction"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading 
+library(tidyverse)
+
+# Global Parameters 
+top_ratio <- 0.1 # Top 10% topological nodes
+
+# Data Import 
+# Import drug target and disease target datasets
+
+# Data Analysis 
+# 1. Match drug, ingredient and target relationships
+# 2. Generate standard input files for Cytoscape
+# 3. Calculate topological parameters and screen core nodes
+
+# Result Export 
+# Output network node and edge files for visualization
+
+# Result Description 
+# Illustrate network construction rules and topological screening standards

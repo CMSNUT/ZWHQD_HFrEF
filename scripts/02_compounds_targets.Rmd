@@ -1,0 +1,56 @@
+---
+title: "02. Ingredient Targets Prediction"
+---
+
+```{r setup, includeFALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+# Global settings (avoid timeout/garbled text)
+options(timeout = 36000)                # The overtime has been extended to 10 hours
+options(stringsAsFactors = FALSE)     # Disable automatic factor conversion
+options(download.file.method = "curl")
+
+# Disable SSL verification
+options(download.file.extra = "-k -L")
+
+# Obtain the complete list of repositories recommended by Bioconductor, including CRAN and Bioconductor
+my_repos <- BiocManager::repositories()
+
+# Configure CRAN 
+my_repos["CRAN"] <- "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"
+
+# Set the repository options for R
+options(repos = my_repos)
+```
+
+# Package Loading
+```{r}
+library(tidyverse)
+library(openxlsx)
+library(data.table)
+library(kableExtra)
+```
+
+# Acquisition of Potential Targets of Active Compounds
+
+We screened and identified potential therapeutic targets for the active ingredients of Zhenwu Huangqi Decoction (ZWHQD) using three authoritative bioinformatics databases, including BATMAN-TCM (http://bionet.ncpsb.org.cn/batman-tcm/), Super-Pred (https://prediction.charite.de/), and SwissTargetPrediction (https://www.swisstargetprediction.ch/). We acquired validated targets of qualified active compounds from BATMAN-TCM via corresponding PubChem compound IDs, and also retained predicted targets with high-confidence prediction scores no less than 0.84. We submitted the SMILES strings of eligible compounds to Super-Pred for target prediction, We submitted the SMILES strings of eligible compounds to Super-Pred for target prediction, which yielded known targets, and retained candidate targets with a probability ≥ 70% and model accuracy ≥ 90%. Similarly, we queried SwissTargetPrediction with the same SMILES structures and collected all predictive targets with a threshold score of 0.1 or above.
+
+We then standardized all collected target identifiers against canonical entries in the UniProt database (https://www.uniprot.org/) to unify cross-database gene annotation specifications and resolve inherent data heterogeneity. Finally, we merged experimentally verified and in silico predicted targets to establish a comprehensive candidate dataset for bioactive ingredients of ZWHQD. With this refined dataset, we conducted systematic network pharmacology analyses to elucidate the molecular mechanisms underlying the therapeutic efficacy of Zhenwu Huangqi Decoction (ZWHQD). 
+
+# Import standardized active ingredient list
+# Import raw target prediction data from multiple databases
+
+#  Data Analysis 
+# 1. Merge target data from multi-database sources
+# 2. Filter human-derived targets
+# 3. HGNC gene name standardization and deduplication
+# 4. Credibility classification of predicted targets
+
+# Results

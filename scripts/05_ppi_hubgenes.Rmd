@@ -1,0 +1,39 @@
+---
+title: "05 PPI Network and Hub Gene Identification"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(STRINGdb)
+library(igraph)
+
+# Global Parameters
+ppi_score <- 0.7 # PPI confidence score
+degree_cutoff <- 2
+k_core <- 2
+
+# Data Import
+# Import intersecting drug-disease target genes
+
+# Data Analysis
+# 1. Obtain protein-protein interaction data from STRING
+# 2. Remove low-confidence interactions and isolated nodes
+# 3. MCODE module clustering analysis
+# 4. Screen hub genes via Degree and MCC algorithm intersection
+
+# Result Export
+# Output PPI network data and final hub gene list
+
+# Result Description
+# Explain PPI filtering parameters and hub gene selection basis

@@ -1,0 +1,38 @@
+---
+title: "11 Consensus Clustering Analysis"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(ConsensusClusterPlus)
+
+# Global Parameters
+max_k <- 9
+
+# Data Import
+# Import core gene expression matrix
+
+# Data Analysis
+# 1. Consensus clustering computation
+# 2. Optimal k-value determination via silhouette coefficient
+# 3. Immune and pathway difference analysis among subtypes
+
+# Visualization
+# Clustering heatmap, consensus curve, subtype difference plot
+
+# Result Export
+# Output sample typing results and subtype differential statistics
+
+# Result Description
+# Explain optimal typing basis and disease heterogeneity

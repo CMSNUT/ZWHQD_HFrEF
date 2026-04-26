@@ -1,0 +1,40 @@
+---
+title: "09 Weighted Gene Co-expression Network Analysis"
+---
+
+```{r setup, include=FALSE}
+# Global rendering configuration for the whole project
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+```
+
+# Package Loading
+library(tidyverse)
+library(WGCNA)
+
+# Global Parameters
+# Soft threshold and module merging parameters
+
+# Data Import
+# Import cleaned expression matrix and clinical trait data
+
+# Data Analysis
+# 1. Sample clustering and outlier removal
+# 2. Optimal soft threshold selection
+# 3. Gene co-expression module identification
+# 4. Module-trait correlation analysis
+# 5. Core gene screening of key modules
+
+# Visualization
+# Module clustering tree, trait correlation heatmap
+
+# Result Export
+# Output WGCNA module gene list and statistical results
+
+# Result Description
+# Explain module screening criteria and trait association mechanism
