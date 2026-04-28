@@ -195,7 +195,7 @@ unique_cids <- as.character(unique(compounds_pubchem$CID))
 cid_batches <- split(unique_cids, ceiling(seq_along(unique_cids) / batch_size))
 
 # Set up parallel processing (leave one core free)
-plan(multisession, workers = availableCores() - 1)  
+plan(multisession, workers = availableCores() - 2)  
 
 # Fetch chemical info for all batches with progress bar
 with_progress({
@@ -207,7 +207,7 @@ with_progress({
 })
 future::plan("sequential") 
 
-save(compounds_pubchem,"../data/01compounds/compounds_pubchem.Rdata")
+save(compounds_pubchem,file = "../data/01compounds/compounds_pubchem.Rdata")
 ```
 
 

@@ -36,6 +36,9 @@ library(tidyverse)
 library(openxlsx)
 library(data.table)
 library(kableExtra)
+
+library(org.Hs.eg.db)
+library(AnnotationDbi)
 ```
 
 # Acquisition of Potential Targets of Active Compounds
@@ -44,13 +47,158 @@ We screened and identified potential therapeutic targets for the active ingredie
 
 We then standardized all collected target identifiers against canonical entries in the UniProt database (https://www.uniprot.org/) to unify cross-database gene annotation specifications and resolve inherent data heterogeneity. Finally, we merged experimentally verified and in silico predicted targets to establish a comprehensive candidate dataset for bioactive ingredients of ZWHQD. With this refined dataset, we conducted systematic network pharmacology analyses to elucidate the molecular mechanisms underlying the therapeutic efficacy of Zhenwu Huangqi Decoction (ZWHQD). 
 
-# Import standardized active ingredient list
-# Import raw target prediction data from multiple databases
+# Import raw target prediction data from BATMAN-TCM
+```{r}
+rm(list = ls())
+source("utils.R")
 
-#  Data Analysis 
-# 1. Merge target data from multi-database sources
-# 2. Filter human-derived targets
-# 3. HGNC gene name standardization and deduplication
-# 4. Credibility classification of predicted targets
+load("../data/01compounds/compounds_final.Rdata")
+load("../../tcm_datasets/data/batman/batman_target_known.Rdata")
+load("../../tcm_datasets/data/batman/batman_target_pred.Rdata")
+
+# Known targets of ZWHQD ingredients----
+compound_target_known_batman <- compounds_final %>%
+  left_join(batman_target_known, by = "CID",relationship = "many-to-many") %>%
+  dplyr::select(-ends_with(".x")) %>%
+  rename_with(~ str_replace(., "\\.y$", ""), ends_with(".y")) %>%
+  distinct(Herb.Name.Chinese, CID, Uniprot.ID, .keep_all = TRUE) %>%
+  mutate(across(where(is.character), trimws)) %>%
+  dplyr::filter(!is.na(Symbol)) 
+
+
+# prediction targets of ZWHQD ingredients(Score>=0.84)----
+compound_target_pred_batman <- compounds_final %>%
+  left_join(batman_target_pred, by = "CID",relationship = "many-to-many") %>%
+  dplyr::select(-ends_with(".x")) %>%
+  rename_with(~ str_replace(., "\\.y$", ""), ends_with(".y")) %>%
+  distinct(Herb.Name.Chinese, CID, Uniprot.ID, .keep_all = TRUE) %>%
+  mutate(across(where(is.character), trimws)) %>%
+  dplyr::filter(!is.na(Symbol)) %>%
+  dplyr::filter(Score>=0.84)
+
+save(compound_target_known_batman,compound_target_pred_batman,file = "../data/02compounds_targets/compound_target_batman.Rdata")
+```
+
+# Import raw target prediction data from Super-Pred
+```{r}
+rm(list = ls())
+source("utils.R")
+
+load("../data/01compounds/compounds_final.Rdata")
+load("../../tcm_datasets/data/uniprot/uniprotkb_human_reviewed_with_sequence.Rdata")
+
+result <- read_compound_target("../data/02compounds_targets/super/known") %>%
+  dplyr::select(CID,Protein.name = `Target Name`,ChEMBL.ID = `ChEMBL-ID`,Uniprot.ID = `UniProt ID`,PDB.ID = `PDB Visualization`) %>%
+  mutate(across(where(is.character), trimws))
+
+result_super <- result %>%
+  left_join(uniprotkb_human_reviewed_with_sequence,
+            by = c("Uniprot.ID"="Entry")) %>%
+  mutate(across(where(is.character), trimws)) %>%
+  dplyr::filter(!is.na(Gene.Names.primary)) %>%
+  mutate(CID = as.numeric(CID),Symbol = Gene.Names.primary) %>%
+  arrange(CID,Symbol,Uniprot.ID) %>%
+  mutate(CID = as.character(CID)) %>%
+  distinct(CID,Uniprot.ID,.keep_all = TRUE) 
+
+compound_target_known_super <- compounds_final %>%
+  left_join(result_super, by = "CID",relationship = "many-to-many") %>%
+  distinct(Herb.Name.Chinese, CID, Uniprot.ID, .keep_all = TRUE) %>%
+  dplyr::filter(!is.na(Symbol)) %>%
+  mutate(CID = as.numeric(CID)) %>%
+  arrange(Herb.Name.Pinyin, CID,Symbol) %>%
+  mutate(CID = as.character(CID)) 
+
+# Predicted targets
+result <- read_compound_target("../data/02compounds_targets/super") %>%
+  dplyr::filter(Probability > 70 & `Model accuracy` > 90) %>%
+  dplyr::select(CID,Protein.name = `Target Name`,ChEMBL.ID = `ChEMBL-ID`,Uniprot.ID = `UniProt ID`,PDB.ID = `PDB Visualization`)%>%
+  mutate(across(where(is.character), trimws))
+
+result_super <- result %>%
+  left_join(uniprotkb_human_reviewed_with_sequence,
+            by = c("Uniprot.ID"="Entry"),relationship =
+              "many-to-many") %>%
+  mutate(across(where(is.character), trimws)) %>%
+  dplyr::filter(!is.na(Gene.Names.primary)) %>%
+  mutate(CID = as.numeric(CID),Symbol = Gene.Names.primary) %>%
+  arrange(CID,Symbol,Uniprot.ID) %>%
+  mutate(CID = as.character(CID)) %>%
+  distinct(CID,Uniprot.ID,.keep_all = TRUE) 
+
+compound_target_pred_super <- compounds_final %>%
+  left_join(result_super, by = "CID",relationship = "many-to-many") %>%
+  distinct(Herb.Name.Chinese, CID, Uniprot.ID, .keep_all = TRUE) %>%
+  dplyr::filter(!is.na(Symbol)) %>%
+  mutate(CID = as.numeric(CID)) %>%
+  arrange(Herb.Name.Pinyin, CID,Symbol) %>%
+  mutate(CID = as.character(CID)) 
+
+save(compound_target_known_super,compound_target_pred_super,file = "../data/02compounds_targets/compound_target_super.Rdata")
+```
+
+# Import raw target prediction data from SwissTargetsPrediction
+```{r}
+rm(list = ls())
+source("utils.R")
+
+load("../data/01compounds/compounds_final.Rdata")
+load("../../tcm_datasets/data/uniprot/uniprotkb_human_reviewed_with_sequence.Rdata")
+
+result <- read_compound_target("../data/02compounds_targets/swiss") %>% 
+  dplyr::filter(`Probability*` > 0.10) %>%
+  mutate(across(where(is.character), trimws)) %>%
+  separate_rows(`Common name`, `Uniprot ID`, sep = " ") %>%
+  mutate(CID = clean_cids(CID),
+         Uniprot.ID = gsub("[[:space:]]", "", as.character(`Uniprot ID`)),
+         Symbol = gsub("[[:space:]]", "", as.character(`Common name`))) %>%
+  dplyr::select(CID,Uniprot.ID) %>%
+  distinct(CID,Uniprot.ID,.keep_all = TRUE) %>%
+  left_join(uniprotkb_human_reviewed_with_sequence,
+            by = c("Uniprot.ID"="Entry"),relationship = "many-to-many") %>%
+  dplyr::filter(!is.na(Gene.Names.primary)) %>%
+  mutate(CID = as.numeric(CID),Symbol = Gene.Names.primary) %>%
+  arrange(CID,Symbol,Uniprot.ID) %>%
+  mutate(CID = as.character(CID)) %>%
+  mutate(across(where(is.character), trimws)) %>%
+  distinct(CID,Uniprot.ID,.keep_all = TRUE) 
+
+result_swiss <- compounds_final %>%
+  left_join(result, by = "CID",relationship = "many-to-many") %>%
+  dplyr::filter(!is.na(Gene.Names.primary)) %>%
+  distinct(Herb.Name.Chinese, CID, Symbol, .keep_all = TRUE) %>%
+  mutate(across(where(is.character), trimws)) %>%
+  mutate(CID = clean_cids(CID),
+         Symbol = gsub("[[:space:]]", "", as.character(Symbol))) 
+
+compound_target_pred_swiss <- result_swiss
+
+save(compound_target_pred_swiss,file = "../data/02compounds_targets/compound_target_pred_swiss.Rdata")
+```
 
 # Results
+```{r}
+rm(list = ls())
+
+# BATMAN-TCM
+load("../data/02compounds_targets/compound_target_batman.Rdata")
+
+cat("\nNumber of components with known targets：", length(unique(compound_target_known_batman$CID)),"\n")
+cat("\nNumber of known targets：", length(unique(compound_target_known_batman$Uniprot.ID)),"\n")
+
+cat("Number of components with prediction targets from BATMAN-TCM：", length(unique(compound_target_pred_batman$CID)),"\n")
+cat("Number of prediction targets from BATMAN-TCM：", length(unique(compound_target_pred_batman$Uniprot.ID)),"\n")
+
+# Super-Pred
+load("../data/02compounds_targets/compound_target_super.Rdata")
+cat("\nNumber of components with known targets from Super-Pred：", length(unique(compound_target_known_super$CID)),"\n")
+cat("\nNumber of known targets from Super-Pred：", length(unique(compound_target_known_super$Uniprot.ID)),"\n")
+
+cat("\nNumber of components with prediction targets from Super-Pred：", length(unique(compound_target_pred_super$CID)),"\n")
+cat("\nNumber of prediction targets from Super-Pred：", length(unique(compound_target_pred_super$Uniprot.ID)),"\n")
+
+# SwissTargetsPrediction
+load("../data/02compounds_targets/compound_target_pred_swiss.Rdata")
+cat("Number of components with prediction targets from SwissTargetsPrediction：", length(unique(compound_target_pred_swiss$CID)),"\n")
+cat("Number of prediction targets from SwissTargetsPrediction：", length(unique(compound_target_pred_swiss$Uniprot.ID)),"\n")
+```
