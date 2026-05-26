@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Kun Hou">
+<meta name="author" content="Supervisor’s name">
+
+<title>Part 3: Mechanism exploration of ZWHQD against HFrEF – ZWHQD for HFrEF</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">ZWHQD for HFrEF</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../methods.html"> 
+<span class="menu-text">Methods</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../results.html"> 
+<span class="menu-text">Results</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../manuscript.html"> 
+<span class="menu-text">Manuscript</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../supplementary.html"> 
+<span class="menu-text">Supplementary</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-analysis" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Analysis</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-analysis">    
+        <li>
+    <a class="dropdown-item" href="../analysis/Part_1_Data_acquisition_and_preprocessing.html">
+ <span class="dropdown-text">Part 1: Data acquisition and preprocessing</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../analysis/Part_2_Screening_of_HFrEF_related_genes.html">
+ <span class="dropdown-text">Part 2: Screening of HFrEF-related genes</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../analysis/Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.html">
+ <span class="dropdown-text">Part 3: Mechanism exploration of ZWHQD against HFrEF</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../analysis/Part_4_Mechanism_validation_via_bioinformatics_and_docking.html">
+ <span class="dropdown-text">Part 4: Mechanism validation via bioinformatics and docking</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../analysis/Part_5_TF_miRNA_regulatory_network.html">
+ <span class="dropdown-text">Part 5: TF-miRNA regulatory network</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#identification-of-candidate-targets" id="toc-identification-of-candidate-targets" class="nav-link active" data-scroll-target="#identification-of-candidate-targets"><span class="header-section-number">1</span> Identification of Candidate Targets</a>
+  <ul>
+  <li><a href="#load-packages" id="toc-load-packages" class="nav-link" data-scroll-target="#load-packages"><span class="header-section-number">1.1</span> Load Packages</a></li>
+  <li><a href="#candidate-genes" id="toc-candidate-genes" class="nav-link" data-scroll-target="#candidate-genes"><span class="header-section-number">1.2</span> Candidate Genes</a></li>
+  </ul></li>
+  <li><a href="#functional-enrichment-analysis" id="toc-functional-enrichment-analysis" class="nav-link" data-scroll-target="#functional-enrichment-analysis"><span class="header-section-number">2</span> Functional Enrichment Analysis</a>
+  <ul>
+  <li><a href="#load-packages-1" id="toc-load-packages-1" class="nav-link" data-scroll-target="#load-packages-1"><span class="header-section-number">2.1</span> Load packages</a></li>
+  <li><a href="#step-1-symbol-to-entrezid" id="toc-step-1-symbol-to-entrezid" class="nav-link" data-scroll-target="#step-1-symbol-to-entrezid"><span class="header-section-number">2.2</span> Step 1: SYMBOL to ENTREZID</a></li>
+  <li><a href="#step-2-go" id="toc-step-2-go" class="nav-link" data-scroll-target="#step-2-go"><span class="header-section-number">2.3</span> Step 2: GO</a></li>
+  <li><a href="#step-3-kegg" id="toc-step-3-kegg" class="nav-link" data-scroll-target="#step-3-kegg"><span class="header-section-number">2.4</span> Step 3: KEGG</a></li>
+  </ul></li>
+  <li><a href="#immune-infiltration-profiling" id="toc-immune-infiltration-profiling" class="nav-link" data-scroll-target="#immune-infiltration-profiling"><span class="header-section-number">3</span> Immune Infiltration Profiling</a></li>
+  <li><a href="#herb-ingredient-target-hit-network" id="toc-herb-ingredient-target-hit-network" class="nav-link" data-scroll-target="#herb-ingredient-target-hit-network"><span class="header-section-number">4</span> Herb-Ingredient-Target (HIT) Network</a></li>
+  <li><a href="#ppi-network" id="toc-ppi-network" class="nav-link" data-scroll-target="#ppi-network"><span class="header-section-number">5</span> PPI Network</a></li>
+  <li><a href="#identification-of-hub-genes" id="toc-identification-of-hub-genes" class="nav-link" data-scroll-target="#identification-of-hub-genes"><span class="header-section-number">6</span> Identification of Hub Genes</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+    </div>
+<!-- main -->
+<main class="content column-page-right" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Part 3: Mechanism exploration of ZWHQD against HFrEF</h1>
+</div>
+
+
+<div class="quarto-title-meta-author column-page-right">
+  <div class="quarto-title-meta-heading">Authors</div>
+  <div class="quarto-title-meta-heading">Affiliations</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">Kun Hou <a href="mailto:xxx@163.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/0000-xxxx-xxxx-xxxx" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            Health Science Center, Xi’an Jiaotong University
+          </p>
+        <p class="affiliation">
+            Hanzhong Traditional Chinese Medicine Hospital
+          </p>
+      </div>
+    <div class="quarto-title-meta-contents">
+    <p class="author">Supervisor’s name <a href="mailto:xxx@163.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/0000-xxxx-xxxx-xxxx" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            Health Science Center, Xi’an Jiaotong University
+          </p>
+        <p class="affiliation">
+            The First Affiliated Hospital of Xi’an Jiaotong University
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta column-page-right">
+
+      
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<hr>
+<section id="identification-of-candidate-targets" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Identification of Candidate Targets</h1>
+<section id="load-packages" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="load-packages"><span class="header-section-number">1.1</span> Load Packages</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(ggvenn)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">library</span>(openxlsx)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="candidate-genes" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="candidate-genes"><span class="header-section-number">1.2</span> Candidate Genes</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>())</span>
+<span id="cb2-2"><a href="#cb2-2"></a></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="fu">load</span>(<span class="st">"../data/processed/geo/GSE141910/degs_results.Rdata"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4"></a></span>
+<span id="cb2-5"><a href="#cb2-5"></a>deg_sig <span class="ot">&lt;-</span> deg_all <span class="sc">%&gt;%</span> <span class="fu">filter</span>(padj <span class="sc">&lt;</span> <span class="fl">0.05</span>, <span class="fu">abs</span>(log2FoldChange) <span class="sc">&gt;</span> lfc)</span>
+<span id="cb2-6"><a href="#cb2-6"></a></span>
+<span id="cb2-7"><a href="#cb2-7"></a>deg_genes <span class="ot">&lt;-</span> <span class="fu">rownames</span>(deg_sig) </span>
+<span id="cb2-8"><a href="#cb2-8"></a></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="fu">load</span>(<span class="st">"../data/processed/tcm/14_compound_target_final.RData"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10"></a></span>
+<span id="cb2-11"><a href="#cb2-11"></a>herb_targets <span class="ot">&lt;-</span> <span class="fu">unique</span>(compound_target_final<span class="sc">$</span>Symbol)</span>
+<span id="cb2-12"><a href="#cb2-12"></a></span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="fu">load</span>(<span class="st">"../data/processed/geo/GSE141910/wgcna_candidates_genes.Rdata"</span>)</span>
+<span id="cb2-14"><a href="#cb2-14"></a></span>
+<span id="cb2-15"><a href="#cb2-15"></a><span class="co"># disease_genes: intersecting DEGs and WGCNA</span></span>
+<span id="cb2-16"><a href="#cb2-16"></a>disease_genes <span class="ot">&lt;-</span> <span class="fu">intersect</span>(deg_genes,wgcna_candidates_genes<span class="sc">$</span>Gene)</span>
+<span id="cb2-17"><a href="#cb2-17"></a></span>
+<span id="cb2-18"><a href="#cb2-18"></a><span class="co"># candidate_genes: intersecting herb_targets and disease_genes</span></span>
+<span id="cb2-19"><a href="#cb2-19"></a>candidate_genes <span class="ot">&lt;-</span><span class="fu">intersect</span>(herb_targets, disease_genes)</span>
+<span id="cb2-20"><a href="#cb2-20"></a></span>
+<span id="cb2-21"><a href="#cb2-21"></a>herb_targets_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Gene =</span> herb_targets) <span class="sc">%&gt;%</span></span>
+<span id="cb2-22"><a href="#cb2-22"></a>  <span class="fu">arrange</span>(Gene)</span>
+<span id="cb2-23"><a href="#cb2-23"></a></span>
+<span id="cb2-24"><a href="#cb2-24"></a>deg_genes_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Gene =</span> deg_genes) <span class="sc">%&gt;%</span></span>
+<span id="cb2-25"><a href="#cb2-25"></a>  <span class="fu">arrange</span>(Gene)</span>
+<span id="cb2-26"><a href="#cb2-26"></a></span>
+<span id="cb2-27"><a href="#cb2-27"></a>wgcna_genes_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Gene =</span> wgcna_candidates_genes<span class="sc">$</span>Gene) <span class="sc">%&gt;%</span></span>
+<span id="cb2-28"><a href="#cb2-28"></a>  <span class="fu">arrange</span>(Gene)</span>
+<span id="cb2-29"><a href="#cb2-29"></a></span>
+<span id="cb2-30"><a href="#cb2-30"></a>disease_genes_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Gene =</span> disease_genes) <span class="sc">%&gt;%</span></span>
+<span id="cb2-31"><a href="#cb2-31"></a>  <span class="fu">arrange</span>(Gene)</span>
+<span id="cb2-32"><a href="#cb2-32"></a></span>
+<span id="cb2-33"><a href="#cb2-33"></a>candidate_genes_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Gene =</span> candidate_genes) <span class="sc">%&gt;%</span></span>
+<span id="cb2-34"><a href="#cb2-34"></a>  <span class="fu">arrange</span>(Gene)</span>
+<span id="cb2-35"><a href="#cb2-35"></a></span>
+<span id="cb2-36"><a href="#cb2-36"></a>gene_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb2-37"><a href="#cb2-37"></a>  <span class="at">DEGs =</span> deg_genes,</span>
+<span id="cb2-38"><a href="#cb2-38"></a>  <span class="st">`</span><span class="at">Herb targets</span><span class="st">`</span> <span class="ot">=</span> herb_targets,</span>
+<span id="cb2-39"><a href="#cb2-39"></a>  <span class="st">`</span><span class="at">WGCNA Genes</span><span class="st">`</span> <span class="ot">=</span> wgcna_candidates_genes<span class="sc">$</span>Gene</span>
+<span id="cb2-40"><a href="#cb2-40"></a>)</span>
+<span id="cb2-41"><a href="#cb2-41"></a></span>
+<span id="cb2-42"><a href="#cb2-42"></a>p <span class="ot">&lt;-</span> <span class="fu">ggvenn</span>(</span>
+<span id="cb2-43"><a href="#cb2-43"></a>  gene_list,</span>
+<span id="cb2-44"><a href="#cb2-44"></a>  <span class="at">fill_color =</span> <span class="fu">c</span>(<span class="st">"#F1948A"</span>, <span class="st">"blue"</span>,<span class="st">"#58D68D"</span>),</span>
+<span id="cb2-45"><a href="#cb2-45"></a>  <span class="at">stroke_color =</span> <span class="st">"white"</span>,</span>
+<span id="cb2-46"><a href="#cb2-46"></a>  <span class="at">stroke_size =</span> <span class="dv">1</span>,</span>
+<span id="cb2-47"><a href="#cb2-47"></a>  <span class="at">set_name_size =</span> <span class="dv">5</span>,</span>
+<span id="cb2-48"><a href="#cb2-48"></a>  <span class="at">text_size =</span> <span class="dv">5</span>,</span>
+<span id="cb2-49"><a href="#cb2-49"></a>  <span class="at">show_percentage =</span> <span class="cn">FALSE</span></span>
+<span id="cb2-50"><a href="#cb2-50"></a>) <span class="sc">+</span></span>
+<span id="cb2-51"><a href="#cb2-51"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">size=</span><span class="dv">10</span>))</span>
+<span id="cb2-52"><a href="#cb2-52"></a></span>
+<span id="cb2-53"><a href="#cb2-53"></a><span class="co"># save</span></span>
+<span id="cb2-54"><a href="#cb2-54"></a><span class="fu">ggsave</span>(<span class="st">"../results/figures/main/Figure_3C_Venn_Herb_DEG_WGCNA.pdf"</span>, p, <span class="at">width=</span><span class="dv">6</span>, <span class="at">height=</span><span class="dv">6</span>, <span class="at">dpi=</span><span class="dv">300</span>)</span>
+<span id="cb2-55"><a href="#cb2-55"></a><span class="fu">ggsave</span>(<span class="st">"../results/figures/main/Figure_3C_Venn_Herb_DEG_WGCNA.png"</span>, p, <span class="at">width=</span><span class="dv">6</span>, <span class="at">height=</span><span class="dv">6</span>, <span class="at">dpi=</span><span class="dv">300</span>)</span>
+<span id="cb2-56"><a href="#cb2-56"></a></span>
+<span id="cb2-57"><a href="#cb2-57"></a></span>
+<span id="cb2-58"><a href="#cb2-58"></a><span class="fu">save</span>(herb_targets_df, deg_genes_df, wgcna_genes_df,disease_genes_df, candidate_genes_df, <span class="at">file =</span> <span class="st">"../data/processed/network/herb_disease_genes.Rdata"</span>)</span>
+<span id="cb2-59"><a href="#cb2-59"></a></span>
+<span id="cb2-60"><a href="#cb2-60"></a><span class="fu">write.xlsx</span>(</span>
+<span id="cb2-61"><a href="#cb2-61"></a>  <span class="fu">list</span>(</span>
+<span id="cb2-62"><a href="#cb2-62"></a>    <span class="at">HerbTargets =</span> herb_targets_df,</span>
+<span id="cb2-63"><a href="#cb2-63"></a>    <span class="at">DEGs =</span> deg_genes_df,</span>
+<span id="cb2-64"><a href="#cb2-64"></a>    <span class="at">WGCNAGenes =</span> wgcna_genes_df,</span>
+<span id="cb2-65"><a href="#cb2-65"></a>    <span class="at">DiseaseGenes =</span> disease_genes_df,</span>
+<span id="cb2-66"><a href="#cb2-66"></a>    <span class="at">CandidateGenes =</span> candidate_genes_df</span>
+<span id="cb2-67"><a href="#cb2-67"></a>  ),</span>
+<span id="cb2-68"><a href="#cb2-68"></a>  <span class="st">"../results/tables/supplementary/Table_S5_herb_disease_targets.xlsx"</span></span>
+<span id="cb2-69"><a href="#cb2-69"></a>)</span>
+<span id="cb2-70"><a href="#cb2-70"></a></span>
+<span id="cb2-71"><a href="#cb2-71"></a>deg_candidate <span class="ot">&lt;-</span> deg_all[<span class="fu">rownames</span>(deg_all) <span class="sc">%in%</span> candidate_genes, ]</span>
+<span id="cb2-72"><a href="#cb2-72"></a> </span>
+<span id="cb2-73"><a href="#cb2-73"></a>deg_candidate<span class="sc">$</span>regulation <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(</span>
+<span id="cb2-74"><a href="#cb2-74"></a>  deg_candidate<span class="sc">$</span>log2FoldChange <span class="sc">&gt;=</span> lfc, <span class="st">"Up"</span>,</span>
+<span id="cb2-75"><a href="#cb2-75"></a>  <span class="fu">ifelse</span>(deg_candidate<span class="sc">$</span>log2FoldChange <span class="sc">&lt;=</span> <span class="sc">-</span>lfc, <span class="st">"Down"</span>, <span class="st">"NS"</span>)</span>
+<span id="cb2-76"><a href="#cb2-76"></a>)</span>
+<span id="cb2-77"><a href="#cb2-77"></a></span>
+<span id="cb2-78"><a href="#cb2-78"></a>deg_candidate<span class="sc">$</span>Gene <span class="ot">&lt;-</span> <span class="fu">rownames</span>(deg_candidate)</span>
+<span id="cb2-79"><a href="#cb2-79"></a></span>
+<span id="cb2-80"><a href="#cb2-80"></a>up_genes <span class="ot">&lt;-</span> deg_candidate<span class="sc">$</span>Gene[deg_candidate<span class="sc">$</span>regulation <span class="sc">==</span> <span class="st">"Up"</span>]</span>
+<span id="cb2-81"><a href="#cb2-81"></a>down_genes <span class="ot">&lt;-</span> deg_candidate<span class="sc">$</span>Gene[deg_candidate<span class="sc">$</span>regulation <span class="sc">==</span> <span class="st">"Down"</span>]</span>
+<span id="cb2-82"><a href="#cb2-82"></a></span>
+<span id="cb2-83"><a href="#cb2-83"></a><span class="fu">cat</span>(<span class="st">"Up genes: "</span>, <span class="fu">length</span>(up_genes), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb2-84"><a href="#cb2-84"></a><span class="fu">print</span>(up_genes)</span>
+<span id="cb2-85"><a href="#cb2-85"></a></span>
+<span id="cb2-86"><a href="#cb2-86"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Down genes: "</span>, <span class="fu">length</span>(down_genes), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb2-87"><a href="#cb2-87"></a><span class="fu">print</span>(down_genes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+</section>
+<section id="functional-enrichment-analysis" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Functional Enrichment Analysis</h1>
+<section id="load-packages-1" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="load-packages-1"><span class="header-section-number">2.1</span> Load packages</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">library</span>(clusterProfiler)</span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="fu">library</span>(org.Hs.eg.db)</span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="fu">library</span>(enrichplot)</span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="fu">library</span>(STRINGdb)</span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="fu">library</span>(ggvenn)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="step-1-symbol-to-entrezid" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="step-1-symbol-to-entrezid"><span class="header-section-number">2.2</span> Step 1: SYMBOL to ENTREZID</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>())</span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="fu">load</span>(<span class="st">"../data/processed/network/herb_disease_genes.Rdata"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3"></a></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="co"># candidate_genes</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>gene_id_map <span class="ot">&lt;-</span> <span class="fu">bitr</span>(</span>
+<span id="cb4-6"><a href="#cb4-6"></a>  <span class="at">geneID =</span> candidate_genes_df<span class="sc">$</span>Gene,</span>
+<span id="cb4-7"><a href="#cb4-7"></a>  <span class="at">fromType =</span> <span class="st">"SYMBOL"</span>,</span>
+<span id="cb4-8"><a href="#cb4-8"></a>  <span class="at">toType =</span> <span class="st">"ENTREZID"</span>,</span>
+<span id="cb4-9"><a href="#cb4-9"></a>  <span class="at">OrgDb =</span> org.Hs.eg.db</span>
+<span id="cb4-10"><a href="#cb4-10"></a>)</span>
+<span id="cb4-11"><a href="#cb4-11"></a>gene_entrez <span class="ot">&lt;-</span> gene_id_map<span class="sc">$</span>ENTREZID</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="step-2-go" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="step-2-go"><span class="header-section-number">2.3</span> Step 2: GO</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>go_enrich <span class="ot">&lt;-</span> <span class="fu">enrichGO</span>(</span>
+<span id="cb5-2"><a href="#cb5-2"></a>  <span class="at">gene =</span> gene_entrez,</span>
+<span id="cb5-3"><a href="#cb5-3"></a>  <span class="at">OrgDb =</span> org.Hs.eg.db,</span>
+<span id="cb5-4"><a href="#cb5-4"></a>  <span class="at">keyType =</span> <span class="st">"ENTREZID"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5"></a>  <span class="at">ont =</span> <span class="st">"ALL"</span>,</span>
+<span id="cb5-6"><a href="#cb5-6"></a>  <span class="at">pAdjustMethod =</span> <span class="st">"fdr"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7"></a>  <span class="at">qvalueCutoff =</span> <span class="fl">0.05</span>,</span>
+<span id="cb5-8"><a href="#cb5-8"></a>  <span class="at">readable =</span> <span class="cn">TRUE</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a>)</span>
+<span id="cb5-10"><a href="#cb5-10"></a></span>
+<span id="cb5-11"><a href="#cb5-11"></a>go_top <span class="ot">&lt;-</span> go_enrich <span class="sc">%&gt;%</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a>  <span class="fu">group_by</span>(ONTOLOGY) <span class="sc">%&gt;%</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a>  <span class="fu">slice_max</span>(<span class="sc">-</span><span class="fu">log10</span>(p.adjust), <span class="at">n =</span> <span class="dv">5</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-15"><a href="#cb5-15"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-16"><a href="#cb5-16"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb5-17"><a href="#cb5-17"></a>    <span class="at">Description =</span> <span class="fu">fct_reorder</span>(Description, p.adjust), </span>
+<span id="cb5-18"><a href="#cb5-18"></a>    <span class="at">ONTOLOGY =</span> <span class="fu">factor</span>(ONTOLOGY, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"BP"</span>, <span class="st">"CC"</span>, <span class="st">"MF"</span>))  </span>
+<span id="cb5-19"><a href="#cb5-19"></a>  )</span>
+<span id="cb5-20"><a href="#cb5-20"></a></span>
+<span id="cb5-21"><a href="#cb5-21"></a>go_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(go_top, <span class="fu">aes</span>(<span class="at">x =</span> Count, <span class="at">y =</span> Description)) <span class="sc">+</span></span>
+<span id="cb5-22"><a href="#cb5-22"></a>  <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">fill =</span> <span class="sc">-</span><span class="fu">log10</span>(p.adjust)), <span class="at">width =</span> <span class="fl">0.7</span>) <span class="sc">+</span> </span>
+<span id="cb5-23"><a href="#cb5-23"></a>  <span class="fu">facet_grid</span>(ONTOLOGY <span class="sc">~</span> ., <span class="at">scales =</span> <span class="st">"free_y"</span>, <span class="at">space =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb5-24"><a href="#cb5-24"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"#fde725"</span>, <span class="at">high =</span> <span class="st">"#21918c"</span>, <span class="at">name =</span> <span class="st">"-log10(p.adjust)"</span>) <span class="sc">+</span></span>
+<span id="cb5-25"><a href="#cb5-25"></a>  </span>
+<span id="cb5-26"><a href="#cb5-26"></a>  <span class="co"># 标签</span></span>
+<span id="cb5-27"><a href="#cb5-27"></a>  <span class="fu">labs</span>(</span>
+<span id="cb5-28"><a href="#cb5-28"></a>    <span class="at">x =</span> <span class="st">"Gene Count"</span>,</span>
+<span id="cb5-29"><a href="#cb5-29"></a>    <span class="at">y =</span> <span class="st">"GO Term"</span></span>
+<span id="cb5-30"><a href="#cb5-30"></a>  ) <span class="sc">+</span></span>
+<span id="cb5-31"><a href="#cb5-31"></a>  <span class="fu">theme_bw</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb5-32"><a href="#cb5-32"></a>  <span class="fu">theme</span>(</span>
+<span id="cb5-33"><a href="#cb5-33"></a>    <span class="at">strip.text.y =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">0</span>, <span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb5-34"><a href="#cb5-34"></a>    <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
+<span id="cb5-35"><a href="#cb5-35"></a>    <span class="at">panel.grid =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb5-36"><a href="#cb5-36"></a>    <span class="at">legend.position =</span> <span class="st">"bottom"</span></span>
+<span id="cb5-37"><a href="#cb5-37"></a>  ) <span class="sc">+</span></span>
+<span id="cb5-38"><a href="#cb5-38"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_colorbar</span>(<span class="at">title.position =</span> <span class="st">"top"</span>, <span class="at">barwidth =</span> <span class="dv">15</span>, <span class="at">barheight =</span> <span class="fl">0.8</span>))</span>
+<span id="cb5-39"><a href="#cb5-39"></a></span>
+<span id="cb5-40"><a href="#cb5-40"></a><span class="fu">ggsave</span>(<span class="st">"../results/figures/main/Figure_3D_GO_Plot.pdf"</span>, go_plot, <span class="at">width =</span> <span class="dv">9</span>, <span class="at">height =</span> <span class="dv">7</span>, <span class="at">dpi =</span> <span class="dv">300</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="step-3-kegg" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="step-3-kegg"><span class="header-section-number">2.4</span> Step 3: KEGG</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>kegg_enrich <span class="ot">&lt;-</span> <span class="fu">enrichKEGG</span>(</span>
+<span id="cb6-2"><a href="#cb6-2"></a>  <span class="at">gene =</span> gene_entrez,</span>
+<span id="cb6-3"><a href="#cb6-3"></a>  <span class="at">organism =</span> <span class="st">"hsa"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4"></a>  <span class="at">pAdjustMethod =</span> <span class="st">"fdr"</span>,</span>
+<span id="cb6-5"><a href="#cb6-5"></a>  <span class="at">qvalueCutoff =</span> <span class="fl">0.05</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a>)</span>
+<span id="cb6-7"><a href="#cb6-7"></a></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="co"># KEGG plot</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a>kegg_plot <span class="ot">&lt;-</span> <span class="fu">dotplot</span>(kegg_enrich, <span class="at">showCategory =</span> <span class="dv">12</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>()</span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="fu">ggsave</span>(<span class="st">"../results/figures/main/Figure_3E_KEGG_dot.pdf"</span>, kegg_plot, <span class="at">width =</span> <span class="dv">9</span>, <span class="at">height =</span> <span class="dv">7</span>, <span class="at">dpi =</span> <span class="dv">300</span>)</span>
+<span id="cb6-11"><a href="#cb6-11"></a></span>
+<span id="cb6-12"><a href="#cb6-12"></a><span class="fu">save</span>(kegg_enrich,go_enrich, <span class="at">file =</span> <span class="st">"../data/processed/functional/enrich.Rdata"</span>)</span>
+<span id="cb6-13"><a href="#cb6-13"></a></span>
+<span id="cb6-14"><a href="#cb6-14"></a><span class="co"># write.xlsx(</span></span>
+<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#   list(</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a><span class="co">#     GO &lt;- </span></span>
+<span id="cb6-17"><a href="#cb6-17"></a><span class="co">#   )</span></span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="co"># )</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+</section>
+<section id="immune-infiltration-profiling" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Immune Infiltration Profiling</h1>
+<hr>
+</section>
+<section id="herb-ingredient-target-hit-network" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Herb-Ingredient-Target (HIT) Network</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">library</span>(RCy3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="ppi-network" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> PPI Network</h1>
+<hr>
+</section>
+<section id="identification-of-hub-genes" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Identification of Hub Genes</h1>
+<hr>
+<table class="nav-table" width="100%">
+<tbody><tr>
+<td align="left">
+<a href="../index.html">Home</a> | <a href="../about.html">About</a> | <a href="../methods.html">Methods</a> | <a href="../results.html">Results</a>
+</td>
+<td align="right">
+<a href="../analysis/Part_2_Screening_of_HFrEF_related_genes.html">Previous</a> | <a href="../analysis/Part_4_Mechanism_validation_via_bioinformatics_and_docking.html">Next</a>
+</td>
+</tr>
+</tbody></table>
+</section>
+<section id="references" class="level1 unnumbered">
+<h1 class="unnumbered">References</h1>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

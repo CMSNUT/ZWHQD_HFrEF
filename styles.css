@@ -1,0 +1,12 @@
+/* Auto-wrap code blocks */
+pre {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+}
+
+/* Center images */
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}

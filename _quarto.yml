@@ -1,0 +1,132 @@
+project:
+  type: website
+  output-dir: docs
+
+author:
+  - id: a
+    number: 1
+    name: 
+      given: Kun
+      family: Hou
+      literal: Kun Hou
+    orcid: 0000-xxxx-xxxx-xxxx
+    email: xxx@163.com
+    attributes:
+      corresponding: false
+    roles: 
+      - conceptualization
+      - methodology
+      - writing – original draft
+    affiliations:
+      - id: xju
+        number: 1
+        name: Health Science Center, Xi’an Jiaotong University
+        department: Health Science Center
+        city: Xi'an
+        address: address
+        region: Shaanxi
+        country: China
+        postal-code: 710061
+      
+      - id: hztcm
+        name: Hanzhong Traditional Chinese Medicine Hospital
+        department: department
+        address: address
+        city: Hanzhong
+        region: Shaanxi
+        country: China
+        postal-code: 723001
+        
+  - id: b
+    number: 2
+    name: Supervisor's name
+    orcid: 0000-xxxx-xxxx-xxxx
+    email: xxx@163.com
+    attributes:
+      corresponding: true
+    roles:
+      - project administration
+      - funding
+    affiliations:
+      - ref: xju
+      - name: The First Affiliated Hospital of Xi’an Jiaotong University
+        department: department
+        address: address
+        city: Xi'an
+        region: Shaanxi
+        country: China
+        postal-code: 710061
+
+bibliography: references.bib
+csl: ../csl/analytical-chemistry.csl
+
+website:
+  title: "ZWHQD for HFrEF"
+  description: "Integrating Network Pharmacology, Multi-Omics, Causal Inference & Molecular Docking"
+  navbar:
+    background: primary
+    search: true
+    left:
+      - href: index.qmd
+        text: Home
+      - href: about.qmd
+        text: About
+      - href: methods.qmd
+        text: Methods
+      - href: results.qmd
+        text: Results
+      - href: manuscript.qmd
+        text: Manuscript
+      - href: supplementary.qmd
+        text: Supplementary
+      - text: Analysis
+        menu:
+          - text: "Part 1: Data acquisition and preprocessing"
+            href: "analysis/Part_1_Data_acquisition_and_preprocessing.qmd"
+          - text: "Part 2: Screening of HFrEF-related genes"
+            href: "analysis/Part_2_Screening_of_HFrEF_related_genes.qmd"
+          - text: "Part 3: Mechanism exploration of ZWHQD against HFrEF"
+            href: "analysis/Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.qmd"
+          - text: "Part 4: Mechanism validation via bioinformatics and docking"
+            href: "analysis/Part_4_Mechanism_validation_via_bioinformatics_and_docking.qmd"
+          - text: "Part 5: TF-miRNA regulatory network"
+            href: "analysis/Part_5_TF_miRNA_regulatory_network.qmd"
+format:
+  html:
+    css: style.css
+    theme: cosmo
+    toc: true
+    toc-depth: 4
+    toc-location: left
+    code-fold: false
+    code-tools: false
+    code-copy: true
+    code-line-numbers: true
+    highlight-style: github
+    fig-align: center
+    fig-dpi: 300
+    page-layout: full
+    smooth-scroll: true
+
+crossref:
+  title-delim: "."
+  subref-labels: alpha A
+  custom:
+    - kind: float
+      key: suppfig
+      latex-env: suppfig
+      reference-prefix: Figure S
+      latex-list-of-description: Supplementary Figure
+      space-before-numbering: false
+    - kind: float
+      key: supptbl
+      latex-env: supptbl
+      reference-prefix: Table S
+      latex-list-of-description: Supplementary Table
+      space-before-numbering: false
+
+execute:
+  eval: false
+  echo: true
+  warning: false
+  message: false

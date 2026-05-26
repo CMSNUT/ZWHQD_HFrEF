@@ -1,0 +1,59 @@
+---
+title: "Part 4: Mechanism validation via bioinformatics and docking"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+---
+
+# Single‑Cell Transcriptome Expression Mapping
+
+---
+
+# Identification and Validation of Biomarker Genes by Machine Learning
+
+---
+
+# Identification of Causal Genes by Mendelian Randomization
+
+
+# GSEA Pathway Analysis of Causal Genes
+
+---
+
+# Docking of Active Ingredients and Core Targets
+
+---
+
+<table class="nav-table" width="100%">
+  <tr>
+    <td align="left">
+      [Home](../index.qmd) | [About](../about.qmd) | [Methods](../methods.qmd) | [Results](../results.qmd)
+    </td>
+    <td align="right">
+      [Previous](Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.qmd) | [Next](Part_5_TF_miRNA_regulatory_network.qmd)
+    </td>
+  </tr>
+</table>
+
+# References {-}

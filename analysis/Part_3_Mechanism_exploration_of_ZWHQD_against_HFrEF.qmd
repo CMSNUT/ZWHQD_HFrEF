@@ -1,0 +1,265 @@
+---
+title: "Part 3: Mechanism exploration of ZWHQD against HFrEF"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+---
+
+# Identification of Candidate Targets
+
+## Load Packages
+```{r}
+library(ggvenn)
+library(tidyverse)
+library(openxlsx)
+```
+
+## Candidate Genes
+```{r}
+rm(list = ls())
+
+load("../data/processed/geo/GSE141910/degs_results.Rdata")
+
+deg_sig <- deg_all %>% filter(padj < 0.05, abs(log2FoldChange) > lfc)
+
+deg_genes <- rownames(deg_sig) 
+
+load("../data/processed/tcm/14_compound_target_final.RData")
+
+herb_targets <- unique(compound_target_final$Symbol)
+
+load("../data/processed/geo/GSE141910/wgcna_candidates_genes.Rdata")
+
+# disease_genes: intersecting DEGs and WGCNA
+disease_genes <- intersect(deg_genes,wgcna_candidates_genes$Gene)
+
+# candidate_genes: intersecting herb_targets and disease_genes
+candidate_genes <-intersect(herb_targets, disease_genes)
+
+herb_targets_df <- data.frame(Gene = herb_targets) %>%
+  arrange(Gene)
+
+deg_genes_df <- data.frame(Gene = deg_genes) %>%
+  arrange(Gene)
+
+wgcna_genes_df <- data.frame(Gene = wgcna_candidates_genes$Gene) %>%
+  arrange(Gene)
+
+disease_genes_df <- data.frame(Gene = disease_genes) %>%
+  arrange(Gene)
+
+candidate_genes_df <- data.frame(Gene = candidate_genes) %>%
+  arrange(Gene)
+
+gene_list <- list(
+  DEGs = deg_genes,
+  `Herb targets` = herb_targets,
+  `WGCNA Genes` = wgcna_candidates_genes$Gene
+)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = c("#F1948A", "blue","#58D68D"),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=10))
+
+# save
+ggsave("../results/figures/main/Figure_3C_Venn_Herb_DEG_WGCNA.pdf", p, width=6, height=6, dpi=300)
+ggsave("../results/figures/main/Figure_3C_Venn_Herb_DEG_WGCNA.png", p, width=6, height=6, dpi=300)
+
+
+save(herb_targets_df, deg_genes_df, wgcna_genes_df,disease_genes_df, candidate_genes_df, file = "../data/processed/network/herb_disease_genes.Rdata")
+
+write.xlsx(
+  list(
+    HerbTargets = herb_targets_df,
+    DEGs = deg_genes_df,
+    WGCNAGenes = wgcna_genes_df,
+    DiseaseGenes = disease_genes_df,
+    CandidateGenes = candidate_genes_df
+  ),
+  "../results/tables/supplementary/Table_S5_herb_disease_targets.xlsx"
+)
+
+deg_candidate <- deg_all[rownames(deg_all) %in% candidate_genes, ]
+ 
+deg_candidate$regulation <- ifelse(
+  deg_candidate$log2FoldChange >= lfc, "Up",
+  ifelse(deg_candidate$log2FoldChange <= -lfc, "Down", "NS")
+)
+
+deg_candidate$Gene <- rownames(deg_candidate)
+
+up_genes <- deg_candidate$Gene[deg_candidate$regulation == "Up"]
+down_genes <- deg_candidate$Gene[deg_candidate$regulation == "Down"]
+
+cat("Up genes: ", length(up_genes), "\n")
+print(up_genes)
+
+cat("\nDown genes: ", length(down_genes), "\n")
+print(down_genes)
+```
+
+---
+
+# Functional Enrichment Analysis
+
+## Load packages
+```{r}
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(enrichplot)
+library(ggplot2)
+library(STRINGdb)
+library(dplyr)
+library(ggvenn)
+```
+
+## Step 1: SYMBOL to ENTREZID
+
+```{r}
+rm(list = ls())
+load("../data/processed/network/herb_disease_genes.Rdata")
+
+# candidate_genes
+gene_id_map <- bitr(
+  geneID = candidate_genes_df$Gene,
+  fromType = "SYMBOL",
+  toType = "ENTREZID",
+  OrgDb = org.Hs.eg.db
+)
+gene_entrez <- gene_id_map$ENTREZID
+```
+
+## Step 2: GO
+```{r}
+go_enrich <- enrichGO(
+  gene = gene_entrez,
+  OrgDb = org.Hs.eg.db,
+  keyType = "ENTREZID",
+  ont = "ALL",
+  pAdjustMethod = "fdr",
+  qvalueCutoff = 0.05,
+  readable = TRUE
+)
+
+go_top <- go_enrich %>%
+  as.data.frame() %>%
+  group_by(ONTOLOGY) %>%
+  slice_max(-log10(p.adjust), n = 5) %>% 
+  ungroup() %>%
+  mutate(
+    Description = fct_reorder(Description, p.adjust), 
+    ONTOLOGY = factor(ONTOLOGY, levels = c("BP", "CC", "MF"))  
+  )
+
+go_plot <- ggplot(go_top, aes(x = Count, y = Description)) +
+  geom_col(aes(fill = -log10(p.adjust)), width = 0.7) + 
+  facet_grid(ONTOLOGY ~ ., scales = "free_y", space = "free_y") +
+  scale_fill_gradient(low = "#fde725", high = "#21918c", name = "-log10(p.adjust)") +
+  
+  # 标签
+  labs(
+    x = "Gene Count",
+    y = "GO Term"
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    strip.text.y = element_text(angle = 0, face = "bold", size = 11),
+    axis.text.y = element_text(size = 10),
+    panel.grid = element_blank(),
+    legend.position = "bottom"
+  ) +
+  guides(fill = guide_colorbar(title.position = "top", barwidth = 15, barheight = 0.8))
+
+ggsave("../results/figures/main/Figure_3D_GO_Plot.pdf", go_plot, width = 9, height = 7, dpi = 300)
+
+```
+
+## Step 3: KEGG
+```{r}
+kegg_enrich <- enrichKEGG(
+  gene = gene_entrez,
+  organism = "hsa",
+  pAdjustMethod = "fdr",
+  qvalueCutoff = 0.05
+)
+
+# KEGG plot
+kegg_plot <- dotplot(kegg_enrich, showCategory = 12) + theme_bw()
+ggsave("../results/figures/main/Figure_3E_KEGG_dot.pdf", kegg_plot, width = 9, height = 7, dpi = 300)
+
+save(kegg_enrich,go_enrich, file = "../data/processed/functional/enrich.Rdata")
+
+# write.xlsx(
+#   list(
+#     GO <- 
+#   )
+# )
+```
+
+---
+
+# Immune Infiltration Profiling
+```{r}
+
+```
+
+---
+
+# Herb-Ingredient-Target (HIT) Network
+```{r}
+library(RCy3)
+```
+
+---
+
+# PPI Network
+
+
+---
+
+# Identification of Hub Genes
+
+
+
+---
+
+<table class="nav-table" width="100%">
+  <tr>
+    <td align="left">
+      [Home](../index.qmd) | [About](../about.qmd) | [Methods](../methods.qmd) | [Results](../results.qmd)
+    </td>
+    <td align="right">
+      [Previous](Part_2_Screening_of_HFrEF_related_genes.qmd) | [Next](Part_4_Mechanism_validation_via_bioinformatics_and_docking.qmd)
+    </td>
+  </tr>
+</table>
+
+# References {-}
