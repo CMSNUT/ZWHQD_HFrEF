@@ -165,7 +165,6 @@ mat_z <- t(scale(t(mat)))
 breaks <- seq(-2, 2, length.out = 100)
 palette <- colorRampPalette(c("blue", "white", "red"))(99)
 
-
 anno_col <- data.frame(
   Group = pheno_final[sample_order, "group"]
 )
@@ -356,7 +355,7 @@ save(datTraits,datExpr,file = "../data/processed/geo/GSE141910/datExpr.Rdata")
 ```{r}
 load("../data/processed/geo/GSE141910/datExpr.Rdata")
 
-R2 <- 0.84
+R2 <- 0.80
 
 enableWGCNAThreads()
 powers <- c(c(1:10), seq(from = 12, to=20, by=2))
@@ -572,7 +571,7 @@ dev.off()
 ---
 
 ```{r}
-# Filtering significant modules (| r |>0.5 and p<0.05)
+# Filtering significant modules (|r|>0.5 and p<0.05)
 trait_of_interest <- "DCM_HFrEF"   
 idx <- which(colnames(datTraits) == trait_of_interest)
 cor_values <- moduleTraitCor[, idx]
@@ -614,7 +613,7 @@ GS_threshold <- 0.2
 candidate_genes_list <- list()
 plot_list <- list()
 
-for (mod in sig_modules) {
+for (mod in sig_modules_sorted) {
   mod_clean <- sub("^ME", "", mod)            
   inModule <- (moduleColors == mod_clean)     
   if (sum(inModule) == 0) {

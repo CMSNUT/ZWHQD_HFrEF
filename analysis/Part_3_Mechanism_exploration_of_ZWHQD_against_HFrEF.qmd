@@ -169,6 +169,22 @@ go_enrich <- enrichGO(
   readable = TRUE
 )
 
+```
+
+## Step 3: KEGG
+```{r}
+kegg_enrich <- enrichKEGG(
+  gene = gene_entrez,
+  organism = "hsa",
+  pAdjustMethod = "fdr",
+  qvalueCutoff = 0.05
+)
+
+save(kegg_enrich,go_enrich, file = "../data/processed/functional/enrich.Rdata")
+```
+
+## Step 4: visualization
+```{r}
 go_top <- go_enrich %>%
   as.data.frame() %>%
   group_by(ONTOLOGY) %>%
@@ -200,35 +216,162 @@ go_plot <- ggplot(go_top, aes(x = Count, y = Description)) +
 
 ggsave("../results/figures/main/Figure_3D_GO_Plot.pdf", go_plot, width = 9, height = 7, dpi = 300)
 
-```
-
-## Step 3: KEGG
-```{r}
-kegg_enrich <- enrichKEGG(
-  gene = gene_entrez,
-  organism = "hsa",
-  pAdjustMethod = "fdr",
-  qvalueCutoff = 0.05
-)
 
 # KEGG plot
 kegg_plot <- dotplot(kegg_enrich, showCategory = 12) + theme_bw()
 ggsave("../results/figures/main/Figure_3E_KEGG_dot.pdf", kegg_plot, width = 9, height = 7, dpi = 300)
-
-save(kegg_enrich,go_enrich, file = "../data/processed/functional/enrich.Rdata")
-
-# write.xlsx(
-#   list(
-#     GO <- 
-#   )
-# )
 ```
 
 ---
 
 # Immune Infiltration Profiling
-```{r}
 
+## Load Package
+```{r}
+library(IOBR)
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(pheatmap)
+
+# 加载分析所需的R包
+library(devtools) 
+library(CIBERSORT) 
+library(pheatmap) 
+library(tidyverse) 
+library(rstatix) 
+library(corrplot) 
+library(ggpubr) 
+```
+
+## Step 1: CIBERSORT
+```{r}
+rm(list = ls())
+load("../data/processed/geo/GSE141910/GSE141910_preprocessed_final.RData")
+
+data(LM22)
+
+# # get 22 types of immune cells
+# cibersort_res <- deconvo_tme(
+#   eset = as.data.frame(expr_fpkm_corr),
+#   method = "cibersort",
+#   arrays = FALSE,
+#   tumor = FALSE,
+#   perm = 1000
+# )
+# 
+# # Extract 22 immune cell results
+# immune_22cells <- cibersort_res %>%
+#   column_to_rownames("ID") %>%
+#   dplyr::select(-c("P-value_CIBERSORT", "Correlation_CIBERSORT", "RMSE_CIBERSORT"))
+# 
+# # the names of immune cell types
+# cell_types <- colnames(immune_22cells)
+
+# 运行CIBERSORT核心函数，计算每个样本中22种免疫细胞的比例# 参数说明：
+# - sig_matrix：参考矩阵（此处为LM22）
+# - mixture_file：待分析的表达矩阵
+# - perm：置换检验次数（推荐100-1000，次数越多结果越可靠但耗时越长）
+# - QN：是否进行 quantile normalization（分位数标准化，推荐TRUE）
+
+results <- cibersort(
+  sig_matrix = LM22, 
+  mixture_file = expr_fpkm_corr, 
+  perm = 1000, 
+  QN = TRUE
+)
+
+# 保存CIBERSORT结果包含各细胞比例、P值、相关性等信息
+
+write.table(
+  rownames_to_column(as.data.frame(results), 'Sample'), 
+  '../data/processed/tme/cibersort_res.xls',  
+  sep = '\t', 
+  quote = F, 
+  row.names = F)
+
+write.table(
+  rownames_to_column(as.data.frame(results), 'Sample'), 
+  '../results/tables/supplementary/tme/cibersort_res.xls',  
+  sep = '\t', 
+  quote = F, 
+  row.names = F)
+```
+
+## Step 2: 免疫细胞比例热图可视化
+```{r}
+# 从结果中提取22种免疫细胞的比例数据（排除统计信息列）
+cibersort_result <- results[, 1:22] %>% as.data.frame()
+
+group_info <- data.frame(
+  samples = rownames(pheno_final), 
+  group =pheno_final$group)
+
+# 确保分组信息的样本顺序与免疫细胞结果一致（避免后续可视化混乱）
+group_info <- group_info[order(match(group_info$sample, rownames(results))), ]
+
+# 准备热图的分组注释（用于在热图右侧标记样本分组）
+annotation_row <- group_info[, "group", drop = FALSE]  # 提取分组列
+rownames(annotation_row) <- group_info$sample  # 匹配样本名
+
+
+# 绘制并保存免疫细胞丰度热图
+# 参数说明：
+# - scale = "row"：按行标准化（使不同细胞的比例可比较）
+# - cluster_rows = FALSE：不聚类样本（按原始顺序排列）
+# - color：自定义颜色渐变（蓝-白-红）
+# - annotation_row：添加样本分组注释
+png("../results/figures/main/immune_cell_abundance_heatmap.png", width = 800, height = 800)  # 保存为PNG
+pheatmap(cibersort_result, 
+         scale = "row", 
+         cluster_rows = FALSE,
+         cluster_cols = TRUE,  # 对细胞类型进行聚类
+         color = colorRampPalette(c("lightblue", "white", "#BB2222"))(100),
+         show_rownames = FALSE,  # 不显示样本名（样本多时常重叠）
+         show_colnames = TRUE,   # 显示免疫细胞名
+         main = "Immune Cell Abundance Heatmap",
+         annotation_row = annotation_row,  # 右侧添加分组注释
+         annotation_names_row = FALSE,
+         fontsize_col = 10,
+         cellwidth = 10,
+         cellheight = 10)
+dev.off()
+
+
+
+
+```
+
+## Step 3: 免疫细胞丰度堆叠图
+
+```{r}
+# 为免疫细胞丰度结果添加分组信息：将样本分组匹配到对应的丰度数据
+cibersort_result$group <- group_info$group[match(rownames(cibersort_result), group_info$sample)]
+# 数据转换：将宽表转为长表（适合ggplot绘图）
+# 转换后格式：sample（样本）、group（分组）、cell（免疫细胞）、score（丰度）
+cibersort_data <- cibersort_result %>% 
+  tibble::rownames_to_column('sample') %>%  
+  tidyr::pivot_longer(cols = -c(group, sample), names_to = 'cell', values_to = 'score')
+# 绘制堆叠条形图：
+p1 <- ggplot(cibersort_data, aes(x = sample, y = score, fill = cell)) +
+  geom_col(position = 'fill', alpha = 0.7) +  # position='fill'：按比例堆叠（总和为1）
+  labs(x = '', y = 'Estimated proportion', fill = 'Cell type') +  # 坐标轴和图例标题
+  guides(fill = guide_legend(ncol = 1)) +  # 图例按1列排列
+  theme(
+    axis.text.x = element_blank(),  # 不显示x轴样本名（避免拥挤）
+    axis.text.y = element_text(size = 15, color = 'black'),  # y轴字体设置
+    axis.title = element_text(size = 18, color = 'black'),  # 轴标题字体
+    axis.ticks.x = element_blank(),  # 不显示x轴刻度
+    legend.title = element_text(size = 18, colour = 'black'),  # 图例标题
+    legend.text = element_text(size = 12, colour = 'black'),   # 图例文本
+    legend.key.size = unit(2, 'mm'),  # 图例符号大小
+    strip.text = element_text(size = 15),  # 分组标签字体
+    strip.background = element_rect(fill = 'gray', colour = 'black'),  # 分组背景
+    panel.grid = element_blank(),  # 去除网格线
+    panel.background = element_rect(fill = NA, color = NA)  # 去除背景
+  ) +
+  facet_grid(. ~ group, scales = "free")  # 按分组分面展示
+print(p1)  # 显示图形
 ```
 
 ---
