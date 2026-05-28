@@ -26,16 +26,506 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 
 ---
 
-# Single‑Cell Transcriptome Expression Mapping
-
----
-
 # Identification and Validation of Biomarker Genes by Machine Learning
 
+## Load Packages
+```{r}
+library(tidyverse)
+library(caret)
+library(glmnet)
+library(e1071)
+library(Boruta)
+library(xgboost)
+library(pROC)
+library(ggplot2)
+library(ggsci)
+```
+
+## Step 1: Loading data
+```{r}
+rm(list = ls())
+
+load("../data/processed/geo/GSE141910GSE141910_preprocessed_final.RData")
+
+load("../data/processed/network/08_hub_genes.Rdata")
+
+expr_matrix <- t(expr_fpkm_corr[rownames(expr_fpkm_corr) %in% hub_genes,])
+
+group <- pheno_final[rownames(expr_matrix),"group"] %>% as.numeric()-1
+
+expr_data <- data.frame(expr_matrix, group = group)
+```
+
+## Step 2: Stratified sampling
+```{r}
+set.seed(42)
+
+train_index <- createDataPartition(
+  expr_data$group, 
+  p = 0.7, 
+  list = FALSE
+)
+
+train_data <- expr_data[train_index, ]
+test_data  <- expr_data[-train_index, ]
+
+x_train <- as.matrix(train_data[, -ncol(train_data)])
+y_train <- train_data$group
+x_test  <- as.matrix(test_data[, -ncol(test_data)])
+y_test  <- test_data$group
+
+save(x_train,y_train,x_test,y_test, file = "../data/processed/ml/01_model_data.Rdata")
+```
+
+## Step 3: Feature selection
+
+### LASSO
+```{r}
+set.seed(42)
+cv_lasso <- cv.glmnet(
+  x_train, 
+  y_train, 
+  family = "binomial", 
+  alpha = 1, 
+  nfolds = 10
+)
+
+lasso_coef <- coef(cv_lasso, s = "lambda.min")
+
+lasso_selected <- rownames(lasso_coef)[which(lasso_coef[,1] != 0)][-1]
+
+cat("LASSO selected:", length(lasso_selected), "genes\n")
+cat(lasso_selected, "\n")
+
+save(cv_lasso,lasso_selected, file = "../data/processed/ml/02_lasso.Rdata")
+```
+
+### SVM-RFE
+```{r}
+set.seed(42)
+
+svmFuncs <- caretFuncs
+svmFuncs$summary <- function(data, lev = NULL, model = NULL) defaultSummary(data, lev, model)
+rfe_ctrl <- rfeControl(functions = svmFuncs, method = "cv", number = 10, verbose = FALSE)
+svm_rfe <- rfe(x_train, as.factor(y_train), sizes = c(1:18), rfeControl = rfe_ctrl)
+svm_selected <- predictors(svm_rfe)
+cat("SVM-RFE selected:", length(svm_selected), "genes\n")
+cat(svm_selected, "\n")
+
+save(svm_rfe,svm_selected, file = "../data/processed/ml/03_svm_rfe.Rdata")
+```
+
+### Boruta
+```{r}
+set.seed(42)
+folds <- createFolds(y_train, k = 5, list = TRUE)
+
+importance_list <- list() 
+decision_list <- list()   
+
+for (i in seq_along(folds)) {
+  train_idx <- folds[[i]]
+  x_sub <- x_train[train_idx, ]
+  y_sub <- y_train[train_idx]
+  
+  boruta_sub <- Boruta(x_sub, as.factor(y_sub), 
+                       maxRuns = 100, pValue = 0.05, doTrace = 0)
+  
+  imp_stats <- attStats(boruta_sub)
+  importance_list[[i]] <- imp_stats$medianImp
+  names(importance_list[[i]]) <- rownames(imp_stats)
+  
+  decision_list[[i]] <- boruta_sub$finalDecision
+  names(decision_list[[i]]) <- rownames(imp_stats)
+}
+
+all_features <- unique(unlist(lapply(importance_list, names)))
+imp_matrix <- matrix(NA, nrow = length(all_features), ncol = 5,
+                     dimnames = list(all_features, paste0("Fold", 1:5)))
+
+for (i in 1:5) {
+  imp_matrix[names(importance_list[[i]]), i] <- importance_list[[i]]
+}
+
+confirm_matrix <- sapply(decision_list, function(d) {
+    confirmed <- names(d[d == "Confirmed"])
+    return(all_features %in% confirmed)
+})
+confirm_freq <- rowSums(confirm_matrix)   # 频次 0-5
+
+boruta_selected <- all_features[confirm_freq == 5]
+cat("Boruta selected:", length(boruta_selected), "genes\n")
+
+cat("Boruta selected:", length(boruta_selected), "genes\n")
+cat(boruta_selected, "\n")
+
+save(boruta_result,boruta_selected, file = "../data/processed/ml/04_boruta.Rdata")
+```
+
+### XGBoost
+```{r}
+set.seed(42)
+
+dtrain <- xgb.DMatrix(data = x_train, label = y_train)
+
+params <- list(
+  objective = "binary:logistic",
+  max_depth = 3,
+  eta = 0.1,
+  eval_metric = "logloss"
+)
+
+xgb_model <- xgb.train(
+  params = params,
+  data = dtrain,
+  nrounds = 100,
+  verbose = 0
+)
+
+importance <- xgb.importance(
+  feature_names = colnames(x_train), 
+  model = xgb_model)
+
+xgb_selected <- head(importance$Feature, 15)
+cat("XGBoost selected:", length(xgb_selected), "features\n")
+cat(xgb_selected, "\n")
+
+save(xgb_model,xgb_selected, file = "../data/processed/ml/05_xgb.Rdata")
+```
+
+### Consensus genes
+```{r}
+consensus_genes <- Reduce(intersect, list(lasso_selected, svm_selected, boruta_selected, xgb_selected))
+cat("Consensus genes:", length(consensus_genes), "\n")
+print(consensus_genes)
+
+write.csv(data.frame(Gene = consensus_genes), "../data/processed/ml/05_consensus_genes.csv", row.names = FALSE)
+```
+
+## Step 4: Feature selection Visualization
+### LASSO
+```{r}
+# Figure S3A
+pdf("../results/figures/supplementary/Figure_S3_A_LASSO_cv_curve.pdf", width = 7, height = 5)
+
+plot(cv_lasso, 
+     # main = "LASSO Cross-Validation Error Curve",
+     xlab = expression(-log(lambda)), 
+     ylab = "Partial Likelihood Deviance"
+)
+abline(v = -log(cv_lasso$lambda.min), col = "red", lty = 2)
+abline(v = -log(cv_lasso$lambda.1se), col = "blue", lty = 2)
+legend("topright", 
+       legend = c("lambda.min", "lambda.1se"), 
+       col = c("red", "blue"), 
+       lty = 2, 
+       bty = "n")
+dev.off()
+
+# Figure S3B
+
+pdf("../results/figures/supplementary/Figure_S3_B_LASSO_coef_path.pdf", width = 7, height = 5)
+
+plot(cv_lasso$glmnet.fit, 
+     # main = "LASSO Coefficient Path", 
+     xvar = "lambda", 
+     label = FALSE)
+abline(v = -log(cv_lasso$lambda.min), col = "red", lty = 2)
+abline(v = -log(cv_lasso$lambda.1se), col = "blue", lty = 2)
+legend("topleft", 
+       legend = c("lambda.min", "lambda.1se"), 
+       col = c("red", "blue"), 
+       lty = 2, 
+       bty = "n")
+dev.off()
+
+  # Figure S3C
+if (length(lasso_selected) <= 30 & length(lasso_selected) > 0) {
+  coef_vals <- as.matrix(lasso_coef)[-1, , drop = FALSE]
+  coef_df <- data.frame(Gene = rownames(coef_vals), Coefficient = coef_vals[,1])
+  coef_df <- coef_df[coef_df$Coefficient != 0, ]
+  coef_df <- coef_df[order(abs(coef_df$Coefficient), decreasing = TRUE), ]
+  p <- ggplot(coef_df, aes(x = reorder(Gene, Coefficient), y = Coefficient, fill = Coefficient > 0)) +
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    labs(
+      title = "LASSO Selected Features Coefficients",
+      x = "Gene", 
+      y = "Coefficient") +
+    scale_fill_manual(values = c("red", "green"), labels = c("Negative", "Positive")) +
+    theme_minimal()
+  ggsave("../results/figures/supplementary/Figure_S3_C_LASSO_coef_bar.pdf", p, width = 7, height = max(5, length(lasso_selected)*0.3))
+}
+
+```
+
+### SVM-RFE
+```{r}
+# Figure S4A
+plot_data <- svm_rfe$results
+best_idx <- which.max(plot_data$Accuracy)
+best_point <- plot_data[best_idx, ]
+
+p <- ggplot(plot_data, aes(x = Variables, y = Accuracy)) +
+    geom_line() +
+    geom_point(shape = 8, size = 2) + 
+    geom_point(data = best_point, aes(x = Variables, y = Accuracy), 
+               color = "red", size = 4, shape = 16) +
+    labs(x = "Number of Features", y = "Accuracy (Cross-Validation)") +
+    theme_bw()
+ggsave("../results/figures/supplementary/Figure_S4_A_SVMRFE_performance.pdf", p, width = 7, height = 5)
+
+# Figure S4B
+if (length(svm_rfe$optVariables) > 0) {
+    top_vars <- svm_rfe$optVariables[1:min(20, length(svm_rfe$optVariables))]
+    importance_score <- rev(seq_along(top_vars))  
+    var_imp_df <- data.frame(
+      Gene = factor(top_vars, levels = rev(top_vars)),
+      Importance = importance_score)
+    
+    p <- ggplot(var_imp_df, aes(x = Gene, y = Importance, fill = Importance)) +
+        geom_bar(stat = "identity") +
+        coord_flip() +
+        scale_fill_gradient(low = "lightblue", high = "darkblue", guide = "none") +
+        labs(
+          # title = "SVM-RFE Feature Ranking", 
+          x = "Gene", 
+          y = "Importance Score (higher = more important)") +
+        theme_minimal() +
+        theme(axis.text.y = element_text(size = 8))
+  ggsave("../results/figures/supplementary/Figure_S4_B_SVMRFE_ranking.pdf", p, width = 7, height = max(5, length(top_vars)*0.3))
+}
+```
+
+### Boruta
+```{r}
+# Figure S5A
+freq_df <- data.frame(Feature = all_features, Freq = confirm_freq)
+freq_df <- freq_df[order(freq_df$Freq, decreasing = TRUE), ]
+
+top_n <- min(30, nrow(freq_df))
+freq_top <- freq_df[1:top_n, ]
+
+p1 <- ggplot(freq_top, aes(x = reorder(Feature, Freq), y = Freq, fill = Freq)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", breaks = 0:5) +
+  labs(
+    # title = "Boruta Feature Selection Stability Across 5 CV Folds",
+       x = "Feature", y = "Number of Folds where Confirmed") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 8))
+ggsave("../results/figures/supplementary/Figrue_S5_A_Boruta_CV_Frequency.pdf", p1, width = 7, height = max(5, top_n*0.25))
+
+# # Figure S5B
+# pdf("../results/figures/supplementary/Figure_S5_B_Boruta_decision.pdf", width = 8, height = 6)
+# plotImpHistory(boruta_result, main = "Boruta Importance History")
+# dev.off()
+
+# Figure S5B
+library(reshape2)
+
+imp_mean <- rowMeans(imp_matrix, na.rm = TRUE)
+ordered_features <- names(sort(imp_mean, decreasing = TRUE))
+imp_melt <- melt(imp_matrix[ordered_features, ], 
+                 varnames = c("Feature", "Fold"), 
+                 value.name = "Importance")
+
+p2 <- ggplot(imp_melt, aes(x = Fold, y = Feature, fill = Importance)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red", na.value = "grey90") +
+  labs(
+    # title = "Boruta Median Importance Across CV Folds",
+    
+       x = "Cross-Validation Fold", y = "Feature", fill = "Median Imp.") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 8))
+ggsave("../results/figures/supplementary/Figure_S5_B_Boruta_CV_Heatmap.pdf", p2, width = 7, height = max(6, nrow(imp_matrix)*0.1))
+
+# Figure S5C
+top_features <- names(sort(imp_mean, decreasing = TRUE))
+imp_top <- imp_matrix[top_features, ]
+imp_top_melt <- melt(imp_top, varnames = c("Feature", "Fold"), value.name = "Importance")
+
+p3 <- ggplot(imp_top_melt, aes(x = reorder(Feature, -Importance, FUN = median, na.rm = TRUE), 
+                               y = Importance)) +
+  geom_boxplot(fill = "lightblue", outlier.color = "red", outlier.size = 1) +
+  coord_flip() +
+  labs(
+    # title = paste("Top", top_n_box, "Features: Importance Distribution Across Folds"),
+       x = "Feature", y = "Median Importance") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 10))
+ggsave("../results/figures/supplementary/Figure_S5_C_Boruta_CV_TopBoxplot.pdf", p3, width = 7, height = max(5, top_n_box*0.3))
+
+# Figure S5D
+fold_counts <- data.frame(
+  Fold = paste0("Fold", 1:5),
+  Confirmed = sapply(decision_list, function(d) sum(d == "Confirmed"))
+)
+
+p4 <- ggplot(fold_counts, aes(x = Fold, y = Confirmed, fill = Fold)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = Confirmed), vjust = -0.5) +
+  labs(title = "Number of Boruta-Confirmed Genes per CV Fold",
+       x = "CV Fold", y = "Confirmed Genes") +
+  theme_minimal() +
+  theme(legend.position = "none")
+ggsave("../results/figures/supplementary/Figure_S5_D_Boruta_CV_FoldCounts.pdf", p4, width = 7, height = 5)
+
+```
+
+### XGBoost
+```{r}
+importance_matrix <- xgb.importance(feature_names = colnames(x_train), model = xgb_model)
+
+# Figure S6A
+if (nrow(importance_matrix) > 0) {
+  imp_top <- head(importance_matrix, 20)
+  p <- ggplot(imp_top, aes(x = reorder(Feature, Gain), y = Gain, fill = Gain)) +
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    scale_fill_gradient(low = "lightblue", high = "darkblue") +
+    labs(
+      # title = "XGBoost Feature Importance (Gain)", 
+      x = "Feature", 
+      y = "Gain") +
+    theme_minimal()
+  ggsave("../results/figures/supplementary/Figure_S6_A_XGBoost_importance.pdf", p, width = 8, height = max(5, nrow(imp_top)*0.3))
+}
+
+# Figure S6B
+pdf("../results/figures/supplementary/Figure_S6_B_XGBoost_tree.pdf", width = 12, height = 8)
+xgb.plot.tree(model = xgb_model, trees = 0:4, render = FALSE)  
+dev.off()
+```
+
+### Consensus genes
+```{r}
+# Venn
+gene_list <- list(
+  LASSO = lasso_selected,
+  `SVM-RFE` = svm_selected,
+  Bruta = boruta_selected,
+  XGBoost = xgb_selected
+)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(4),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=10))
+
+# save
+ggsave("../results/figures/main/Figure_5A_Venn_ML_Core_Genes.pdf", p, width=6, height=6, dpi=300)
+ggsave("../results/figures/main/Figure_5A_Venn_ML_Core_Genes.png", p, width=6, height=6, dpi=300)
+
+
+# Upset
+library(ComplexUpset)
+
+all_features <- unique(unlist(gene_list))
+presence <- sapply(gene_list, function(x) all_features %in% x)
+rownames(presence) <- all_features
+upset_data <- as.data.frame(presence)
+upset_data$feature <- rownames(upset_data)
+upset_plot <- upset(
+    upset_data,
+    intersect = colnames(upset_data),  
+    name = "Fold",
+    width_ratio = 0.1,
+    min_degree = 1,
+    sort_intersections = "ascending"
+)
+ggsave("../results/figures/supplementary/Figure_7A_UpSet_ML_Consensus.pdf", upset_plot, width = 10, height = 6)
+
+```
+
+## Step 5: Logistic regression model
+```{r}
+library(ggplot2)
+library(ggsci)
+library(pROC)
+
+formula_lr <- as.formula(paste("group ~", paste(consensus_genes, collapse = "+")))
+lr_model <- glm(formula_lr, data = train_data, family = binomial())
+
+# Train set ROC
+train_pred <- predict(lr_model, train_data, type = "response")
+train_roc <- roc(train_data$group, train_pred)
+
+# Test set ROC
+test_pred <- predict(lr_model, test_data, type = "response")
+test_roc <- roc(test_data$group, test_pred)
+
+# 构建数据框
+# 计算 AUC 值
+train_auc <- round(auc(train_roc), 3)
+test_auc <- round(auc(test_roc), 3)
+
+roc_df <- rbind(
+  data.frame(
+    Specificity = 1 - train_coords$specificity,  # 1 - specificity 作为 x 轴
+    Sensitivity = train_coords$sensitivity,
+    Group = paste0("Train AUC = ", train_auc)
+  ),
+  data.frame(
+    Specificity = 1 - test_coords$specificity,
+    Sensitivity = test_coords$sensitivity,
+    Group = paste0("Test AUC = ", test_auc)
+  )
+)
+
+# ROC curve
+p <- ggplot(roc_df, aes(x = Specificity, y = Sensitivity, color = Group)) +
+  geom_line(size = 1.2) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray50") + 
+  scale_color_aaas() +  
+  labs(
+    # title = "ROC Curves",
+    x = "1 - Specificity",
+    y = "Sensitivity"
+  ) +
+  theme_bw() +
+  theme(
+    text = element_text(family = "sans", size = 10),
+    legend.position = c(0.8, 0.2),
+    legend.background = element_blank(),  
+    legend.title = element_blank()         
+  )
+
+ggsave("../results/figures/main/Figure_5B_ROC_curves.pdf", p, width = 6, height = 6)
+print(p)
+```
+
 ---
+
+
+# Single‑Cell Transcriptome Expression Mapping
+## Step 1: Lo
+
+```{r}
+```
+
+---
+
+
+
 
 # Identification of Causal Genes by Mendelian Randomization
 
+## Step 1:
+```{r}
+```
+
+---
 
 # GSEA Pathway Analysis of Causal Genes
 

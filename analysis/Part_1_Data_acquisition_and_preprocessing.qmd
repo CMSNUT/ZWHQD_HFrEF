@@ -820,6 +820,7 @@ library(tidyverse)
 library(data.table)
 library(openxlsx)
 library(patchwork)
+library(ggrepel)
 library(vegan)
 library(GEOquery)
 library(limma)
@@ -1079,7 +1080,8 @@ pheno <- pheno %>%
 # Filtering Pheno Data of Good Samples 
 pheno <- pheno[rownames(pheno) %in% colnames(counts),]
 
-Normal <- pheno$etiology == "NF" & !is.na(pheno$LVEF) & pheno$LVEF >= 0.5 & pheno$LVEF <= 0.7
+# Normal <- pheno$etiology == "NF" & !is.na(pheno$LVEF) & pheno$LVEF >= 0.5 & pheno$LVEF <= 0.7
+Normal <- pheno$etiology == "NF" 
 DCM_HFrEF  <- pheno$etiology == "DCM" & !is.na(pheno$LVEF) & pheno$LVEF <= 0.4
 
 keep_samples <- rownames(pheno)[Normal | DCM_HFrEF]
@@ -1089,7 +1091,7 @@ counts_keep <- counts[, keep_samples]
 pheno$group <- factor(ifelse(pheno$etiology == "NF", "Normal", "DCM_HFrEF"), levels = c("Normal","DCM_HFrEF"))
 ```
 
-## Step 3: Gene Annotation 
+## Step 3: Gene Annotation(Probe ID converted to gene symbol) 
 ```{r}
 # Obtaining gene length from TxDb
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
@@ -1142,7 +1144,7 @@ counts_anno_mat <- as.matrix(counts_anno_filt)
 rownames(counts_anno_mat) <- gene_anno_filt$Symbol[match(rownames(counts_anno_mat), gene_anno_filt$EntrezID)]
 ```
 
-## Step 5: Merge duplicate genes (take the average)
+## Step 5: Processing duplicate genes (take the average)
 ```{r}
 counts_dup_filt <- limma::avereps(counts_anno_mat) %>%
   round() %>% 
@@ -1197,7 +1199,7 @@ fpkm_final <- compute_fpkm_from_counts(
 
 ## Step 8: SVA Batch Correction for Counts
 ```{r}
-# log2 (CPM+1) matrix (using TMM normalization factor)
+# log2 (CPM+1) matrix 
 dge_norm <- calcNormFactors(DGEList(counts_final))
 logcpm <- cpm(dge_norm, log = TRUE, prior.count = 1)   # log2(CPM+1)
 
@@ -1207,14 +1209,6 @@ mod0 <- model.matrix(~ 1, pheno)
 
 # Estimate the number of potential factors
 n.sv <- num.sv(as.matrix(logcpm), mod, method="leek")
-
-# svobj <- svaseq(as.matrix(logcpm), mod, mod0, n.sv = n.sv)
-# counts_corr <- t( t(logcpm) - svobj$sv %*% solve(t(svobj$sv) %*% svobj$sv) %*% t(svobj$sv) %*% t(cpms_log) )
-# 
-# # Add SVA to pheno
-# svdf <- svobj$sv
-# colnames(svdf) <- paste0("SVA",1:ncol(svdf))
-# pheno_final <- cbind(pheno, svdf)
 
 if (n.sv > 0) {
   # SVA
@@ -1278,6 +1272,7 @@ var_before <- round(100 * attr(pca_before, "percentVar"))
 p_before <- ggplot(pca_before, aes(x = PC1, y = PC2, color = group, fill = group)) +
   geom_point(size = 2.5, alpha = 0.7) +
   stat_ellipse(type = "t", level = 0.95, geom = "polygon", alpha = 0.15) +
+  geom_text_repel(aes(label = rownames(pca_before)), size = 3, show.legend = FALSE) + 
   xlab(paste0("PC1: ", var_before[1], "% variance")) +
   ylab(paste0("PC2: ", var_before[2], "% variance")) +
   ggtitle("Before Batch Correction") +
@@ -1299,6 +1294,7 @@ var_after <- round(100 * attr(pca_after, "percentVar"))
 p_after <- ggplot(pca_after, aes(x = PC1, y = PC2, color = group, fill = group)) +
   geom_point(size = 2.5, alpha = 0.7) +
   stat_ellipse(type = "t", level = 0.95, geom = "polygon", alpha = 0.15) +
+  geom_text_repel(aes(label = rownames(pca_after)), size = 3, show.legend = FALSE) + 
   xlab(paste0("PC1: ", var_after[1], "% variance")) +
   ylab(paste0("PC2: ", var_after[2], "% variance")) +
   ggtitle("After SVA Batch Correction") +

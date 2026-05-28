@@ -62,10 +62,14 @@ pheno_final$group <- factor(pheno_final$group, levels = c("Normal", "DCM_HFrEF")
 pheno_final$gender <- factor(pheno_final$gender, levels = c("Female", "Male"))
 pheno_final$race <- factor(pheno_final$race, levels = c("AA", "Caucasian"))
 
-dds <- DESeqDataSetFromMatrix(countData = counts_final, colData = pheno_final, design= ~ SVA1 + SVA2 + SVA3 + age + gender + race + group)
+# dds <- DESeqDataSetFromMatrix(countData = counts_final, colData = pheno_final, design= ~ SVA1 + SVA2 + SVA3 + age + gender + race + group)
+dds <- DESeqDataSetFromMatrix(countData = counts_final, colData = pheno_final, design= ~ SVA1 + age + gender + race + group)
+
 
 colData(dds)$age_scaled <- scale(colData(dds)$age)
-design(dds) <- ~ SVA1 + SVA2 + SVA3 + age_scaled + gender + race + group
+# design(dds) <- ~ SVA1 + SVA2 + SVA3 + age_scaled + gender + race + group
+
+design(dds) <- ~ SVA1  + age_scaled + gender + race + group
 
 keep <- rowSums(counts(dds) >= 10) >= 3
 dds <- dds[keep, ]
@@ -430,7 +434,7 @@ set.seed(123)
 net <- blockwiseModules(
   datExpr,
   # power = sft$powerEstimate,
-  power = 4,
+  power = 6,
   TOMType = "unsigned",
   minModuleSize = 30,         
   mergeCutHeight = 0.25,

@@ -33,6 +33,7 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 library(ggvenn)
 library(tidyverse)
 library(openxlsx)
+library(ggsci)
 ```
 
 ## Candidate Genes
@@ -80,11 +81,12 @@ gene_list <- list(
 
 p <- ggvenn(
   gene_list,
-  fill_color = c("#F1948A", "blue","#58D68D"),
+  fill_color = pal_aaas()(4),
   stroke_color = "white",
   stroke_size = 1,
   set_name_size = 5,
   text_size = 5,
+  text_color = "white",
   show_percentage = FALSE
 ) +
   theme(plot.title = element_text(hjust = 0.5, size=10))
@@ -94,7 +96,7 @@ ggsave("../results/figures/main/Figure_3C_Venn_Herb_DEG_WGCNA.pdf", p, width=6, 
 ggsave("../results/figures/main/Figure_3C_Venn_Herb_DEG_WGCNA.png", p, width=6, height=6, dpi=300)
 
 
-save(herb_targets_df, deg_genes_df, wgcna_genes_df,disease_genes_df, candidate_genes_df, file = "../data/processed/network/herb_disease_genes.Rdata")
+save(herb_targets_df, deg_genes_df, wgcna_genes_df,disease_genes_df, candidate_genes_df, file = "../data/processed/network/01_herb_disease_genes.Rdata")
 
 write.xlsx(
   list(
@@ -228,14 +230,6 @@ ggsave("../results/figures/main/Figure_3E_KEGG_dot.pdf", kegg_plot, width = 9, h
 
 ## Load Package
 ```{r}
-library(IOBR)
-library(tidyverse)
-library(ggplot2)
-library(ggpubr)
-library(pheatmap)
-
-# 加载分析所需的R包
-library(devtools) 
 library(CIBERSORT) 
 library(pheatmap) 
 library(tidyverse) 
@@ -251,29 +245,6 @@ load("../data/processed/geo/GSE141910/GSE141910_preprocessed_final.RData")
 
 data(LM22)
 
-# # get 22 types of immune cells
-# cibersort_res <- deconvo_tme(
-#   eset = as.data.frame(expr_fpkm_corr),
-#   method = "cibersort",
-#   arrays = FALSE,
-#   tumor = FALSE,
-#   perm = 1000
-# )
-# 
-# # Extract 22 immune cell results
-# immune_22cells <- cibersort_res %>%
-#   column_to_rownames("ID") %>%
-#   dplyr::select(-c("P-value_CIBERSORT", "Correlation_CIBERSORT", "RMSE_CIBERSORT"))
-# 
-# # the names of immune cell types
-# cell_types <- colnames(immune_22cells)
-
-# 运行CIBERSORT核心函数，计算每个样本中22种免疫细胞的比例# 参数说明：
-# - sig_matrix：参考矩阵（此处为LM22）
-# - mixture_file：待分析的表达矩阵
-# - perm：置换检验次数（推荐100-1000，次数越多结果越可靠但耗时越长）
-# - QN：是否进行 quantile normalization（分位数标准化，推荐TRUE）
-
 results <- cibersort(
   sig_matrix = LM22, 
   mixture_file = expr_fpkm_corr, 
@@ -281,116 +252,582 @@ results <- cibersort(
   QN = TRUE
 )
 
-# 保存CIBERSORT结果包含各细胞比例、P值、相关性等信息
-
+save(results,file = "../data/processed/tme/cibersort_res.Rdata")
 write.table(
   rownames_to_column(as.data.frame(results), 'Sample'), 
-  '../data/processed/tme/cibersort_res.xls',  
-  sep = '\t', 
-  quote = F, 
-  row.names = F)
-
-write.table(
-  rownames_to_column(as.data.frame(results), 'Sample'), 
-  '../results/tables/supplementary/tme/cibersort_res.xls',  
+  '../data/processed/tme/cibersort_res.xlsx',  
   sep = '\t', 
   quote = F, 
   row.names = F)
 ```
 
-## Step 2: 免疫细胞比例热图可视化
+## Step 2: 提取22种免疫细胞的比例数据
 ```{r}
-# 从结果中提取22种免疫细胞的比例数据（排除统计信息列）
-cibersort_result <- results[, 1:22] %>% as.data.frame()
+cell_cols <- intersect(colnames(results), colnames(LM22)) 
+cibersort_result <- results[, cell_cols] %>% as.data.frame()
+```
 
+## Step 3: Adding group infos
+```{r}
 group_info <- data.frame(
   samples = rownames(pheno_final), 
   group =pheno_final$group)
 
-# 确保分组信息的样本顺序与免疫细胞结果一致（避免后续可视化混乱）
 group_info <- group_info[order(match(group_info$sample, rownames(results))), ]
 
-# 准备热图的分组注释（用于在热图右侧标记样本分组）
-annotation_row <- group_info[, "group", drop = FALSE]  # 提取分组列
-rownames(annotation_row) <- group_info$sample  # 匹配样本名
-
-
-# 绘制并保存免疫细胞丰度热图
-# 参数说明：
-# - scale = "row"：按行标准化（使不同细胞的比例可比较）
-# - cluster_rows = FALSE：不聚类样本（按原始顺序排列）
-# - color：自定义颜色渐变（蓝-白-红）
-# - annotation_row：添加样本分组注释
-png("../results/figures/main/immune_cell_abundance_heatmap.png", width = 800, height = 800)  # 保存为PNG
-pheatmap(cibersort_result, 
-         scale = "row", 
-         cluster_rows = FALSE,
-         cluster_cols = TRUE,  # 对细胞类型进行聚类
-         color = colorRampPalette(c("lightblue", "white", "#BB2222"))(100),
-         show_rownames = FALSE,  # 不显示样本名（样本多时常重叠）
-         show_colnames = TRUE,   # 显示免疫细胞名
-         main = "Immune Cell Abundance Heatmap",
-         annotation_row = annotation_row,  # 右侧添加分组注释
-         annotation_names_row = FALSE,
-         fontsize_col = 10,
-         cellwidth = 10,
-         cellheight = 10)
-dev.off()
-
-
-
-
+cibersort_result$group <- group_info$group[match(rownames(cibersort_result), group_info$sample)]
 ```
 
-## Step 3: 免疫细胞丰度堆叠图
+
+## Step 3: 免疫细胞丰度堆叠图（样本比例分布）
 
 ```{r}
-# 为免疫细胞丰度结果添加分组信息：将样本分组匹配到对应的丰度数据
-cibersort_result$group <- group_info$group[match(rownames(cibersort_result), group_info$sample)]
-# 数据转换：将宽表转为长表（适合ggplot绘图）
-# 转换后格式：sample（样本）、group（分组）、cell（免疫细胞）、score（丰度）
 cibersort_data <- cibersort_result %>% 
+  dplyr::select(where(~ any(. != 0))) %>%
   tibble::rownames_to_column('sample') %>%  
-  tidyr::pivot_longer(cols = -c(group, sample), names_to = 'cell', values_to = 'score')
-# 绘制堆叠条形图：
+  tidyr::pivot_longer(
+    cols = -c(group, sample), 
+    names_to = 'cell', 
+    values_to = 'score'
+)
+
 p1 <- ggplot(cibersort_data, aes(x = sample, y = score, fill = cell)) +
-  geom_col(position = 'fill', alpha = 0.7) +  # position='fill'：按比例堆叠（总和为1）
-  labs(x = '', y = 'Estimated proportion', fill = 'Cell type') +  # 坐标轴和图例标题
-  guides(fill = guide_legend(ncol = 1)) +  # 图例按1列排列
+  geom_col(position = 'fill', alpha = 0.7) +  
+  labs(x = '', 
+       y = 'Estimated proportion', 
+       fill = 'Cell type'
+  ) + 
+  guides(fill = guide_legend(ncol = 1)) + 
   theme(
-    axis.text.x = element_blank(),  # 不显示x轴样本名（避免拥挤）
-    axis.text.y = element_text(size = 15, color = 'black'),  # y轴字体设置
-    axis.title = element_text(size = 18, color = 'black'),  # 轴标题字体
-    axis.ticks.x = element_blank(),  # 不显示x轴刻度
-    legend.title = element_text(size = 18, colour = 'black'),  # 图例标题
-    legend.text = element_text(size = 12, colour = 'black'),   # 图例文本
-    legend.key.size = unit(2, 'mm'),  # 图例符号大小
-    strip.text = element_text(size = 15),  # 分组标签字体
-    strip.background = element_rect(fill = 'gray', colour = 'black'),  # 分组背景
-    panel.grid = element_blank(),  # 去除网格线
-    panel.background = element_rect(fill = NA, color = NA)  # 去除背景
+    axis.text.x = element_blank(),  
+    axis.text.y = element_text(size = 10),  
+    axis.title = element_text(size = 10), 
+    axis.ticks.x = element_blank(),  
+    legend.title = element_text(size = 10),  
+    legend.text = element_text(size = 10),  
+    legend.key.size = unit(2, 'mm'),  
+    strip.text = element_text(size = 10),  
+    strip.background = element_rect(fill = 'gray', colour = 'black'), 
+    panel.grid = element_blank(), 
+    panel.background = element_rect(fill = NA, color = NA)  
   ) +
-  facet_grid(. ~ group, scales = "free")  # 按分组分面展示
-print(p1)  # 显示图形
+  facet_grid(. ~ group, scales = "free")  
+
+print(p1)  
 ```
+
+## Step 4: 免疫细胞差异分析及箱线图
+```{r}
+state_result <- cibersort_data %>% 
+  group_by(cell) %>% 
+  wilcox_test(score ~ group, p.adjust.method = 'BH')
+state_result$p <- signif(state_result$p, 3)
+state_result$p.label <- ifelse(state_result$p < 0.05, 
+                               ifelse(state_result$p < 0.01, 
+                                      ifelse(state_result$p < 0.001, 
+                                             ifelse(state_result$p < 0.0001, "****", "***"), "**"), "*"), "ns")
+
+change_all <- cibersort_data %>%
+  group_by(cell) %>%
+  summarise(
+    case_median = median(score[group == "DCM_HFrEF"]),
+    control_median = median(score[group == "Normal"]),
+    signif = ifelse(case_median > control_median, "sig_high", "sig_low")
+  )
+
+change_all$signif <- ifelse(state_result$p.label[match(change_all$cell, state_result$cell)] == "ns", 
+                            "not significant", change_all$signif)
+cibersort_data$change <- change_all$signif[match(cibersort_data$cell, change_all$cell)]
+
+cibersort_data <- cibersort_data %>% arrange(cell)
+cibersort_data$cell <- factor(cibersort_data$cell, levels = unique(cibersort_data$cell))
+
+state_result <- state_result %>%
+  left_join(
+    cibersort_data %>% distinct(cell, group),
+    by = c("cell" = "cell")
+  )
+
+p2 <- ggplot(cibersort_data, aes(x = cell, y = score, fill = group)) +
+  geom_boxplot() +  
+  scale_fill_manual(values = c(Normal = "#4E4E56", DCM_HFrEF = "#DA635D")) +  
+  stat_pvalue_manual(state_result,
+                     x = "cell",
+                     y.position = max(cibersort_data$score) * 1.1,
+                     size = 3,
+                     color = "blue",
+                     label = "p.label") +
+  labs(x = "", y = "Estimated Proportion", fill = "Group") + 
+  theme_minimal() + 
+  theme(
+    axis.title.y = element_text(size = 10), 
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 10, color = "black"),  
+    axis.text = element_text(size = 10),  
+    legend.text = element_text(size = 10), 
+    legend.position = 'top',  
+    legend.title = element_text(size = 10),  
+    panel.grid.major.x = element_blank(),  
+    panel.grid.minor = element_blank() 
+  )
+
+print(p2)  
+```
+
+## Step 5: 免疫细胞间相关性分析
+```{r}
+# 相关性分析：仅保留数值列（排除分组等非数值信息）
+numeric_cols <- sapply(cibersort_result, is.numeric)
+# 计算Spearman相关系数（适合非正态分布数据）
+cor_sorce <- cor(cibersort_result[, numeric_cols], method = 'spearman')
+# 计算相关系数的P值（使用WGCNA包的函数）
+cor_sorce_p <- WGCNA::corPvalueStudent(cor_sorce, nrow(cibersort_result))
+# 设置颜色渐变：从深蓝（负相关）到浅黄再到深红（正相关）
+col2 <- colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0",
+                           "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))(50)
+# 定义绘制相关性热图的函数：
+# 上三角显示相关系数数值，下三角显示圆圈（大小表示相关性强弱）和显著性标签
+corr_plot <- function() {
+  corrplot(cor_sorce,
+           na.label = " ",  # 缺失值用空格表示
+           diag = T,  # 显示对角线（自身相关性）
+           method = "number",  # 上三角用数字表示相关系数
+           type = "upper",  # 仅显示上三角
+           tl.pos = "lt",  # 标签位置（左和上）
+           tl.col = "black",  # 标签颜色
+           tl.srt = 90,  # 标签旋转90度
+           tl.cex = 0.9,  # 标签字体大小
+           cl.length = 8,  # 颜色图例的分段数
+           cl.cex = 0.8,  # 颜色图例字体大小
+           col = col2,  # 使用自定义颜色
+           number.cex = 0.7)  # 相关系数数值大小
+
+  # 下三角添加显著性标签
+  corrplot(cor_sorce,
+           p.mat = cor_sorce_p,  # P值矩阵
+           insig = "label_sig",  # 对不显著的相关性标记
+           add = TRUE,  # 在已有图上添加
+           type = "lower",  # 仅显示下三角
+           method = "circle",  # 用圆圈表示相关性
+           col = col2,  # 颜色与上三角一致
+           na.label = " ",  # 缺失值处理
+           diag = FALSE,  # 不显示对角线
+           tl.pos = "n",  # 不显示标签
+           cl.pos = "n",  # 不显示颜色图例
+           sig.level = c(.0001, .001, .01, .05),  # 显著性水平分级
+           pch.cex = 0.9,  # 显著性标签大小
+           pch.col = "black")  # 显著性标签颜色
+}
+corr_plot()  # 绘制并显示相关性热图
+```
+
+## Step 6: 目标基因与免疫细胞的相关性分析
+```{r}
+# 定义您感兴趣的基因（请根据实际研究的基因修改）：这里以ACE和CASP1为例
+interest_genes <- c("ACE","CASP1")  
+gene_expr <- expr_fpkm_corr[rownames(expr_fpkm_corr) %in% interest_genes, , drop = FALSE]
+
+gene_expr_t <- as.data.frame(t(gene_expr))
+colnames(gene_expr_t) <- rownames(gene_expr)  
+common_samples <- intersect(rownames(cibersort_result), rownames(gene_expr_t))
+cibersort_sub <- cibersort_result[common_samples, cell_cols, drop = FALSE] %>%
+  dplyr::select(where(~ any(. != 0)))
+
+gene_expr_sub <- gene_expr_t[common_samples, , drop = FALSE] 
+combined_data <- cbind(cibersort_sub, gene_expr_sub)
+
+correlation_matrix <- cor(combined_data, method = "spearman")
+
+n_immune <- ncol(cibersort_sub)  
+n_genes <- length(interest_genes)  
+gene_cell_cor <- correlation_matrix[(n_immune + 1):(n_immune + n_genes), 1:n_immune, drop = FALSE]
+
+p_matrix <- matrix(0, nrow = n_genes, ncol = n_immune)
+rownames(p_matrix) <- interest_genes
+colnames(p_matrix) <- colnames(cibersort_sub)
+for (gene in interest_genes) {
+  for (cell in colnames(cibersort_sub)) {
+    test <- cor.test(combined_data[[gene]], combined_data[[cell]], method = "spearman")
+    p_matrix[gene, cell] <- test$p.value  
+  }
+}
+
+sig_matrix <- ifelse(p_matrix < 0.001, "***", 
+                     ifelse(p_matrix < 0.01, "**", 
+                            ifelse(p_matrix < 0.05, "*", "")))
+pheatmap(gene_cell_cor,
+         color = colorRampPalette(c("#2166AC", "white", "#B2182B"))(100), 
+         display_numbers = sig_matrix,  
+         number_color = "black",
+         number_format = "%s",  
+         main = "Correlation between Genes and Immune Cells",  # 图标题
+         treeheight_row = 20,  
+         treeheight_col = 20, 
+         fontsize = 10,  
+         fontsize_row = 12,  
+         fontsize_col = 10,  
+         cellwidth = 25,  
+         cellheight = 30)  
+dev.off()  
+```
+
 
 ---
 
 # Herb-Ingredient-Target (HIT) Network
+## Load Packages
+
 ```{r}
+library(tidyverse)
+library(openxlsx)
+library(data.table)
+
+library(clusterProfiler)
+library(igraph)
+library(centiserve)
 library(RCy3)
 ```
+
+## Step 1: Loading data
+```{r}
+rm(list = ls())
+
+load("../data/processed/network/01_herb_disease_genes.Rdata")
+load("../data/processed/tcm/14_compound_target_final.RData")
+
+herb_ingredient_target <- candidate_genes_df %>%
+  left_join(compound_target_final, by = c("Gene" = "Symbol"),relationship = "many-to-many") %>%
+  dplyr::select(Herb.Name.Pinyin, Compound.Name, Gene) %>%
+  dplyr:: rename(Herb = Herb.Name.Pinyin, Ingredient = Compound.Name, Target = Gene)  %>%
+  distinct() %>%
+  arrange(Herb,Target)
+
+save(herb_ingredient_target,file = "../data/processed/network/02_herb_ingredient_target.Rdata")
+
+```
+
+## Step 2: Build herb-compound-target network
+```{r}
+herb_ingredient <- herb_ingredient_target %>%
+  dplyr::select(Herb, Ingredient) %>%
+  distinct()
+  
+ingredient_target <- herb_ingredient_target %>%
+  dplyr::select(Ingredient, Target) %>%
+  distinct()
+  
+# edges
+edges <- bind_rows(
+  herb_ingredient %>% 
+    dplyr::rename(source = Herb, target = Ingredient) %>% 
+    mutate(interaction = "herb_ingredient"),
+  ingredient_target %>%
+    dplyr::rename(source = Ingredient, target = Target) %>%
+    mutate(interaction = "ingredient_target")
+)
+
+# nodes
+nodes <- data.frame(id = unique(c(edges$source, edges$target))) %>%
+  mutate(type = case_when(
+    id %in% herb_ingredient$Herb        ~ "Herb",
+    id %in% ingredient_target$Ingredient  ~ "Ingredient",
+    id %in% ingredient_target$Target    ~ "Target",
+    TRUE                              ~ "Other"
+  ))
+
+save(nodes,edges,file = "../data/processed/network/03_HIT_network.Rdata")
+
+write.xlsx(
+  list(
+    Herb_Ingredient_Target = herb_ingredient_target,
+    Edges = edges,
+    Nodes = nodes
+  ),
+  "../results/tables/supplementary/Table_S7_herb_ingredient_target_network.xlsx", overwrite = TRUE)
+
+```
+
+## Step 3: HIT network visualization
+```{r}
+rm(list = ls())
+
+load("../data/processed/network/03_HIT_network.Rdata")
+
+cytoscapePing()  
+
+deleteAllNetworks() 
+
+createNetworkFromDataFrames(
+  nodes = nodes,
+  edges = edges,
+  title = "HFrEF_HIT_Network",
+  collection = "HIT_Network"
+)
+
+# layout
+layoutNetwork("force-directed")
+
+# style
+style_name <- "HIT_Style_By_Nodes_Type"
+try(deleteVisualStyle(style_name), silent = TRUE)
+
+# default style
+defaults <- list(
+  NODE_SHAPE = "RECTANGLE",
+  NODE_SIZE = 30,
+  NODE_FILL_COLOR = "#CCCCCC",
+  NODE_LABEL_FONT_FACE = "Arial,plain,12",
+  EDGE_WIDTH = 0.5,
+  EDGE_STROKE_COLOR = "#E0E0E0",
+  EDGE_TRANSPARENCY = 200         
+)
+
+# mapping style
+mappings <- list(
+  # node shape
+  mapVisualProperty(
+    visual.prop = 'node shape', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c("ROUND RECTANGLE","ELLIPSE", "DIAMOND")
+  ),
+  
+  # node color
+  mapVisualProperty(
+    visual.prop = 'node fill color', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c("#fe9acc", "#fe0000", "#0401b9")
+  ),
+  
+  # node size
+  mapVisualProperty(
+    visual.prop = 'node size',
+    table.column = 'type',
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c(30, 20, 30)
+  ),
+  
+  # node label
+  mapVisualProperty(
+    visual.prop = 'node label', 
+    table.column = 'name', 
+    mapping.type = 'p'
+  ),
+  
+  mapVisualProperty(
+    visual.prop = 'node label color', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c("#000000", "#000000", "#FFFFFF")
+  )
+)
+
+# apply style
+createVisualStyle(
+  style.name = style_name, 
+  defaults = defaults, 
+  mappings = mappings
+)
+
+setVisualStyle(style_name)
+```
+
 
 ---
 
 # PPI Network
 
+## Step 1: Obtain the PPI network from the STRING database
+```{r}
+rm(list = ls())
+
+load("../data/processed/network/01_herb_disease_genes.Rdata")
+
+gene_list <- candidate_genes_df$Gene
+ppi_list <- clusterProfiler::getPPI(gene_list, taxID = "9606",required_score = 400)
+
+save(ppi_list,file = "../data/processed/network/04_ppi_list.Rdata")
+```
+
+## Step 2: PPI network construction data preparation
+```{r}
+nodes <- data.frame(id = igraph::V(ppi_list)$name)
+nodes$degree <- igraph::degree(ppi_list)
+
+edges <- igraph::as_data_frame(ppi_list, what = "edges")
+colnames(edges)[colnames(edges) == "from"] <- "source"
+colnames(edges)[colnames(edges) == "to"]   <- "target"
+# add an "interaction" column to edges
+if(!"interaction" %in% colnames(edges)){
+    edges$interaction <- "interacts with"
+}
+
+save(nodes,edges,file = "../data/processed/network/05_ppi_network.Rdata")
+
+
+write.xlsx(
+  list(
+    Nodes = nodes,
+    Edges = edges
+  ), 
+  "../results/tables/supplementary/Table_S8_PPI_network.xlsx", overwrite = TRUE)
+```
+
+## Step 3: PPI network visualization
+```{r}
+# Ping Cytoscape 
+cytoscapePing() 
+
+try(deleteNetwork("HFrEF_PPI_Network"), silent = TRUE)
+deleteAllNetworks() 
+
+createNetworkFromDataFrames(
+  nodes = nodes,  
+  edges = edges,  
+  title = "HFrEF_PPI_Network", 
+  collection = "PPI_Network" 
+)
+
+# Create based on degree values, node attributes must be synchronized into Cytoscape first
+
+loadTableData(nodes, data.key.column = "id", table = "node")
+
+# New style
+try(deleteVisualStyle("PPI_Style_By_Nodes_Degree"), silent = TRUE)
+style_name <- "PPI_Style_By_Nodes_Degree"
+
+# default style
+default_lists <- list(
+  NODE_SHAPE = "ellipse",           
+  NODE_SIZE = 40,                   
+  NODE_FILL_COLOR = "#88CCEE",      
+  # NODE_LABEL_FONT_SIZE = 12,
+  NODE_LABEL_FONT_FACE = "Arial,plain,12",  
+  EDGE_WIDTH = 0.5,
+  EDGE_STROKE_COLOR = "#E0E0E0",
+  EDGE_TRANSPARENCY = 200          
+)
+
+mapping_lists <- list(
+  # Node size: small degree → 20, large degree → 100
+  mapVisualProperty(
+    visual.prop = 'node size', 
+    table.column = 'degree', 
+    mapping.type = 'c',  
+    table.column.values = c(min(nodes$degree), max(nodes$degree)), 
+    visual.prop.values = c(20, 100)
+  ),
+  # Node fill color mapping: small degree → light yellow, large degree → red
+  mapVisualProperty(
+    visual.prop = 'node fill color', 
+    table.column = 'degree', 
+    mapping.type = 'c',
+    table.column.values = c(min(nodes$degree), max(nodes$degree)),
+    visual.prop.values = c("#FFFFCC", "#CC0000")
+  )
+)
+
+createVisualStyle(
+  style.name = style_name,
+  defaults = default_lists,
+  mappings = mapping_lists
+)
+
+setVisualStyle(style_name)
+
+# Node Label
+setNodeLabelMapping(table.column = 'id', style.name = style_name)
+
+layoutNetwork("force-directed")
+```
+
+
 
 ---
 
 # Identification of Hub Genes
+## Step 1: Cytohubba
+```{r}
+cytohubba_res <- read_csv("../data/processed/network/06_cytohubba_res.csv") %>%
+  column_to_rownames(var = colnames(.)[1])
 
+# cytohubba
+n <- min(20, nrow(cytohubba_res))
 
+top_mcc <- rownames(cytohubba_res[order(cytohubba_res$MCC, decreasing = TRUE), ])[1:n]
+
+top_degree <- rownames(cytohubba_res[order(cytohubba_res$Degree,decreasing = T),])[1:n]
+
+top_mnc <- rownames(cytohubba_res[order(cytohubba_res$MNC,decreasing = T),])[1:n]
+
+cytohubba_hub <- Reduce(intersect, list(top_mcc, top_degree, top_mnc))
+
+cytohubba_hub
+
+```
+
+## Step 2: MCODE
+```{r}
+mcode_res <- data.table::fread("../data/processed/network/07_mcode_res.txt") %>%
+  dplyr::slice(1) %>%                   
+  dplyr::select(last_col()) %>%          
+  dplyr::pull(1) %>%                     
+  strsplit(",\\s*") %>%         
+  unlist() 
+
+# intersect
+hub_genes <- Reduce(intersect, list(top_mcc, top_degree, top_mnc,mcode_hub))
+
+hub_genes
+
+hub_genes_tbl <- cytohubba_res[rownames(cytohubba_res) %in% hub_genes, c("MCC","MNC","Degree")] %>%
+  mutate(MCC = as.numeric(MCC)) %>%
+  arrange(desc(MCC)) %>%
+    rownames_to_column("Gene")
+
+hub_genes_tbl
+
+save(hub_genes_tbl,hub_genes,top_mcc,top_degree,top_mnc, 
+     file = "../data/processed/network/08_hub_genes.Rdata")
+
+write.xlsx(
+  hub_genes_tbl,
+  "../results/tables/main/Table2_Hub_Genes.xlsx"
+)
+```
+
+## Step 3: Visualization
+```{r}
+gene_list <- list(
+  MCC = top_mcc,
+  MNC = top_mnc,
+  Degree = top_degree,
+  MCODE = mcode_hub
+)
+
+library(ggsci)
+library(ggvenn)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(4),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=10))
+
+# save
+ggsave("../results/figures/main/Figure_4C_Venn_Hub_Genes.pdf", p, width=6, height=6, dpi=300)
+ggsave("../results/figures/main/Figure_4C_Venn_Hub_Genes.png", p, width=6, height=6, dpi=300)
+```
 
 ---
 
