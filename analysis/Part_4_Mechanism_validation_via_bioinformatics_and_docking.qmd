@@ -39,17 +39,20 @@ library(xgboost)
 library(pROC)
 library(ggplot2)
 library(ggsci)
+library(corrplot)
 ```
 
 ## Step 1: Loading data
 ```{r}
 rm(list = ls())
 
-load("../data/processed/geo/GSE141910GSE141910_preprocessed_final.RData")
+load("../data/processed/geo/GSE141910/GSE141910_preprocessed_final.RData")
 
-load("../data/processed/network/08_hub_genes.Rdata")
+load("../data/processed/network/08_hub_genes.RData")
 
 expr_matrix <- t(expr_fpkm_corr[rownames(expr_fpkm_corr) %in% hub_genes,])
+
+expr_matrix <- expr_matrix[,hub_genes]
 
 group <- pheno_final[rownames(expr_matrix),"group"] %>% as.numeric()-1
 
@@ -74,10 +77,76 @@ y_train <- train_data$group
 x_test  <- as.matrix(test_data[, -ncol(test_data)])
 y_test  <- test_data$group
 
-save(x_train,y_train,x_test,y_test, file = "../data/processed/ml/01_model_data.Rdata")
+save(x_train,y_train,x_test,y_test, file = "../data/processed/ml/01_model_data.RData")
 ```
 
-## Step 3: Feature selection
+## Step 4: Hub genes correlation analysis
+```{r}
+cor_matrix <- cor(x_train)
+
+off_diag_abs <- abs(cor_matrix[lower.tri(cor_matrix)])
+
+max_abs <- max(off_diag_abs, na.rm = TRUE)
+min_abs <- min(off_diag_abs, na.rm = TRUE)
+
+cor_df <- melt(cor_matrix, varnames = c("Gene1", "Gene2"), value.name = "cor")
+
+cor_df <- cor_df[as.character(cor_df$Gene1) != as.character(cor_df$Gene2), ]
+
+cor_df$row_id <- as.numeric(factor(cor_df$Gene1, levels = hub_genes))
+
+cor_df$col_id <- as.numeric(factor(cor_df$Gene2, levels = hub_genes))
+
+cor_df <- cor_df[cor_df$row_id > cor_df$col_id, ]
+
+p <- ggplot(cor_df, aes(x = col_id, y = row_id)) +
+  geom_point(aes(fill = cor), shape = 21, size = 10, stroke = 0) +
+  geom_text(aes(label = sprintf("%.2f", cor)), size = 2.5, color = "black") +  
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", 
+                       midpoint = 0, limits = c(-1, 1),
+                       name = "Correlation") +
+  scale_y_continuous(breaks = 1:length(hub_genes), labels = hub_genes, trans = "reverse") +
+  scale_x_continuous(breaks = 1:length(hub_genes), labels = hub_genes) +
+  labs(x="",y="") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1.2, size = 10),
+        axis.text.y = element_text(size = 10),
+        legend.position = c(0.85,0.55)) +
+  coord_fixed()
+
+ggsave("../results/figures/supplementary/Figure_S3_A_correlation_plot.pdf", p, width = 7, height = 7, dpi = 300)
+```
+
+## Step 4: ROC-AUC for each gene
+```{r}
+compute_auc <- function(gene, x, y) {
+  roc_obj <- roc(response = y, predictor = x[, gene], quiet = TRUE, direction = "auto")
+  auc_val <- round(auc(roc_obj), 3)
+  return(auc_val)
+}
+
+gene_auc_df <- data.frame(
+  Gene = hub_genes,
+  Train_AUC = sapply(hub_genes, compute_auc, x = x_train, y = y_train),
+  Test_AUC  = sapply(hub_genes, compute_auc, x = x_test,  y = y_test)
+) 
+
+hub_genes_tbl2 <- hub_genes_tbl %>%
+  left_join(gene_auc_df,by="Gene")
+
+save(gene_auc_df, hub_genes_tbl2, 
+     file = "../data/processed/ml/02_gene_auc.RData")
+
+write.xlsx(
+  hub_genes_tbl2,
+  "../results/tables/main/Table2_Hub_Genes_AUC.xlsx"
+)
+
+
+```
+
+## Step 5: Feature selection
 
 ### LASSO
 ```{r}
@@ -97,7 +166,7 @@ lasso_selected <- rownames(lasso_coef)[which(lasso_coef[,1] != 0)][-1]
 cat("LASSO selected:", length(lasso_selected), "genes\n")
 cat(lasso_selected, "\n")
 
-save(cv_lasso,lasso_selected, file = "../data/processed/ml/02_lasso.Rdata")
+save(cv_lasso,lasso_selected, file = "../data/processed/ml/02_lasso.RData")
 ```
 
 ### SVM-RFE
@@ -112,7 +181,7 @@ svm_selected <- predictors(svm_rfe)
 cat("SVM-RFE selected:", length(svm_selected), "genes\n")
 cat(svm_selected, "\n")
 
-save(svm_rfe,svm_selected, file = "../data/processed/ml/03_svm_rfe.Rdata")
+save(svm_rfe,svm_selected, file = "../data/processed/ml/03_svm_rfe.RData")
 ```
 
 ### Boruta
@@ -159,7 +228,7 @@ cat("Boruta selected:", length(boruta_selected), "genes\n")
 cat("Boruta selected:", length(boruta_selected), "genes\n")
 cat(boruta_selected, "\n")
 
-save(boruta_result,boruta_selected, file = "../data/processed/ml/04_boruta.Rdata")
+save(boruta_result,boruta_selected, file = "../data/processed/ml/04_boruta.RData")
 ```
 
 ### XGBoost
@@ -190,7 +259,7 @@ xgb_selected <- head(importance$Feature, 15)
 cat("XGBoost selected:", length(xgb_selected), "features\n")
 cat(xgb_selected, "\n")
 
-save(xgb_model,xgb_selected, file = "../data/processed/ml/05_xgb.Rdata")
+save(xgb_model,xgb_selected, file = "../data/processed/ml/05_xgb.RData")
 ```
 
 ### Consensus genes
@@ -199,10 +268,12 @@ consensus_genes <- Reduce(intersect, list(lasso_selected, svm_selected, boruta_s
 cat("Consensus genes:", length(consensus_genes), "\n")
 print(consensus_genes)
 
-write.csv(data.frame(Gene = consensus_genes), "../data/processed/ml/05_consensus_genes.csv", row.names = FALSE)
+save(consensus_genes, file =  "../data/processed/ml/06_consensus_genes.RData")
+
+write.csv(data.frame(Gene = consensus_genes), "../data/processed/ml/06_consensus_genes.csv", row.names = FALSE)
 ```
 
-## Step 4: Feature selection Visualization
+## Step 6: Feature selection Visualization
 ### LASSO
 ```{r}
 # Figure S3A
@@ -448,14 +519,15 @@ ggsave("../results/figures/supplementary/Figure_7A_UpSet_ML_Consensus.pdf", upse
 
 ```
 
-## Step 5: Logistic regression model
+## Step 7: Logistic regression model
 ```{r}
-library(ggplot2)
-library(ggsci)
-library(pROC)
+load("../data/processed/ml/06_consensus_genes.RData")
+load("../data/processed/ml/01_model_data.RData")
 
-formula_lr <- as.formula(paste("group ~", paste(consensus_genes, collapse = "+")))
+formula_lr <- as.formula(paste("group ~", paste(consensus_genes$Gene, collapse = "+")))
 lr_model <- glm(formula_lr, data = train_data, family = binomial())
+
+save(lr_model, file = "../data/processed/ml/07_lr_model.RData")
 
 # Train set ROC
 train_pred <- predict(lr_model, train_data, type = "response")
@@ -470,15 +542,18 @@ test_roc <- roc(test_data$group, test_pred)
 train_auc <- round(auc(train_roc), 3)
 test_auc <- round(auc(test_roc), 3)
 
+train_roc_smooth <- smooth(train_roc, method = "binormal")
+test_roc_smooth  <- smooth(test_roc,  method = "binormal")
+
 roc_df <- rbind(
   data.frame(
-    Specificity = 1 - train_coords$specificity,  # 1 - specificity 作为 x 轴
-    Sensitivity = train_coords$sensitivity,
+    Specificity = 1 - train_roc_smooth$specificities, 
+    Sensitivity = train_roc_smooth$sensitivities,
     Group = paste0("Train AUC = ", train_auc)
   ),
   data.frame(
-    Specificity = 1 - test_coords$specificity,
-    Sensitivity = test_coords$sensitivity,
+    Specificity = 1 - test_roc_smooth$specificities,
+    Sensitivity = test_roc_smooth$sensitivities,
     Group = paste0("Test AUC = ", test_auc)
   )
 )
@@ -502,16 +577,415 @@ p <- ggplot(roc_df, aes(x = Specificity, y = Sensitivity, color = Group)) +
   )
 
 ggsave("../results/figures/main/Figure_5B_ROC_curves.pdf", p, width = 6, height = 6)
-print(p)
+```
+
+## Step 8: External validation
+
+### GSE116250: External validation set
+```{r}
+library(org.Hs.eg.db)
+
+rm(list = ls())
+
+load("../data/processed/ml/06_consensus_genes.RData")
+load("../data/processed/ml/07_lr_model.RData")
+load("../data/raw/geo/gse116250_raw.RData")
+
+gse116250_expr_trans <- gse116250_fpkm_raw %>%
+  column_to_rownames("GeneID") %>%
+  mutate(across(everything(), ~ .x + 1)) %>%  
+  log2() %>%
+  t() %>% 
+  as.data.frame()
+
+entrez_ids <- colnames(gse116250_expr_trans)  
+symbols <- mapIds(org.Hs.eg.db, keys = entrez_ids, keytype = "ENTREZID", column = "SYMBOL", multiVals = "first")
+
+keep <- !is.na(symbols)
+gse116250_expr_annot <- t(gse116250_expr_trans[, keep]) %>%
+  as.data.frame() %>%
+  mutate(Gene = symbols[keep], .before = 1)
+
+common_genes <- intersect(consensus_genes$Gene, (gse116250_expr_annot$Gene))
+
+if (all(common_genes %in% consensus_genes$Gene)) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+
+gse116250_expr_merged <- gse116250_expr_annot %>%
+  as.data.frame() %>%
+  dplyr::filter(Gene %in% common_genes) %>%
+  group_by(Gene) %>%
+  summarise(across(everything(), mean, na.rm = TRUE)) %>%
+  column_to_rownames("Gene") %>%
+  t() %>%                          
+  as.data.frame()
+
+gse116250_expr_merged <- gse116250_expr_merged[,consensus_genes$Gene]
+
+# pheno info
+Normal <- trimws(gse116250_pheno_raw$characteristics_ch1.1) == "disease: non-failing"
+DCM_HFrEF <- trimws(gse116250_pheno_raw$characteristics_ch1.1) == "disease: dilated cardiomyopathy"
+
+gse116250_expr_filtered <- rbind(gse116250_expr_merged[Normal,],gse116250_expr_merged[DCM_HFrEF,]) %>%
+  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
+
+source("../scripts/external_roc_cm.R")
+
+plot_external_roc(
+  lr_model, 
+  gse116250_expr_filtered, 
+  gse116250_expr_filtered$group,
+  dataset_name = "GSE116250"
+)
+
+plot_external_cm(
+  lr_model, 
+  gse116250_expr_filtered, 
+  gse116250_expr_filtered$group, 
+  dataset_name = "GSE116250"
+)
+
+if (res_roc$auc >= 0.80) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+
+```
+
+### GSE161472: External validation set
+```{r}
+rm(list = ls())
+
+load("../data/processed/ml/06_consensus_genes.RData")
+load("../data/processed/ml/07_lr_model.RData")
+load("../data/raw/geo/gse161472_raw.RData")
+
+gse161472_expr_trans <- gse161472_fpkm_raw %>%
+  column_to_rownames("GeneID") %>%
+  mutate(across(everything(), ~ .x + 1)) %>%  
+  log2() %>%
+  t() %>% 
+  as.data.frame()
+
+entrez_ids <- colnames(gse161472_expr_trans)  
+symbols <- mapIds(org.Hs.eg.db, keys = entrez_ids, keytype = "ENTREZID", column = "SYMBOL", multiVals = "first")
+
+keep <- !is.na(symbols)
+gse161472_expr_annot <- t(gse161472_expr_trans[, keep]) %>%
+  as.data.frame() %>%
+  mutate(Gene = symbols[keep], .before = 1)
+
+common_genes <- intersect(consensus_genes$Gene, (gse161472_expr_annot$Gene))
+
+if (all(common_genes %in% consensus_genes$Gene)) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+
+gse161472_expr_merged <- gse161472_expr_annot %>%
+  as.data.frame() %>%
+  dplyr::filter(Gene %in% common_genes) %>%
+  group_by(Gene) %>%
+  summarise(across(everything(), mean, na.rm = TRUE)) %>%
+  column_to_rownames("Gene") %>%
+  t() %>%                          
+  as.data.frame()
+
+gse161472_expr_merged <- gse161472_expr_merged[,consensus_genes$Gene]
+
+# pheno info
+Normal <- trimws(gse161472_pheno_raw$`disease state:ch1`) == "NF"
+DCM_HFrEF <- trimws(gse161472_pheno_raw$`disease state:ch1`) == "HFrEF"
+
+gse161472_expr_filtered <- rbind(gse161472_expr_merged[Normal,],gse161472_expr_merged[DCM_HFrEF,]) %>%
+  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
+
+source("../scripts/external_roc_cm.R")
+
+res_roc <- plot_external_roc(
+  lr_model, 
+  gse161472_expr_filtered, 
+  gse161472_expr_filtered$group,
+  dataset_name = "GSE161472"
+)
+
+res_cm <- plot_external_cm(
+  lr_model, 
+  gse161472_expr_filtered, 
+  gse161472_expr_filtered$group, 
+  dataset_name = "GSE161472"
+)
+
+if (res_roc$auc >= 0.80) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+```
+
+### GSE135055: External validation set
+```{r}
+rm(list = ls())
+
+load("../data/processed/ml/06_consensus_genes.RData")
+load("../data/processed/ml/07_lr_model.RData")
+load("../data/raw/geo/gse135055_raw.RData")
+
+gse135055_expr_trans <- gse135055_fpkm_raw %>%
+  column_to_rownames("GeneID") %>%
+  mutate(across(everything(), ~ .x + 1)) %>%  
+  log2() %>%
+  t() %>% 
+  as.data.frame()
+
+entrez_ids <- colnames(gse135055_expr_trans)  
+symbols <- mapIds(org.Hs.eg.db, keys = entrez_ids, keytype = "ENTREZID", column = "SYMBOL", multiVals = "first")
+
+keep <- !is.na(symbols)
+gse135055_expr_annot <- t(gse135055_expr_trans[, keep]) %>%
+  as.data.frame() %>%
+  mutate(Gene = symbols[keep], .before = 1)
+
+common_genes <- intersect(consensus_genes$Gene, (gse135055_expr_annot$Gene))
+
+if (all(common_genes %in% consensus_genes$Gene)) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+
+gse135055_expr_merged <- gse135055_expr_annot %>%
+  as.data.frame() %>%
+  dplyr::filter(Gene %in% common_genes) %>%
+  group_by(Gene) %>%
+  summarise(across(everything(), mean, na.rm = TRUE)) %>%
+  column_to_rownames("Gene") %>%
+  t() %>%                          
+  as.data.frame()
+
+gse135055_expr_merged <- gse135055_expr_merged[,consensus_genes$Gene]
+
+gse135055_pheno_filtered <- gse135055_pheno_raw[rownames(gse135055_expr_merged),]
+
+# pheno info
+Normal <- trimws(gse135055_pheno_filtered$`diagnosis:ch1`) == "Not available"
+
+lvef_col <- trimws(gse135055_pheno_filtered$`lvef (%):ch1`)
+lvef_numeric <- ifelse(grepl("^[0-9.]+$", lvef_col), as.numeric(lvef_col), NA)
+
+DCM_HFrEF <- (trimws(gse135055_pheno_filtered$`diagnosis:ch1`) != "Not available") &
+             !is.na(lvef_numeric) &
+             lvef_numeric <= 40
+
+gse135055_expr_filtered <- rbind(gse135055_expr_merged[Normal,],gse135055_expr_merged[DCM_HFrEF,]) %>%
+  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
+
+source("../scripts/external_roc_cm.R")
+
+res_roc <- plot_external_roc(
+  lr_model, 
+  gse135055_expr_filtered, 
+  gse135055_expr_filtered$group,
+  dataset_name = "GSE135055"
+)
+
+res_cm <- plot_external_cm(
+  lr_model, 
+  gse135055_expr_filtered, 
+  gse135055_expr_filtered$group, 
+  dataset_name = "GSE135055"
+)
+
+if (res_roc$auc >= 0.80) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
 ```
 
 ---
 
+### GSE120895: External validation set(array)
+```{r}
+library(AnnoProbe)
 
+rm(list = ls())
+
+load("../data/processed/ml/06_consensus_genes.RData")
+load("../data/processed/ml/07_lr_model.RData")
+load("../data/raw/geo/gse120895_raw.RData")
+
+ex <- gse120895_exprs_raw
+qx <- as.numeric(quantile(ex, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
+
+LogC <- (qx[5] > 100) ||
+          (qx[6]-qx[1] > 50 && qx[2] > 0)
+if (LogC) { ex[which(ex <= 0)] <- NaN
+  ex <- log2(ex + 1) }
+
+probe2gene <- idmap("GPL570")
+gse120895_expr_annot <-  as.data.frame(ex) %>% 
+  rownames_to_column("probe_id") %>%
+  inner_join(probe2gene, by = "probe_id") %>%
+  dplyr::select(-probe_id) %>%
+  mutate(Gene = symbol, .before = 1) %>%
+  dplyr::select(-symbol)
+
+common_genes <- intersect(consensus_genes$Gene, (gse120895_expr_annot$Gene))
+
+if (all(common_genes %in% consensus_genes$Gene)) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+
+gse120895_expr_merged <- gse120895_expr_annot %>%
+  as.data.frame() %>%
+  dplyr::filter(Gene %in% common_genes) %>%
+  group_by(Gene) %>%
+  summarise(across(everything(), mean, na.rm = TRUE)) %>%
+  column_to_rownames("Gene") %>%
+  t() %>%                          
+  as.data.frame()
+
+gse120895_expr_merged <- gse120895_expr_merged[,consensus_genes$Gene]
+
+# pheno info
+Normal <- trimws(gse120895_pheno_raw$`condition:ch1`) == "control"
+DCM_HFrEF <- trimws(gse120895_pheno_raw$`condition:ch1`) != "control"
+
+gse120895_expr_filtered <- rbind(gse120895_expr_merged[Normal,],gse120895_expr_merged[DCM_HFrEF,]) %>%
+  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
+
+source("../scripts/external_roc_cm.R")
+
+res_roc <- plot_external_roc(
+  lr_model, 
+  gse120895_expr_filtered, 
+  gse120895_expr_filtered$group,
+  dataset_name = "GSE120895"
+)
+
+res_cm <- plot_external_cm(
+  lr_model, 
+  gse120895_expr_filtered, 
+  gse120895_expr_filtered$group, 
+  dataset_name = "GSE120895"
+)
+
+if (res_roc$auc >= 0.80) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+```
+
+### GSE19303: External validation set  
+```{r}
+rm(list = ls())
+
+load("../data/processed/ml/06_consensus_genes.RData")
+load("../data/processed/ml/07_lr_model.RData")
+load("../data/raw/geo/gse19303_raw.RData")
+
+ex <- gse19303_exprs_raw
+qx <- as.numeric(quantile(ex, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
+
+LogC <- (qx[5] > 100) ||
+          (qx[6]-qx[1] > 50 && qx[2] > 0)
+if (LogC) { ex[which(ex <= 0)] <- NaN
+  ex <- log2(ex + 1) }
+
+probe2gene <- idmap("GPL570")
+gse19303_expr_annot <-  as.data.frame(ex) %>% 
+  rownames_to_column("probe_id") %>%
+  inner_join(probe2gene, by = "probe_id") %>%
+  dplyr::select(-probe_id) %>%
+  mutate(Gene = symbol, .before = 1) %>%
+  dplyr::select(-symbol)
+
+common_genes <- intersect(consensus_genes$Gene, (gse19303_expr_annot$Gene))
+
+if (all(common_genes %in% consensus_genes$Gene)) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+
+gse19303_expr_merged <- gse19303_expr_annot %>%
+  as.data.frame() %>%
+  dplyr::filter(Gene %in% common_genes) %>%
+  group_by(Gene) %>%
+  summarise(across(everything(), mean, na.rm = TRUE)) %>%
+  column_to_rownames("Gene") %>%
+  t() %>%                          
+  as.data.frame()
+
+gse19303_expr_merged <- gse19303_expr_merged[,consensus_genes$Gene]
+
+# pheno info
+Normal <- !grepl("^DCM_", gse19303_pheno_raw$title)
+DCM_HFrEF <- grepl("^DCM_", gse19303_pheno_raw$title) & 
+                  as.numeric(gse19303_pheno_raw$`lvef:ch1`) <= 40
+
+# grepl("_baseline", gse19303_pheno_raw$title) &
+
+gse19303_expr_filtered <- rbind(gse19303_expr_merged[Normal,],gse19303_expr_merged[DCM_HFrEF,]) %>%
+  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
+
+source("../scripts/external_roc_cm.R")
+
+res_roc <- plot_external_roc(
+  lr_model, 
+  gse19303_expr_filtered, 
+  gse19303_expr_filtered$group,
+  dataset_name = "GSE19303"
+)
+
+res_cm <- plot_external_cm(
+  lr_model, 
+  gse19303_expr_filtered, 
+  gse19303_expr_filtered$group, 
+  dataset_name = "GSE19303"
+)
+
+if (res_roc$auc >= 0.80) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+```
+
+## herb-ingredient-target
+```{r}
+hit_core <- compound_target_final %>%
+    dplyr::filter(Symbol %in% consensus_genes$Gene) %>%
+  arrange(Herb.Name.Pinyin,Symbol)
+
+unique(hit_core$Herb.Name.Pinyin)
+
+hit_core[,c("Herb.Name.Pinyin", "Compound.Name","Symbol")]
+```
 # Single‑Cell Transcriptome Expression Mapping
-## Step 1: Lo
+## Load Packages
+```{r}
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+library(dplyr)
+library(Matrix)
+```
+
+## Step 1: Loading data
 
 ```{r}
+sc_data <- Read10X("../data/raw/geo/GSE183852/GSE183852_DCM_Integrated.Robj")
+
 ```
 
 ---

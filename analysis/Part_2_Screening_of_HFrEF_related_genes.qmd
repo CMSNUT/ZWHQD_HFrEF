@@ -76,14 +76,14 @@ dds <- dds[keep, ]
 
 dds <- DESeq(dds)
 
-save(dds,file = "../data/processed/geo/GSE141910/dds.Rdata")
+save(dds,file = "../data/processed/geo/GSE141910/dds.RData")
 ```
 
 ---
 
 ## Step 3: HFrEF vs Normal
 ```{r}
-load("../data/processed/geo/GSE141910/dds.Rdata")
+load("../data/processed/geo/GSE141910/dds.RData")
 res <- results(dds, contrast = c("group", "DCM_HFrEF", "Normal"))
 
 res <- lfcShrink(dds, contrast = c("group", "DCM_HFrEF", "Normal"), res = res, type = "ashr")
@@ -198,7 +198,7 @@ ggsave("Figure_2B_DEG_heatmap_Plot.png",plot = p_heat,path = "../results/figures
 
 ## Step 7: Saving DEGs Results
 ```{r}
-save(deg_all,deg_sig,deg_up, deg_down, lfc, file = "../data/processed/geo/GSE141910/degs_results.Rdata")
+save(deg_all,deg_sig,deg_up, deg_down, lfc, file = "../data/processed/geo/GSE141910/degs_results.RData")
 
 write.xlsx(
   list(
@@ -349,7 +349,7 @@ datTraits <- pheno_final %>%
 
 rownames(datTraits) <- rownames(pheno_final)
 
-save(datTraits,datExpr,file = "../data/processed/geo/GSE141910/datExpr.Rdata")
+save(datTraits,datExpr,file = "../data/processed/geo/GSE141910/datExpr.RData")
 ```
 
 ---
@@ -357,7 +357,7 @@ save(datTraits,datExpr,file = "../data/processed/geo/GSE141910/datExpr.Rdata")
 ## Step 2: Select soft threshold
 
 ```{r}
-load("../data/processed/geo/GSE141910/datExpr.Rdata")
+load("../data/processed/geo/GSE141910/datExpr.RData")
 
 R2 <- 0.80
 
@@ -380,7 +380,7 @@ power
 # The average connectivity of WGCNA is above several tens (such as>50) to ensure that the network has sufficient edges
 sft$fitIndices[power, 5]
 
-save(sft,file="../data/processed/geo/GSE141910/sft.Rdata")
+save(sft,file="../data/processed/geo/GSE141910/sft.RData")
 
 pdf("../results/figures/supplementary/Figure_S2_Soft_Threshold.pdf", width = 12, height = 5)
 
@@ -423,9 +423,9 @@ dev.off()
 ---
 
 ```{r}
-load("../data/processed/geo/GSE141910/sft.Rdata")
+load("../data/processed/geo/GSE141910/sft.RData")
 
-load("../data/processed/geo/GSE141910/datExpr.Rdata")
+load("../data/processed/geo/GSE141910/datExpr.RData")
 
 enableWGCNAThreads()
 
@@ -447,7 +447,7 @@ net <- blockwiseModules(
 )
 disableWGCNAThreads()
 
-save(net,file = "../data/processed/geo/GSE141910/net.Rdata")
+save(net,file = "../data/processed/geo/GSE141910/net.RData")
 ```
 
 ## Step 4: Clustering
@@ -455,8 +455,8 @@ save(net,file = "../data/processed/geo/GSE141910/net.Rdata")
 ---
 
 ```{r}
-load("../data/processed/geo/GSE141910/net.Rdata")
-load("../data/processed/geo/GSE141910/datExpr.Rdata")
+load("../data/processed/geo/GSE141910/net.RData")
+load("../data/processed/geo/GSE141910/datExpr.RData")
 
 moduleColors <- net$colors
 table(moduleColors)
@@ -504,8 +504,8 @@ mean_GS: 模块内所有基因与性状相关系数的平均值. 反映模块内
 ---
 
 ```{r}
-load("../data/processed/geo/GSE141910/net.Rdata")
-load("../data/processed/geo/GSE141910/datExpr.Rdata")
+load("../data/processed/geo/GSE141910/net.RData")
+load("../data/processed/geo/GSE141910/datExpr.RData")
 
 moduleLabels <- net$colors
 moduleColors <- labels2colors(moduleLabels)
@@ -709,7 +709,7 @@ cat(nrow(wgcna_candidates_genes), " candidate genes were selected from all signi
 
 names(wgcna_candidates_genes) <- c("Gene", "Module")
 
-save(wgcna_candidates_genes, file = "../data/processed/geo/GSE141910/wgcna_candidates_genes.Rdata")
+save(wgcna_candidates_genes, file = "../data/processed/geo/GSE141910/wgcna_candidates_genes.RData")
 
 library(patchwork)
 library(cowplot)

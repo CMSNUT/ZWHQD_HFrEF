@@ -40,7 +40,7 @@ library(ggsci)
 ```{r}
 rm(list = ls())
 
-load("../data/processed/geo/GSE141910/degs_results.Rdata")
+load("../data/processed/geo/GSE141910/degs_results.RData")
 
 deg_sig <- deg_all %>% filter(padj < 0.05, abs(log2FoldChange) > lfc)
 
@@ -50,7 +50,7 @@ load("../data/processed/tcm/14_compound_target_final.RData")
 
 herb_targets <- unique(compound_target_final$Symbol)
 
-load("../data/processed/geo/GSE141910/wgcna_candidates_genes.Rdata")
+load("../data/processed/geo/GSE141910/wgcna_candidates_genes.RData")
 
 # disease_genes: intersecting DEGs and WGCNA
 disease_genes <- intersect(deg_genes,wgcna_candidates_genes$Gene)
@@ -96,7 +96,7 @@ ggsave("../results/figures/main/Figure_3C_Venn_Herb_DEG_WGCNA.pdf", p, width=6, 
 ggsave("../results/figures/main/Figure_3C_Venn_Herb_DEG_WGCNA.png", p, width=6, height=6, dpi=300)
 
 
-save(herb_targets_df, deg_genes_df, wgcna_genes_df,disease_genes_df, candidate_genes_df, file = "../data/processed/network/01_herb_disease_genes.Rdata")
+save(herb_targets_df, deg_genes_df, wgcna_genes_df,disease_genes_df, candidate_genes_df, file = "../data/processed/network/01_herb_disease_genes.RData")
 
 write.xlsx(
   list(
@@ -147,7 +147,7 @@ library(ggvenn)
 
 ```{r}
 rm(list = ls())
-load("../data/processed/network/herb_disease_genes.Rdata")
+load("../data/processed/network/herb_disease_genes.RData")
 
 # candidate_genes
 gene_id_map <- bitr(
@@ -182,7 +182,7 @@ kegg_enrich <- enrichKEGG(
   qvalueCutoff = 0.05
 )
 
-save(kegg_enrich,go_enrich, file = "../data/processed/functional/enrich.Rdata")
+save(kegg_enrich,go_enrich, file = "../data/processed/functional/enrich.RData")
 ```
 
 ## Step 4: visualization
@@ -252,7 +252,7 @@ results <- cibersort(
   QN = TRUE
 )
 
-save(results,file = "../data/processed/tme/cibersort_res.Rdata")
+save(results,file = "../data/processed/tme/cibersort_res.RData")
 write.table(
   rownames_to_column(as.data.frame(results), 'Sample'), 
   '../data/processed/tme/cibersort_res.xlsx',  
@@ -491,7 +491,7 @@ library(RCy3)
 ```{r}
 rm(list = ls())
 
-load("../data/processed/network/01_herb_disease_genes.Rdata")
+load("../data/processed/network/01_herb_disease_genes.RData")
 load("../data/processed/tcm/14_compound_target_final.RData")
 
 herb_ingredient_target <- candidate_genes_df %>%
@@ -501,7 +501,7 @@ herb_ingredient_target <- candidate_genes_df %>%
   distinct() %>%
   arrange(Herb,Target)
 
-save(herb_ingredient_target,file = "../data/processed/network/02_herb_ingredient_target.Rdata")
+save(herb_ingredient_target,file = "../data/processed/network/02_herb_ingredient_target.RData")
 
 ```
 
@@ -534,7 +534,7 @@ nodes <- data.frame(id = unique(c(edges$source, edges$target))) %>%
     TRUE                              ~ "Other"
   ))
 
-save(nodes,edges,file = "../data/processed/network/03_HIT_network.Rdata")
+save(nodes,edges,file = "../data/processed/network/03_HIT_network.RData")
 
 write.xlsx(
   list(
@@ -550,7 +550,7 @@ write.xlsx(
 ```{r}
 rm(list = ls())
 
-load("../data/processed/network/03_HIT_network.Rdata")
+load("../data/processed/network/03_HIT_network.RData")
 
 cytoscapePing()  
 
@@ -645,12 +645,12 @@ setVisualStyle(style_name)
 ```{r}
 rm(list = ls())
 
-load("../data/processed/network/01_herb_disease_genes.Rdata")
+load("../data/processed/network/01_herb_disease_genes.RData")
 
 gene_list <- candidate_genes_df$Gene
 ppi_list <- clusterProfiler::getPPI(gene_list, taxID = "9606",required_score = 400)
 
-save(ppi_list,file = "../data/processed/network/04_ppi_list.Rdata")
+save(ppi_list,file = "../data/processed/network/04_ppi_list.RData")
 ```
 
 ## Step 2: PPI network construction data preparation
@@ -666,7 +666,7 @@ if(!"interaction" %in% colnames(edges)){
     edges$interaction <- "interacts with"
 }
 
-save(nodes,edges,file = "../data/processed/network/05_ppi_network.Rdata")
+save(nodes,edges,file = "../data/processed/network/05_ppi_network.RData")
 
 
 write.xlsx(
@@ -782,8 +782,6 @@ mcode_res <- data.table::fread("../data/processed/network/07_mcode_res.txt") %>%
 # intersect
 hub_genes <- Reduce(intersect, list(top_mcc, top_degree, top_mnc,mcode_hub))
 
-hub_genes
-
 hub_genes_tbl <- cytohubba_res[rownames(cytohubba_res) %in% hub_genes, c("MCC","MNC","Degree")] %>%
   mutate(MCC = as.numeric(MCC)) %>%
   arrange(desc(MCC)) %>%
@@ -791,8 +789,12 @@ hub_genes_tbl <- cytohubba_res[rownames(cytohubba_res) %in% hub_genes, c("MCC","
 
 hub_genes_tbl
 
+hub_genes <- hub_genes_tbl$Gene
+
+hub_genes
+
 save(hub_genes_tbl,hub_genes,top_mcc,top_degree,top_mnc, 
-     file = "../data/processed/network/08_hub_genes.Rdata")
+     file = "../data/processed/network/08_hub_genes.RData")
 
 write.xlsx(
   hub_genes_tbl,

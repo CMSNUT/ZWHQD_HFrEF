@@ -526,9 +526,9 @@ chembl_ids <- unique(result$`Target ID`)
 
 uniprot_list <- sapply(chembl_ids, chembl_to_uniprot)
 
-save(uniprot_list,file = "../data/raw/tcm/ppb3/uniprot_list.Rdata")
+save(uniprot_list,file = "../data/raw/tcm/ppb3/uniprot_list.RData")
 
-# load("../data/raw/tcm/ppb3/uniprot_list.Rdata")
+# load("../data/raw/tcm/ppb3/uniprot_list.RData")
 
 df <- data.frame(
   Chembl.ID = names(uniprot_list),
@@ -753,7 +753,7 @@ summary_table <- tibble(
 
 # Export table to Excel for manuscript supplementary materials
 
-save(summary_table, file =  "../data/processed/tcm/15_target_statistics.Rdata")
+save(summary_table, file =  "../data/processed/tcm/15_target_statistics.RData")
 
 write.xlsx(
   list(
@@ -787,7 +787,7 @@ We further collected putative target proteins of these active ingredients from s
 #| width: 100%
 #| results: asis
 
-load("../data/processed/tcm/15_target_statistics.Rdata")
+load("../data/processed/tcm/15_target_statistics.RData")
 
 summary_table %>% 
   kbl(
