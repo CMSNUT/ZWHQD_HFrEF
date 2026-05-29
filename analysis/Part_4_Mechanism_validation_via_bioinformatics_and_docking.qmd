@@ -31,6 +31,8 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 ## Load Packages
 ```{r}
 library(tidyverse)
+library(data.table)
+library(reshape2)
 library(caret)
 library(glmnet)
 library(e1071)
@@ -40,6 +42,7 @@ library(pROC)
 library(ggplot2)
 library(ggsci)
 library(corrplot)
+library(openxlsx)
 ```
 
 ## Step 1: Loading data
@@ -77,7 +80,7 @@ y_train <- train_data$group
 x_test  <- as.matrix(test_data[, -ncol(test_data)])
 y_test  <- test_data$group
 
-save(x_train,y_train,x_test,y_test, file = "../data/processed/ml/01_model_data.RData")
+save(train_data, test_data, x_train,y_train,x_test,y_test, file = "../data/processed/ml/01_model_data.RData")
 ```
 
 ## Step 4: Hub genes correlation analysis
@@ -577,6 +580,23 @@ p <- ggplot(roc_df, aes(x = Specificity, y = Sensitivity, color = Group)) +
   )
 
 ggsave("../results/figures/main/Figure_5B_ROC_curves.pdf", p, width = 6, height = 6)
+
+source("../scripts/external_roc_cm.R")
+
+res_cm_train <- plot_external_cm(
+  lr_model, 
+  train_data, 
+  train_data$group, 
+  dataset_name = "train_data"
+)
+
+res_cm_test <- plot_external_cm(
+  lr_model, 
+  test_data, 
+  test_data$group, 
+  dataset_name = "test_data"
+)
+save(roc_df,res_cm_train,res_cm_test, file = "../data/processed/ml/gse141910_res.RData")
 ```
 
 ## Step 8: External validation
@@ -634,14 +654,14 @@ gse116250_expr_filtered <- rbind(gse116250_expr_merged[Normal,],gse116250_expr_m
 
 source("../scripts/external_roc_cm.R")
 
-plot_external_roc(
+res_roc <- plot_external_roc(
   lr_model, 
   gse116250_expr_filtered, 
   gse116250_expr_filtered$group,
   dataset_name = "GSE116250"
 )
 
-plot_external_cm(
+res_cm <- plot_external_cm(
   lr_model, 
   gse116250_expr_filtered, 
   gse116250_expr_filtered$group, 
@@ -654,6 +674,7 @@ if (res_roc$auc >= 0.80) {
   cat("Bad dataset\n")
 }
 
+save(res_cm,res_roc, file = "../data/processed/ml/gse116250_res.RData")
 ```
 
 ### GSE161472: External validation set
@@ -726,6 +747,8 @@ if (res_roc$auc >= 0.80) {
 } else {
   cat("Bad dataset\n")
 }
+
+save(res_cm,res_roc, file = "../data/processed/ml/gse161472_res.RData")
 ```
 
 ### GSE135055: External validation set
@@ -806,6 +829,8 @@ if (res_roc$auc >= 0.80) {
 } else {
   cat("Bad dataset\n")
 }
+
+save(res_cm,res_roc, file = "../data/processed/ml/gse135055_res.RData")
 ```
 
 ---
@@ -883,6 +908,8 @@ if (res_roc$auc >= 0.80) {
 } else {
   cat("Bad dataset\n")
 }
+
+save(res_cm,res_roc, file = "../data/processed/ml/gse120895_res.RData")
 ```
 
 ### GSE19303: External validation set  
@@ -959,10 +986,14 @@ if (res_roc$auc >= 0.80) {
 } else {
   cat("Bad dataset\n")
 }
+
+save(res_cm,res_roc, file = "../data/processed/ml/gse19303_res.RData")
 ```
 
 ## herb-ingredient-target
 ```{r}
+load("../data/processed/tcm/14_compound_target_final.RData")
+
 hit_core <- compound_target_final %>%
     dplyr::filter(Symbol %in% consensus_genes$Gene) %>%
   arrange(Herb.Name.Pinyin,Symbol)
@@ -979,14 +1010,55 @@ library(ggplot2)
 library(patchwork)
 library(dplyr)
 library(Matrix)
+library(harmony)
 ```
 
 ## Step 1: Loading data
 
 ```{r}
-sc_data <- Read10X("../data/raw/geo/GSE183852/GSE183852_DCM_Integrated.Robj")
+rm(list=ls())
+gc()
+load("../data/processed/ml/06_consensus_genes.RData")
+
+load("../data/raw/geo/GSE183852/GSE183852_DCM_Cells/GSE183852_DCM_Cells.Robj")
+
+new.cluster.ids <- c(
+  "Fibroblasts",
+  "Endothelium",
+  "Pericytes",
+  "Macrophages",
+  "T_Cells",
+  "Smooth_Muscle",
+  "Monocytes",
+  "NK_Cells",
+  "Neurons",
+  "B_Cells",
+  "Lymphatic"
+)
 
 ```
+
+## Step 2: 细胞注释UMAP
+```{r}
+p1 <- DimPlot(HDCM, label = TRUE, repel = TRUE, pt.size = 0.1, label.size = 2.5) +
+  theme_bw(base_family = "sans") +  
+  theme(
+    panel.border = element_rect(fill = NA, color = "black", size = 1.0),
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 8),
+    legend.spacing.y = unit(0.02, "cm"),  
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = 8),  
+    axis.title = element_text(size = 8)  
+  )
+
+ggsave("../results/figures/main/Figure_6A_UMAP.pdf", p1, width = 10, height = 8, units = "cm",dpi = 300)
+
+ggsave("../results/figures/main/Figure_6A_UMAP.png", p1, width = 10, height = 8, units = "cm",dpi = 300)
+```
+
+
 
 ---
 
