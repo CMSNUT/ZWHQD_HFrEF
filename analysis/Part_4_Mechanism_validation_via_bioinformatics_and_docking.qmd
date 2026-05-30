@@ -1065,10 +1065,250 @@ ggsave("../results/figures/main/Figure_6A_UMAP.png", p1, width = 10, height = 8,
 
 
 
-# Identification of Causal Genes by Mendelian Randomization
+# Bayesian co-localization analysis
 
-## Step 1:
+## Load Packages
 ```{r}
+library(data.table)   
+library(ggplot2)      
+library(coloc)         
+library(tidyverse) 
+library(arrow)
+library(rtracklayer)
+library(GenomicRanges)
+```
+
+
+## Step 1: Loading data
+```{r}
+# Loading GTEx v11 eQTLs Heart_Left_Ventricle data
+eqtl_data <- read_parquet("../data/raw/opengwas/GTEx_Analysis_v11_eQTL/Heart_Left_Ventricle.v11.eQTLs.signif_pairs.parquet")
+
+eqtl_dt <- as.data.table(eqtl_data)
+eqtl_dt[, phenotype_id_clean := sub("\\..*", "", phenotype_id)]
+
+# Loading HERMES2_GWAS_DCM_EUR GWAS data
+gwas_raw <- data.table::fread("../data/raw/opengwas/HERMES2_GWAS_DCM_EUR/FORMAT-METAL_Pheno5-DCM_EUR.tsv.gz")
+colnames(gwas_raw)
+head(gwas_raw, 2)
+
+# Core genes
+load("../data/processed/ml/06_consensus_genes.RData")
+phenotype_ids <- c(
+  "ENSG00000162434",  # JAK1
+  "ENSG00000118777",  # ABCG2
+  "ENSG00000113578",  # FGF1
+  "ENSG00000136160",  # EDNRB
+  "ENSG00000100644",  # HIF1A
+  "ENSG00000166825",  # ANPEP
+  "ENSG00000159640"   # ACE
+)
+```
+
+## Step 2: Function of single gene co-localization analysis
+```{r}
+#' Run coloc.abf for a given gene using GTEx v11 eQTL and DCM GWAS
+#'
+#' @param phenotype_id Ensembl gene ID (e.g. "ENSG00000155657")
+#' @param eqtl_dt data.table containing GTEx v11 cis-eQTL significant pairs.
+#'                Must have columns: phenotype_id, variant_id, slope, slope_se, af, ma_count.
+#' @param gwas_dt data.table containing GWAS summary stats.
+#'                Must have columns: SNP, BETA, SE, EAF, N (optional, if missing will be estimated).
+#' @param gwas_n_cases number of cases in GWAS (for type="cc" s parameter)
+#' @param gwas_n_controls number of controls in GWAS (for total N)
+#' @param p1 prior probability a SNP is associated with trait 1 (eQTL), default 1e-4
+#' @param p2 prior probability a SNP is associated with trait 2 (GWAS), default 1e-4
+#' @param p12 prior probability a SNP is associated with both traits, default 1e-5
+#' @param eqtl_window_kb cis-window in kb around gene TSS (not used if eqtl_dt is already filtered), default 1000
+#' @param gene_tss optional integer: TSS position in bp. If NULL, function will try to infer from eqtl_dt or use 0 (skip filtering).
+#' @param return_details if TRUE, return full coloc result object; otherwise return summary data.frame.
+#'
+#' @return A data.frame with gene, PP.H0, PP.H1, PP.H2, PP.H3, PP.H4, n_snps, status
+#'         or if return_details=TRUE, a list with results and summary.
+#'
+#' @import data.table coloc
+#' @export
+#'
+coloc_for_gene <- function(
+  phenotype_id,
+  eqtl_dt,
+  gwas_dt,
+  gwas_n_cases,
+  gwas_n_controls,
+  p1 = 1e-4,
+  p2 = 1e-4,
+  p12 = 1e-5,
+  eqtl_window_kb = 1000,
+  gene_tss = NULL,
+  return_details = FALSE) {
+  
+  # ---------- (1) Extracting eQTL of gene ----------
+  gene_eqtl <- eqtl_dt[phenotype_id == phenotype_id]
+  if (nrow(gene_eqtl) == 0) {
+    warning("No eQTL found for gene ", phenotype_id)
+    return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = 0, status = "no_eqtl"))
+  }
+  
+  # ---------- (2) Analyze variant_id and calculate MAF, N_eqtl ----------
+  # variant_id: "chr_pos_ref_alt_build"
+  gene_eqtl[, c("chr", "pos", "ref", "alt") := tstrsplit(variant_id, "_", keep = 1:4)]
+  gene_eqtl[, pos := as.numeric(pos)]
+  gene_eqtl[, maf := pmin(af, 1 - af)]
+  # Estimate the sample size N=ma_comunt/(2 * maf), round it up and filter out outliers
+  gene_eqtl[, N_eqtl := round(ma_count / (2 * maf))]
+  # Reasonable range: Typically, GTEx v11 heart samples range from 900-1000, with possible errors below 50 or above 2000. Use median instead
+  med_n <- median(gene_eqtl$N_eqtl, na.rm = TRUE)
+  gene_eqtl[is.na(N_eqtl) | N_eqtl < 50 | N_eqtl > 2000, N_eqtl := med_n]
+  
+  # ---------- (3) Cis window filtering (if eqtl-d t has not been filtered by position) ----------
+  if (!is.null(gene_tss)) {
+    gene_eqtl <- gene_eqtl[abs(pos - gene_tss) <= eqtl_window_kb * 1000]
+    if (nrow(gene_eqtl) == 0) {
+      warning("No eQTL within cis-window for gene ", phenotype_id)
+      return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = 0, status = "no_cis_eqtl"))
+    }
+  }
+  
+  # ---------- (4) Build Dataset 1 (eQTL) ----------
+  d1 <- list(
+    beta = gene_eqtl$slope,
+    varbeta = gene_eqtl$slope_se^2,
+    type = "quant",
+    N = med_n,   #Use the median sample size of all eQTLs for this gene
+    sdY = 1,     #Conservatively set, as the expression level of GTEx has been normalized
+    snp = gene_eqtl$variant_id,
+    MAF = gene_eqtl$maf
+  )
+  
+  # Validation of Dataset 1
+  if (any(is.na(d1$beta)) || any(is.na(d1$varbeta)) || any(d1$varbeta <= 0)) {
+    warning("Invalid eQTL data for gene ", phenotype_id)
+    return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = nrow(gene_eqtl), status = "invalid_eqtl"))
+  }
+  
+  # ---------- (5) Prepare GWAS data ----------
+  # Ensure that GWAS has the necessary columns: SNP, BETA, SE, EAF (MAF), and N (optional)
+  if (!"N_total" %in% names(gwas_dt)) {
+    stop("GWAS data must contain 'N_total' column")
+  }
+  gwas_clean <- gwas_dt[!is.na(beta) & !is.na(varbeta) & !is.na(MAF) & varbeta > 0]
+  
+  total_n <- unique(gwas_clean$N_total)
+  if (length(total_n) > 1) total_n <- median(gwas_clean$N_total, na.rm = TRUE)
+  case_n <- unique(gwas_clean$N_case)
+  if (length(case_n) > 1) case_n <- median(gwas_clean$N_case, na.rm = TRUE)
+  s <- case_n / total_n
+  
+  # Match SNP
+  common_snps <- intersect(d1$snp, gwas_clean$SNP)
+  if (length(common_snps) < 5) {
+    warning("Less than 5 common SNPs for gene ", phenotype_id)
+    return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = length(common_snps), status = "low_overlap"))
+  }
+  
+  # Align by common SNP subset
+  idx1 <- match(common_snps, d1$snp)
+  idx2 <- match(common_snps, gwas_clean$SNP)
+  
+  d1_sub <- list(
+    beta = d1$beta[idx1],
+    varbeta = d1$varbeta[idx1],
+    type = "quant",
+    N = d1$N,
+    sdY = d1$sdY,
+    snp = d1$snp[idx1],
+    MAF = d1$MAF[idx1]
+  )
+  
+  d2_sub <- list(
+    beta = gwas_clean$BETA[idx2],
+    varbeta = gwas_clean$SE[idx2]^2,
+    type = "cc",
+    N = total_n,
+    s = s,
+    snp = gwas_clean$SNP[idx2],
+    MAF = gwas_clean$EAF[idx2]
+  )
+  
+  # ---------- (6) run coloc.abf ----------
+  coloc_result <- tryCatch({
+    coloc::coloc.abf(dataset1 = d1_sub, dataset2 = d2_sub,
+                     p1 = p1, p2 = p2, p12 = p12)
+  }, error = function(e) {
+    warning("coloc.abf failed for gene ", phenotype_id, ": ", e$message)
+    return(NULL)
+  })
+  
+  if (is.null(coloc_result)) {
+    return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = length(common_snps), status = "coloc_error"))
+  }
+  
+  # ---------- (7) Extraction results ----------
+  summary_stats <- coloc_result$summary
+  res_df <- data.frame(
+    gene = phenotype_id,
+    PP.H0 = summary_stats["PP.H0.abf"],
+    PP.H1 = summary_stats["PP.H1.abf"],
+    PP.H2 = summary_stats["PP.H2.abf"],
+    PP.H3 = summary_stats["PP.H3.abf"],
+    PP.H4 = summary_stats["PP.H4.abf"],
+    n_snps = length(common_snps),
+    status = "success",
+    stringsAsFactors = FALSE
+  )
+  
+  if (return_details) {
+    return(list(summary = res_df, full_result = coloc_result))
+  } else {
+    return(res_df)
+  }
+}
+```
+
+## Step 3: Building the dataset2 object for colon
+```{r}
+gwas_data <- gwas_raw[, .(
+    snp     = rsID,
+    beta    = A1_beta,
+    varbeta = se^2,
+    MAF     = A1_freq,   
+    N_total = N_total,
+    N_case  = N_case
+)] %>%
+  na.omit()
+
+# Calculate the total sample size and case ratio (using median as each row may be the same)
+total_n <- unique(gwas_data$N)  
+if(length(total_n) > 1) total_n <- median(gwas_data$N, na.rm=TRUE)
+s <- unique(gwas_data$N_case) / total_n
+if(length(s) > 1) s <- median(gwas_data$N_case, na.rm=TRUE) / total_n
+
+d2 <- list(
+    beta    = gwas_data$beta,
+    varbeta = gwas_data$varbeta,
+    type    = "cc",
+    N       = total_n,
+    s       = s,
+    snp     = gwas_data$snp,
+    MAF     = gwas_data$MAF
+)
+```
+
+## JAK1
+```{r}
+jak1_result <- coloc_for_gene(
+  phenotype_id = "ENSG00000162434",
+  eqtl_dt = eqtl_dt,
+  gwas_dt = gwas_data,
+  gwas_n_cases = 6001,
+  gwas_n_controls = 1199156,
+  p1 = 1e-4, p2 = 1e-4, p12 = 1e-5,
+  eqtl_window_kb = 1000,
+  gene_tss = NULL,
+  return_details = FALSE
+)
+
+print(jak1_result)
 ```
 
 ---

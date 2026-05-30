@@ -230,15 +230,18 @@ ggsave("../results/figures/main/Figure_3E_KEGG_dot.pdf", kegg_plot, width = 9, h
 
 ## Load Package
 ```{r}
-library(CIBERSORT) 
+library(GSVA)
+library(GSEABase)
+library(msigdbr)
 library(pheatmap) 
 library(tidyverse) 
 library(rstatix) 
 library(corrplot) 
 library(ggpubr) 
+library(ggsci)
 ```
 
-## Step 1: CIBERSORT
+## Step 1: ssGSEA
 ```{r}
 rm(list = ls())
 load("../data/processed/geo/GSE141910/GSE141910_preprocessed_final.RData")
