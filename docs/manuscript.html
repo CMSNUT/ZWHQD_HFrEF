@@ -124,26 +124,18 @@ div.csl-indent {
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./methods.html"> 
-<span class="menu-text">Methods</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./results.html"> 
-<span class="menu-text">Results</span></a>
-  </li>  
-  <li class="nav-item">
     <a class="nav-link active" href="./manuscript.html" aria-current="page"> 
-<span class="menu-text">Manuscript</span></a>
+<span class="menu-text">Report</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./supplementary.html"> 
-<span class="menu-text">Supplementary</span></a>
+<span class="menu-text">Supplementary Materials</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-analysis" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Analysis</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-data-analysis" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Data Analysis</span>
     </a>
-    <ul class="dropdown-menu" aria-labelledby="nav-menu-analysis">    
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-data-analysis">    
         <li>
     <a class="dropdown-item" href="./analysis/Part_1_Data_acquisition_and_preprocessing.html">
  <span class="dropdown-text">Part 1: Data acquisition and preprocessing</span></a>
@@ -461,12 +453,12 @@ Figure&nbsp;1. Schematic workflow of the study.
 <hr>
 <section id="active-ingredients-and-target-genes-of-zwhqd" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="active-ingredients-and-target-genes-of-zwhqd"><span class="header-section-number">3.1</span> Active ingredients and target genes of ZWHQD</h2>
-<p>We identified a total of 101 active ingredients of ZWHQD from the DCABM-TCM Database, with cycloastragenol manually supplemented. Detailed information on these compounds is provided in the <a href="supplementary.qmd/#supptbl-1">Supplementary Table S1</a>. These active ingredients primarily cover flavonoids, terpenoids, phenolic acids, tannins, alkaloids, glycosides, as well as gingerol and shogaol derivatives. We further collected putative target proteins of these active ingredients from seven online databases. All retrieved target entries were standardized to official gene Symbol IDs according to the UniProt database. Ultimately, a total of 811 candidate genes corresponding to 98 effective compounds were obtained for the subsequent mechanistic exploration of ZWHQD, as summarized in the Final_All worksheet of <a href="results/tables/supplementary/Table_S1_Herbs_and_Compounds_of_Zhenwu_Huangqi_Decoction.xlsx">Supplementary Table S2</a>.</p>
+<p>We identified a total of 101 active ingredients of ZWHQD from the DCABM-TCM Database, with cycloastragenol manually supplemented. Detailed information on these compounds is provided in the <a href="supplementary.html#supptbl-1">Supplementary Table S1</a>. These active ingredients primarily cover flavonoids, terpenoids, phenolic acids, tannins, alkaloids, glycosides, as well as gingerol and shogaol derivatives. We further collected putative target proteins of these active ingredients from seven online databases. All retrieved target entries were standardized to official gene Symbol IDs according to the UniProt database. Ultimately, a total of 811 candidate genes corresponding to 98 effective compounds were obtained for the subsequent mechanistic exploration of ZWHQD, as summarized in the Final_All worksheet of <a href="supplementary.html#supptbl-2">Supplementary Table S2</a>.</p>
 </section>
 <section id="potential-hfref-associated-genes" class="level2" data-number="3.2">
 <h2 data-number="3.2" class="anchored" data-anchor-id="potential-hfref-associated-genes"><span class="header-section-number">3.2</span> Potential HFrEF-associated genes</h2>
-<p>A gene expression profile dataset with 20,810 genes was obtained by annotating the GSE141910 subsets and removing the batch effect (<a href="results/figures/supplementary/Figure_S1_PCA_Combined_Before_After.pdf">Supplementary Figure S1</a>.</p>
-<p>Differential expression analysis was performed on 20,810 genes using DESeq2. Genes with |log2FoldChange| &gt; log₂(1.5) (i.e., absolute fold change &gt; 1.5) and adjusted P value (padj) &lt; 0.05 were considered significantly differentially expressed. Differential expression analysis of 21,572 genes was conducted via DESeq2. Genes satisfying the thresholds of |_2| &gt; _2(1.5) and adjusted P value (padj) &lt; 0.05 were defined as significant differentially expressed genes (DEGs). In total, 3,188 DEGs were screened, consisting of 1,986 upregulated and 1,202 downregulated genes. The number of upregulated genes was obviously predominant, reflecting robust activation of inflammatory response, immune function and cellular stress injury-related pathways in HFrEF myocardium. By contrast, fewer genes exhibited decreased expression, among which protective functional genes, metabolic regulators and tissue structural genes were largely suppressed. Highly expressed upregulated genes contained COL22A1 (_2=4.23), SEZ6L (3.69), TNMD (3.38), SFRP4 (3.22), PENK (3.20), FHAD1-AS1 (3.16), HBD (3.07), LYPD1 (3.03), LAMP5 (3.03) and CAPN6 (2.96), which predominantly participate in extracellular matrix remodeling, neuropeptide signaling and cellular stress response. In contrast, downregulated genes were mainly implicated in inflammatory modulation, substance metabolism, ion transport and epithelial differentiation. Representative downregulated genes included IL1RL1 (_2=-3.88), SERPINA3 (-3.23), RNASE2 (-3.07), PI15 (-3.04), LOC105378356 (-3.01), FAM83B (-3.01), OVOS2P (-3.00), LCN6 (-2.99), TUBA3E (-2.87) and LBP (-2.85). The volcano plot and heatmap of all DEGs are shown in <a href="#fig-2" class="quarto-xref">Figure&nbsp;2</a> A and B, respectively.</p>
+<p>A gene expression profile dataset with 20,810 genes was obtained by annotating the GSE141910 subsets and removing the batch effect (<a href="supplementary.html#suppfig-1">Supplementary Figure S1</a>).</p>
+<p>Differential expression analysis was performed on 20,810 genes using DESeq2. Genes with |log2FC| &gt; 0.585 (i.e., absolute fold change &gt; 1.5) and adjusted P value (padj) &lt; 0.05 were considered significantly differentially expressed. Differential expression analysis of 21,572 genes was conducted via DESeq2. Genes satisfying the thresholds of |_2| &gt; _2(1.5) and adjusted P value (padj) &lt; 0.05 were defined as significant differentially expressed genes (DEGs). In total, 3,188 DEGs were screened, consisting of 1,986 upregulated and 1,202 downregulated genes. The number of upregulated genes was obviously predominant, reflecting robust activation of inflammatory response, immune function and cellular stress injury-related pathways in HFrEF myocardium. By contrast, fewer genes exhibited decreased expression, among which protective functional genes, metabolic regulators and tissue structural genes were largely suppressed. Highly expressed upregulated genes contained COL22A1 (_2=4.23), SEZ6L (3.69), TNMD (3.38), SFRP4 (3.22), PENK (3.20), FHAD1-AS1 (3.16), HBD (3.07), LYPD1 (3.03), LAMP5 (3.03) and CAPN6 (2.96), which predominantly participate in extracellular matrix remodeling, neuropeptide signaling and cellular stress response. In contrast, downregulated genes were mainly implicated in inflammatory modulation, substance metabolism, ion transport and epithelial differentiation. Representative downregulated genes included IL1RL1 (_2=-3.88), SERPINA3 (-3.23), RNASE2 (-3.07), PI15 (-3.04), LOC105378356 (-3.01), FAM83B (-3.01), OVOS2P (-3.00), LCN6 (-2.99), TUBA3E (-2.87) and LBP (-2.85). The volcano plot and heatmap of all DEGs are shown in <a href="#fig-2" class="quarto-xref">Figure&nbsp;2</a> A and B, respectively.</p>
 <p>We also examined associations between disease traits and transcriptomic gene expression patterns using WGCNA. <strong>Twenty-one</strong> gene modules were identified in the analysis on the basis of hierarchical clustering dendrograms, and correlations between the modules and their association with disease traits were calculated using the Spearman’s rank correlation test and Mantel test (<strong>Fig. 2E</strong>). WGCNA identified <strong>675</strong> hub genes from MEbrown (r = <strong>0.84</strong>, p = <strong>8e-04</strong>) and MEroyalblue (r = -0.70, p = 8e-07) that were significantly correlated with disease traits (<strong>Fig. 1C, D</strong>). The potential HFrEF genes for the study were formed by combining the DEGs (|log2 FC| &gt; 0.585) with the WGCNA hub genes.</p>
 <div id="fig-2" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">

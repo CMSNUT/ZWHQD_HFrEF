@@ -71,15 +71,11 @@ website:
         text: Home
       - href: about.qmd
         text: About
-      - href: methods.qmd
-        text: Methods
-      - href: results.qmd
-        text: Results
       - href: manuscript.qmd
-        text: Manuscript
+        text: Report
       - href: supplementary.qmd
-        text: Supplementary
-      - text: Analysis
+        text: Supplementary Materials
+      - text: Data Analysis
         menu:
           - text: "Part 1: Data acquisition and preprocessing"
             href: "analysis/Part_1_Data_acquisition_and_preprocessing.qmd"
