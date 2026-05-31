@@ -1076,25 +1076,24 @@ library(tidyverse)
 library(arrow)
 library(rtracklayer)
 library(GenomicRanges)
+library(future)
+library(future.apply)
 ```
 
-
-## Step 1: Loading data
+## Step 1: Set paths
 ```{r}
-# Loading GTEx v11 eQTLs Heart_Left_Ventricle data
-eqtl_data <- read_parquet("../data/raw/opengwas/GTEx_Analysis_v11_eQTL/Heart_Left_Ventricle.v11.eQTLs.signif_pairs.parquet")
+# download.file("http://hgdownload.cse.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz", destfile = "../data/raw/opengwas/hg19ToHg38.over.chain.gz")
 
-eqtl_dt <- as.data.table(eqtl_data)
-eqtl_dt[, phenotype_id_clean := sub("\\..*", "", phenotype_id)]
+data_dir <- "../data/raw/opengwas"          
+out_dir  <- "../data/processed/opengwas" 
 
-# Loading HERMES2_GWAS_DCM_EUR GWAS data
-gwas_raw <- data.table::fread("../data/raw/opengwas/HERMES2_GWAS_DCM_EUR/FORMAT-METAL_Pheno5-DCM_EUR.tsv.gz")
-colnames(gwas_raw)
-head(gwas_raw, 2)
+chain_file <- file.path(data_dir, "hg19ToHg38.over.chain") 
+
+if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 
 # Core genes
 load("../data/processed/ml/06_consensus_genes.RData")
-phenotype_ids <- c(
+gene_ids <- c(
   "ENSG00000162434",  # JAK1
   "ENSG00000118777",  # ABCG2
   "ENSG00000113578",  # FGF1
@@ -1105,213 +1104,345 @@ phenotype_ids <- c(
 )
 ```
 
-## Step 2: Function of single gene co-localization analysis
+## Step 2: reading and cleaning GTEx eQTL data
 ```{r}
-#' Run coloc.abf for a given gene using GTEx v11 eQTL and DCM GWAS
-#'
-#' @param phenotype_id Ensembl gene ID (e.g. "ENSG00000155657")
-#' @param eqtl_dt data.table containing GTEx v11 cis-eQTL significant pairs.
-#'                Must have columns: phenotype_id, variant_id, slope, slope_se, af, ma_count.
-#' @param gwas_dt data.table containing GWAS summary stats.
-#'                Must have columns: SNP, BETA, SE, EAF, N (optional, if missing will be estimated).
-#' @param gwas_n_cases number of cases in GWAS (for type="cc" s parameter)
-#' @param gwas_n_controls number of controls in GWAS (for total N)
-#' @param p1 prior probability a SNP is associated with trait 1 (eQTL), default 1e-4
-#' @param p2 prior probability a SNP is associated with trait 2 (GWAS), default 1e-4
-#' @param p12 prior probability a SNP is associated with both traits, default 1e-5
-#' @param eqtl_window_kb cis-window in kb around gene TSS (not used if eqtl_dt is already filtered), default 1000
-#' @param gene_tss optional integer: TSS position in bp. If NULL, function will try to infer from eqtl_dt or use 0 (skip filtering).
-#' @param return_details if TRUE, return full coloc result object; otherwise return summary data.frame.
-#'
-#' @return A data.frame with gene, PP.H0, PP.H1, PP.H2, PP.H3, PP.H4, n_snps, status
-#'         or if return_details=TRUE, a list with results and summary.
-#'
-#' @import data.table coloc
-#' @export
-#'
-coloc_for_gene <- function(
-  phenotype_id,
-  eqtl_dt,
-  gwas_dt,
-  gwas_n_cases,
-  gwas_n_controls,
-  p1 = 1e-4,
-  p2 = 1e-4,
-  p12 = 1e-5,
-  eqtl_window_kb = 1000,
-  gene_tss = NULL,
-  return_details = FALSE) {
-  
-  # ---------- (1) Extracting eQTL of gene ----------
-  gene_eqtl <- eqtl_dt[phenotype_id == phenotype_id]
-  if (nrow(gene_eqtl) == 0) {
-    warning("No eQTL found for gene ", phenotype_id)
-    return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = 0, status = "no_eqtl"))
-  }
-  
-  # ---------- (2) Analyze variant_id and calculate MAF, N_eqtl ----------
-  # variant_id: "chr_pos_ref_alt_build"
-  gene_eqtl[, c("chr", "pos", "ref", "alt") := tstrsplit(variant_id, "_", keep = 1:4)]
-  gene_eqtl[, pos := as.numeric(pos)]
-  gene_eqtl[, maf := pmin(af, 1 - af)]
-  # Estimate the sample size N=ma_comunt/(2 * maf), round it up and filter out outliers
-  gene_eqtl[, N_eqtl := round(ma_count / (2 * maf))]
-  # Reasonable range: Typically, GTEx v11 heart samples range from 900-1000, with possible errors below 50 or above 2000. Use median instead
-  med_n <- median(gene_eqtl$N_eqtl, na.rm = TRUE)
-  gene_eqtl[is.na(N_eqtl) | N_eqtl < 50 | N_eqtl > 2000, N_eqtl := med_n]
-  
-  # ---------- (3) Cis window filtering (if eqtl-d t has not been filtered by position) ----------
-  if (!is.null(gene_tss)) {
-    gene_eqtl <- gene_eqtl[abs(pos - gene_tss) <= eqtl_window_kb * 1000]
-    if (nrow(gene_eqtl) == 0) {
-      warning("No eQTL within cis-window for gene ", phenotype_id)
-      return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = 0, status = "no_cis_eqtl"))
-    }
-  }
-  
-  # ---------- (4) Build Dataset 1 (eQTL) ----------
-  d1 <- list(
-    beta = gene_eqtl$slope,
-    varbeta = gene_eqtl$slope_se^2,
-    type = "quant",
-    N = med_n,   #Use the median sample size of all eQTLs for this gene
-    sdY = 1,     #Conservatively set, as the expression level of GTEx has been normalized
-    snp = gene_eqtl$variant_id,
-    MAF = gene_eqtl$maf
+cat("=== Reading GTEx eQTL (left ventricle) ===\n")
+
+eqtl_file <- file.path(data_dir, "GTEx_Analysis_v8_eQTL/Heart_Left_Ventricle.v8.signif_variant_gene_pairs.txt.gz")
+
+eqtl_raw <- fread(eqtl_file, header = TRUE, sep = "\t")
+save(eqtl_raw, file = file.path(out_dir,"eqtl_heart_LV_raw.RData"))
+
+eqtl_clean <- eqtl_raw %>%
+  dplyr::mutate(
+    gene_id = stringr::str_remove(gene_id, "\\..*$"),
+    pval = pval_nominal,
+    beta = slope,
+    varbeta = slope_se^2,
+    MAF = maf
+  ) %>%
+  dplyr::filter(pval < 1e-5) %>%
+  dplyr::mutate(
+    id_temp = stringr::str_remove(variant_id, "_b38$"),
+    chr = stringr::str_extract(id_temp, "^chr[0-9XYM]+"),
+    pos = as.numeric(stringr::str_extract(id_temp, "(?<=_)[0-9]+(?=_)")),
+    ref = stringr::str_extract(id_temp, "(?<=_)[ATCG]+(?=_[ATCG]+$)"),
+    alt = stringr::str_extract(id_temp, "(?<=_)[ATCG]+$")
+  ) %>%
+  dplyr::filter(
+    !is.na(chr), 
+    !is.na(pos), 
+    !is.na(ref), 
+    !is.na(alt)
+  ) %>%
+  dplyr::select(
+    gene_id, 
+    chr, 
+    pos, 
+    ref, 
+    alt, 
+    beta, 
+    varbeta, 
+    MAF, 
+    pval, 
+    variant_id
   )
-  
-  # Validation of Dataset 1
-  if (any(is.na(d1$beta)) || any(is.na(d1$varbeta)) || any(d1$varbeta <= 0)) {
-    warning("Invalid eQTL data for gene ", phenotype_id)
-    return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = nrow(gene_eqtl), status = "invalid_eqtl"))
-  }
-  
-  # ---------- (5) Prepare GWAS data ----------
-  # Ensure that GWAS has the necessary columns: SNP, BETA, SE, EAF (MAF), and N (optional)
-  if (!"N_total" %in% names(gwas_dt)) {
-    stop("GWAS data must contain 'N_total' column")
-  }
-  gwas_clean <- gwas_dt[!is.na(beta) & !is.na(varbeta) & !is.na(MAF) & varbeta > 0]
-  
-  total_n <- unique(gwas_clean$N_total)
-  if (length(total_n) > 1) total_n <- median(gwas_clean$N_total, na.rm = TRUE)
-  case_n <- unique(gwas_clean$N_case)
-  if (length(case_n) > 1) case_n <- median(gwas_clean$N_case, na.rm = TRUE)
-  s <- case_n / total_n
-  
-  # Match SNP
-  common_snps <- intersect(d1$snp, gwas_clean$SNP)
-  if (length(common_snps) < 5) {
-    warning("Less than 5 common SNPs for gene ", phenotype_id)
-    return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = length(common_snps), status = "low_overlap"))
-  }
-  
-  # Align by common SNP subset
-  idx1 <- match(common_snps, d1$snp)
-  idx2 <- match(common_snps, gwas_clean$SNP)
-  
-  d1_sub <- list(
-    beta = d1$beta[idx1],
-    varbeta = d1$varbeta[idx1],
-    type = "quant",
-    N = d1$N,
-    sdY = d1$sdY,
-    snp = d1$snp[idx1],
-    MAF = d1$MAF[idx1]
-  )
-  
-  d2_sub <- list(
-    beta = gwas_clean$BETA[idx2],
-    varbeta = gwas_clean$SE[idx2]^2,
-    type = "cc",
-    N = total_n,
-    s = s,
-    snp = gwas_clean$SNP[idx2],
-    MAF = gwas_clean$EAF[idx2]
-  )
-  
-  # ---------- (6) run coloc.abf ----------
-  coloc_result <- tryCatch({
-    coloc::coloc.abf(dataset1 = d1_sub, dataset2 = d2_sub,
-                     p1 = p1, p2 = p2, p12 = p12)
-  }, error = function(e) {
-    warning("coloc.abf failed for gene ", phenotype_id, ": ", e$message)
-    return(NULL)
-  })
-  
-  if (is.null(coloc_result)) {
-    return(data.frame(gene = phenotype_id, PP.H4 = NA, n_snps = length(common_snps), status = "coloc_error"))
-  }
-  
-  # ---------- (7) Extraction results ----------
-  summary_stats <- coloc_result$summary
-  res_df <- data.frame(
-    gene = phenotype_id,
-    PP.H0 = summary_stats["PP.H0.abf"],
-    PP.H1 = summary_stats["PP.H1.abf"],
-    PP.H2 = summary_stats["PP.H2.abf"],
-    PP.H3 = summary_stats["PP.H3.abf"],
-    PP.H4 = summary_stats["PP.H4.abf"],
-    n_snps = length(common_snps),
-    status = "success",
-    stringsAsFactors = FALSE
-  )
-  
-  if (return_details) {
-    return(list(summary = res_df, full_result = coloc_result))
-  } else {
-    return(res_df)
-  }
-}
+
+cat("eQTL valid records (P<1e-5):", nrow(eqtl_clean), "\n")
+
+save(eqtl_clean, file= file.path(out_dir, "eqtl_heart_LV_clean.RData"))
+
+rm(eqtl_raw, eqtl_clean); gc()
+
+
 ```
 
-## Step 3: Building the dataset2 object for colon
+## Step 3: reading and lifting over HERMES GWAS (hg19 → hg38)
+
+- [HERMES dilated cardiomyopathy 2024 GWAS: European ancestry](https://www.kp4cd.org/node/1482)
+
+- 
+
 ```{r}
-gwas_data <- gwas_raw[, .(
-    snp     = rsID,
-    beta    = A1_beta,
+# cat("\n=== Reading HERMES GWAS ===\n")
+# hermes_raw <- fread(file.path(data_dir, "HERMES2_GWAS_DCM_EUR/FORMAT-METAL_Pheno5-DCM_EUR.tsv.gz"))
+# 
+# save(hermes_raw, file = file.path(out_dir, "hermes_DCM_GWAS_raw.RData"))
+
+load(file.path(out_dir, "hermes_DCM_GWAS_raw.RData"))
+
+# sample sizes
+# https://doi.org/10.1038/s41588-024-01952-y
+N_cases_hermes   <- 6001
+N_controls_hermes <- 449382   # from the paper
+N_total_hermes    <- N_cases_hermes + N_controls_hermes   # 455383
+s_hermes          <- N_cases_hermes / N_total_hermes
+
+cat("HERMES sample sizes: cases =", N_cases_hermes, ", controls =", N_controls_hermes,
+    ", total =", N_total_hermes, "\n")
+
+# Prepare GRanges for liftOver
+hermes_gr <- GenomicRanges::GRanges(
+  seqnames = paste0("chr", hermes_raw$chr),
+  ranges = IRanges::IRanges(start = hermes_raw$pos_b37, end = hermes_raw$pos_b37)
+)
+chain <- rtracklayer::import.chain(chain_file)
+hermes_gr_hg38 <- rtracklayer::liftOver(hermes_gr, chain)
+success <- which(lengths(hermes_gr_hg38) > 0)
+hermes_hg38 <- hermes_raw[success, ]
+hermes_hg38$chr <- as.character(GenomicRanges::seqnames(unlist(hermes_gr_hg38[success])))
+hermes_hg38$pos <- IRanges::start(unlist(hermes_gr_hg38[success]))
+
+# Build HERMES GWAS dataset
+hermes_gwas <- hermes_hg38 %>%
+  dplyr::mutate(
+    ref = A2,
+    alt = A1,
+    beta = A1_beta,
     varbeta = se^2,
-    MAF     = A1_freq,   
-    N_total = N_total,
-    N_case  = N_case
-)] %>%
-  na.omit()
+    pval = pval,
+    variant_id = rsID,
+    MAF_raw = A1_freq,
+    MAF = ifelse(MAF_raw > 0.5, 1 - MAF_raw, MAF_raw)
+  ) %>%
+  dplyr::filter(!is.na(beta), !is.na(varbeta), !is.na(pval)) %>%
+  dplyr::select(chr, pos, ref, alt, beta, varbeta, pval, variant_id, MAF)
 
-# Calculate the total sample size and case ratio (using median as each row may be the same)
-total_n <- unique(gwas_data$N)  
-if(length(total_n) > 1) total_n <- median(gwas_data$N, na.rm=TRUE)
-s <- unique(gwas_data$N_case) / total_n
-if(length(s) > 1) s <- median(gwas_data$N_case, na.rm=TRUE) / total_n
+cat("HERMES successfully converted SNPs:", nrow(hermes_gwas),
+    sprintf("(%.2f%%)", 100 * nrow(hermes_gwas) / nrow(hermes_raw)), "\n")
 
-d2 <- list(
-    beta    = gwas_data$beta,
-    varbeta = gwas_data$varbeta,
-    type    = "cc",
-    N       = total_n,
-    s       = s,
-    snp     = gwas_data$snp,
-    MAF     = gwas_data$MAF
-)
+
+save(hermes_gwas, N_cases_hermes, N_total_hermes,  file = file.path(out_dir, "hermes_DCM_GWAS_hg38.RData"))
+
+rm(hermes_raw, hermes_gr, hermes_gr_hg38, chain, success); gc()
 ```
 
-## JAK1
-```{r}
-jak1_result <- coloc_for_gene(
-  phenotype_id = "ENSG00000162434",
-  eqtl_dt = eqtl_dt,
-  gwas_dt = gwas_data,
-  gwas_n_cases = 6001,
-  gwas_n_controls = 1199156,
-  p1 = 1e-4, p2 = 1e-4, p12 = 1e-5,
-  eqtl_window_kb = 1000,
-  gene_tss = NULL,
-  return_details = FALSE
-)
+## Step 4: reading Jurgens GWAS (hg38)
 
-print(jak1_result)
+- [Dilated cardiomyopathy 2024 GWAS: European ancestry](https://www.kp4cd.org/node/1558)
+
+```{r}
+# Jurgens GWAS summary statistics
+# jurgens_raw <- fread("../data/raw/opengwas/Jurgens_DCM_GWAS/DCM_GWAS/Jurgens_DCM_GWAS_META.tsv.gz", header = TRUE)
+
+# save(jurgens_raw, file = file.path(out_dir, "jurgens_DCM_GWAS_raw.RData"))
+
+load(file.path(out_dir, "jurgens_DCM_GWAS_raw.RData"))
+
+# names(jurgens_raw)
+
+# https://www.nature.com/articles/s41588-024-01975-5
+# N_cases_jurgens <- max(jurgens_raw$N_cases)
+# N_controls_jurgens <- max(jurgens_raw$N_controls)
+N_cases_jurgens <- 9365
+N_controls_jurgens <- 946368  # from paper
+N_total_jurgens <- N_cases_jurgens + N_controls_jurgens
+
+s_jurgens <- N_cases_jurgens / N_total_jurgens
+
+jurgens_gwas <- jurgens_raw %>%
+  dplyr::mutate(
+    chr = paste0("chr", CHR),
+    pos = POS,
+    ref = NEA,
+    alt = EA,
+    beta = BETA,
+    varbeta = SE^2,
+    pval = P,
+    variant_id = ifelse(is.na(rsID) | rsID == "", ID_B38, rsID),
+    MAF_raw = EAFREQ,
+    MAF = ifelse(MAF_raw > 0.5, 1 - MAF_raw, MAF_raw)
+  ) %>%
+  dplyr::filter(!is.na(pval)) %>%
+  dplyr::select(chr, pos, ref, alt, beta, varbeta, pval, variant_id, MAF)
+
+cat("Jurgens 有效 SNP 数:", nrow(jurgens_gwas), "\n")
+rm(jurgens_raw); gc()
+
+
+save(jurgens_gwas, N_cases_jurgens, N_controls_jurgens, N_total_jurgens, s_jurgens, file = "../data/processed/opengwas/jurgens_DCM_GWAS_hg38.RData")
+
+rm(jurgens_raw, jurgens_gwas, jurgens_gwas); gc()
+```
+
+## Step 5: matching SNPs (only identical alleles, no flipping)
+```{r}
+match_identical <- function(eqtl_df, gwas_df) {
+  eqtl_match <- eqtl_df %>%
+    dplyr::select(gene_id, chr, pos, ref_eqtl = ref, alt_eqtl = alt,
+                  beta_eqtl = beta, varbeta_eqtl = varbeta, MAF_eqtl = MAF,
+                  pval_eqtl = pval, variant_id_eqtl = variant_id)
+  gwas_match <- gwas_df %>%
+    dplyr::select(chr, pos, ref_gwas = ref, alt_gwas = alt,
+                  beta_gwas = beta, varbeta_gwas = varbeta, MAF_gwas = MAF,
+                  pval_gwas = pval, variant_id_gwas = variant_id)
+  matched_pos <- dplyr::inner_join(eqtl_match, gwas_match, by = c("chr", "pos"))
+  matched_identical <- matched_pos %>%
+    dplyr::filter(ref_eqtl == ref_gwas & alt_eqtl == alt_gwas) %>%
+    dplyr::select(-ref_eqtl, -alt_eqtl, -ref_gwas, -alt_gwas)
+  return(matched_identical)
+}
+
+load(file.path(out_dir, "eqtl_heart_LV_clean.RData"))
+load(file.path(out_dir, "hermes_DCM_GWAS_hg38.RData"))
+load(file.path(out_dir, "jurgens_DCM_GWAS_hg38.RData"))
+
+matched_hermes <- match_identical(eqtl_clean, hermes_gwas)
+matched_jurgens <- match_identical(eqtl_clean, jurgens_gwas)
+
+cat("\n=== Matching results ===\n")
+cat("HERMES matched records (identical alleles):", nrow(matched_hermes), "\n")
+cat("Jurgens matched records (identical alleles):", nrow(matched_jurgens), "\n")
+
+rm(hermes_gwas, jurgens_gwas); gc()
+```
+
+## Step 6: evaluating match quality
+```{r}
+evaluate_matching <- function(matched_df, original_eqtl, name) {
+  cat("\n========== ", name, " matching quality ==========\n")
+  total_eqtl <- nrow(original_eqtl)
+  matched_n <- nrow(matched_df)
+  cat("Match rate:", matched_n, "/", total_eqtl, sprintf("(%.2f%%)", 100 * matched_n / total_eqtl), "\n")
+  
+  snp_per_gene <- matched_df %>% dplyr::group_by(gene_id) %>% dplyr::summarise(n = dplyr::n())
+  cat("SNPs per gene: median =", median(snp_per_gene$n), 
+      ", mean =", round(mean(snp_per_gene$n),1),
+      ", range =", min(snp_per_gene$n), "-", max(snp_per_gene$n), "\n")
+  cat("Genes with ≥10 SNPs:", sum(snp_per_gene$n >= 10), "/", nrow(snp_per_gene), "\n")
+  
+  if (all(c("MAF_eqtl", "MAF_gwas") %in% names(matched_df))) {
+    maf_cor <- cor(matched_df$MAF_eqtl, matched_df$MAF_gwas, method = "spearman", use = "complete.obs")
+    cat("MAF Spearman correlation:", round(maf_cor, 4), "\n")
+  }
+  
+  if (all(c("pval_eqtl", "pval_gwas") %in% names(matched_df))) {
+    logp_eqtl <- -log10(matched_df$pval_eqtl)
+    logp_gwas <- -log10(matched_df$pval_gwas)
+    p_cor <- cor(logp_eqtl, logp_gwas, method = "spearman", use = "complete.obs")
+    cat("-log10(P) Spearman correlation:", round(p_cor, 4), "\n")
+  }
+  
+  original_genes <- unique(original_eqtl$gene_id)
+  matched_genes <- unique(matched_df$gene_id)
+  cat("Gene coverage:", length(matched_genes), "/", length(original_genes),
+      sprintf("(%.2f%%)", 100 * length(matched_genes) / length(original_genes)), "\n")
+}
+
+# Save original eqtl_clean for evaluation
+eqtl_original <- eqtl_clean
+evaluate_matching(matched_hermes, eqtl_original, "HERMES")
+evaluate_matching(matched_jurgens, eqtl_original, "Jurgens")
+```
+
+## Step 7: filtering genes with ≥10 SNPs
+```{r}
+filter_genes <- function(matched_df) {
+  genes_keep <- matched_df %>%
+    dplyr::group_by(gene_id) %>%
+    dplyr::summarise(n = dplyr::n()) %>%
+    dplyr::filter(n >= 10) %>%
+    dplyr::pull(gene_id)
+  filtered <- matched_df %>% dplyr::filter(gene_id %in% genes_keep)
+  cat("Genes retained (≥10 SNPs):", length(genes_keep), "\n")
+  cat("Total SNP‑gene pairs after filtering:", nrow(filtered), "\n")
+  return(filtered)
+}
+
+matched_hermes_final <- filter_genes(matched_hermes)
+matched_jurgens_final <- filter_genes(matched_jurgens)
+
+rm(eqtl_clean, eqtl_original, matched_hermes, matched_jurgens); gc()
 ```
 
 ---
+
+## Step 8: running P‑value based colocalisation in parallel
+```{r}
+run_coloc_pval_gene <- function(sub_df, N_gwas, s_gwas, N_eqtl = 386,
+                                p1 = 1e-4, p2 = 1e-4, p12 = 1e-5) {
+  if (nrow(sub_df) < 10) return(NULL)
+  d1 <- list(pvalues = sub_df$pval_eqtl,
+             snp = sub_df$variant_id_eqtl,
+             N = N_eqtl,
+             type = "quant")
+  d2 <- list(pvalues = sub_df$pval_gwas,
+             snp = sub_df$variant_id_gwas,
+             N = N_gwas,
+             type = "cc",
+             s = s_gwas)
+  res <- tryCatch(coloc.abf(d1, d2, p1 = p1, p2 = p2, p12 = p12),
+                  error = function(e) NULL)
+  if (is.null(res)) return(NULL)
+  data.frame(gene = unique(sub_df$gene_id),
+             n_snps = res$summary["n snps"],
+             PP.H0 = res$summary["PP.H0"],
+             PP.H1 = res$summary["PP.H1"],
+             PP.H2 = res$summary["PP.H2"],
+             PP.H3 = res$summary["PP.H3"],
+             PP.H4 = res$summary["PP.H4"])
+}
+```
+
+## Step 9: Parallel wrapper
+```{r}
+run_parallel_pval <- function(matched_df, N_gwas, s_gwas, ncores = 8) {
+  gene_list <- split(matched_df, matched_df$gene_id)
+  cat("Total genes to analyse:", length(gene_list), "\n")
+  plan(multisession, workers = ncores)
+  results <- future_lapply(gene_list, function(x) {
+    run_coloc_pval_gene(x, N_gwas, s_gwas)
+  }, future.seed = TRUE)
+  plan(sequential)
+  results <- do.call(rbind, results)
+  return(results)
+}
+```
+
+
+## Step 10: Run colocalisation
+```{r}
+cat("\n=== 4. Running HERMES colocalisation (P‑value based) ===\n")
+
+ncores <- parallel::detectCores() - 1
+res_hermes <- run_parallel_pval(matched_hermes_final, N_total_hermes, s_hermes, ncores = ncores)
+
+cat("\n=== 5. Running Jurgens colocalisation (P‑value based) ===\n")
+res_jurgens <- run_parallel_pval(matched_jurgens_final, N_total_jurgens, s_jurgens, ncores = ncores)
+```
+
+## 11. Identify high‑confidence colocalisation (PP.H4 > 0.8) 
+```{r}
+hits_hermes <- res_hermes %>% dplyr::filter(PP.H4 > 0.8)
+hits_jurgens <- res_jurgens %>% dplyr::filter(PP.H4 > 0.8)
+```
+
+## 12. Save results
+```{r}
+fwrite(res_hermes, file.path(out_dir, "coloc_results_HERMES_pval.csv"))
+fwrite(hits_hermes, file.path(out_dir, "coloc_hits_HERMES_pval_PPH4_0.8.csv"))
+fwrite(res_jurgens, file.path(out_dir, "coloc_results_Jurgens_pval.csv"))
+fwrite(hits_jurgens, file.path(out_dir, "coloc_hits_Jurgens_pval_PPH4_0.8.csv"))
+```
+
+## 13. Summary 
+```{r}
+cat("\n========== FINAL SUMMARY ==========\n")
+cat("HERMES: analysed", nrow(res_hermes), "genes; high‑confidence hits (PP.H4>0.8):", nrow(hits_hermes), "\n")
+if (nrow(hits_hermes) > 0) print(hits_hermes[, c("gene", "PP.H4")])
+cat("\nJurgens: analysed", nrow(res_jurgens), "genes; high‑confidence hits (PP.H4>0.8):", nrow(hits_jurgens), "\n")
+if (nrow(hits_jurgens) > 0) print(hits_jurgens[, c("gene", "PP.H4")])
+
+overlap <- intersect(hits_hermes$gene, hits_jurgens$gene)
+cat("\nOverlap between GWAS hits:", length(overlap), "genes\n")
+if (length(overlap) > 0) {
+  cat("Overlapping genes:", paste(overlap, collapse = ", "), "\n")
+  writeLines(overlap, file.path(out_dir, "overlap_genes.txt"))
+}
+
+cat("\nAll results saved in:", out_dir, "\n")
+cat("Analysis completed.\n")
+```
 
 # GSEA Pathway Analysis of Causal Genes
 
