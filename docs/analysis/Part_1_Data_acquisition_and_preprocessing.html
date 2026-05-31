@@ -265,9 +265,9 @@ div.csl-indent {
   <ul>
   <li><a href="#step-1-loading-raw-counts-fpkm" id="toc-step-1-loading-raw-counts-fpkm" class="nav-link" data-scroll-target="#step-1-loading-raw-counts-fpkm"><span class="header-section-number">3.1</span> Step 1: Loading Raw Counts &amp; FPKM</a></li>
   <li><a href="#step-2-filtering-normal-dcm_hfref-samples" id="toc-step-2-filtering-normal-dcm_hfref-samples" class="nav-link" data-scroll-target="#step-2-filtering-normal-dcm_hfref-samples"><span class="header-section-number">3.2</span> Step 2: Filtering Normal / DCM_HFrEF Samples</a></li>
-  <li><a href="#step-3-gene-annotation" id="toc-step-3-gene-annotation" class="nav-link" data-scroll-target="#step-3-gene-annotation"><span class="header-section-number">3.3</span> Step 3: Gene Annotation</a></li>
+  <li><a href="#step-3-gene-annotationprobe-id-converted-to-gene-symbol" id="toc-step-3-gene-annotationprobe-id-converted-to-gene-symbol" class="nav-link" data-scroll-target="#step-3-gene-annotationprobe-id-converted-to-gene-symbol"><span class="header-section-number">3.3</span> Step 3: Gene Annotation(Probe ID converted to gene symbol)</a></li>
   <li><a href="#step-4-rename-the-row-name-from-entrezid-to-symbol" id="toc-step-4-rename-the-row-name-from-entrezid-to-symbol" class="nav-link" data-scroll-target="#step-4-rename-the-row-name-from-entrezid-to-symbol"><span class="header-section-number">3.4</span> Step 4: Rename the row name from EntrezID to Symbol</a></li>
-  <li><a href="#step-5-merge-duplicate-genes-take-the-average" id="toc-step-5-merge-duplicate-genes-take-the-average" class="nav-link" data-scroll-target="#step-5-merge-duplicate-genes-take-the-average"><span class="header-section-number">3.5</span> Step 5: Merge duplicate genes (take the average)</a></li>
+  <li><a href="#step-5-processing-duplicate-genes-take-the-average" id="toc-step-5-processing-duplicate-genes-take-the-average" class="nav-link" data-scroll-target="#step-5-processing-duplicate-genes-take-the-average"><span class="header-section-number">3.5</span> Step 5: Processing duplicate genes (take the average)</a></li>
   <li><a href="#step-6-filter-low-expression-genes-based-on-cpm" id="toc-step-6-filter-low-expression-genes-based-on-cpm" class="nav-link" data-scroll-target="#step-6-filter-low-expression-genes-based-on-cpm"><span class="header-section-number">3.6</span> Step 6: Filter low expression genes based on CPM</a></li>
   <li><a href="#step-7-compute_fpkm_from_counts" id="toc-step-7-compute_fpkm_from_counts" class="nav-link" data-scroll-target="#step-7-compute_fpkm_from_counts"><span class="header-section-number">3.7</span> Step 7: compute_fpkm_from_counts</a></li>
   <li><a href="#step-8-sva-batch-correction-for-counts" id="toc-step-8-sva-batch-correction-for-counts" class="nav-link" data-scroll-target="#step-8-sva-batch-correction-for-counts"><span class="header-section-number">3.8</span> Step 8: SVA Batch Correction for Counts</a></li>
@@ -854,9 +854,9 @@ Table&nbsp;1.. Herbs of Zhenwu Huangqi Decoction (ZWHQD).
 <span id="cb15-18"><a href="#cb15-18"></a></span>
 <span id="cb15-19"><a href="#cb15-19"></a>uniprot_list <span class="ot">&lt;-</span> <span class="fu">sapply</span>(chembl_ids, chembl_to_uniprot)</span>
 <span id="cb15-20"><a href="#cb15-20"></a></span>
-<span id="cb15-21"><a href="#cb15-21"></a><span class="fu">save</span>(uniprot_list,<span class="at">file =</span> <span class="st">"../data/raw/tcm/ppb3/uniprot_list.Rdata"</span>)</span>
+<span id="cb15-21"><a href="#cb15-21"></a><span class="fu">save</span>(uniprot_list,<span class="at">file =</span> <span class="st">"../data/raw/tcm/ppb3/uniprot_list.RData"</span>)</span>
 <span id="cb15-22"><a href="#cb15-22"></a></span>
-<span id="cb15-23"><a href="#cb15-23"></a><span class="co"># load("../data/raw/tcm/ppb3/uniprot_list.Rdata")</span></span>
+<span id="cb15-23"><a href="#cb15-23"></a><span class="co"># load("../data/raw/tcm/ppb3/uniprot_list.RData")</span></span>
 <span id="cb15-24"><a href="#cb15-24"></a></span>
 <span id="cb15-25"><a href="#cb15-25"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
 <span id="cb15-26"><a href="#cb15-26"></a>  <span class="at">Chembl.ID =</span> <span class="fu">names</span>(uniprot_list),</span>
@@ -1081,7 +1081,7 @@ Table&nbsp;1.. Herbs of Zhenwu Huangqi Decoction (ZWHQD).
 <span id="cb18-45"><a href="#cb18-45"></a></span>
 <span id="cb18-46"><a href="#cb18-46"></a><span class="co"># Export table to Excel for manuscript supplementary materials</span></span>
 <span id="cb18-47"><a href="#cb18-47"></a></span>
-<span id="cb18-48"><a href="#cb18-48"></a><span class="fu">save</span>(summary_table, <span class="at">file =</span>  <span class="st">"../data/processed/tcm/15_target_statistics.Rdata"</span>)</span>
+<span id="cb18-48"><a href="#cb18-48"></a><span class="fu">save</span>(summary_table, <span class="at">file =</span>  <span class="st">"../data/processed/tcm/15_target_statistics.RData"</span>)</span>
 <span id="cb18-49"><a href="#cb18-49"></a></span>
 <span id="cb18-50"><a href="#cb18-50"></a><span class="fu">write.xlsx</span>(</span>
 <span id="cb18-51"><a href="#cb18-51"></a>  <span class="fu">list</span>(</span>
@@ -1158,8 +1158,8 @@ Table&nbsp;2.. Statistics of ZWHQD-related potential targets.
 </tr>
 <tr class="even">
 <td style="text-align: left;">PPB3</td>
-<td style="text-align: right;">91</td>
-<td style="text-align: right;">160</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">162</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">SEA</td>
@@ -1185,9 +1185,6 @@ Table&nbsp;2.. Statistics of ZWHQD-related potential targets.
 <section id="acquisition-of-dcm_hfref-related-gene-expression-data" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Acquisition of DCM_HFrEF-Related Gene Expression Data</h1>
 <p>We integrated multiple transcriptome datasets from the GEO database and systematically carried out the screening and validation of target genes related to heart failure with reduced ejection fraction (DCM_HFrEF). <a href="">GSE141910</a> was selected as data sources for the bulk RNA-seq expression spectrum of DCM_HFrEF in this study, and <a href="">GSE116250</a>, <a href="">GSE161472</a>, <a href="">GSE135055</a>, <a href="">GSE120895</a>, and <a href="">GSE19303</a> were selected as a validation set to perform the diagnostic value assessment with the sample heart tissues. <a href="">GSE183852</a> was selected for subsequent 10X single-cell RNA sequencing (scRNA-seq) analysis. (<a href="">Supplementary Table S3</a>).</p>
-<ul>
-<li>ref: https://pmc.ncbi.nlm.nih.gov/articles/PMC10796662/</li>
-</ul>
 <p><strong>Notes:</strong> All these data have been downloaded and stored in the “../data/rwa/geo”. Please run the following code with caution, as it is time-consuming due to the large volume of data, especially the single-cell transcriptome dataset.</p>
 <section id="load-packages" class="level2" data-number="2.1">
 <h2 data-number="2.1" class="anchored" data-anchor-id="load-packages"><span class="header-section-number">2.1</span> Load Packages</h2>
@@ -1196,17 +1193,18 @@ Table&nbsp;2.. Statistics of ZWHQD-related potential targets.
 <span id="cb19-2"><a href="#cb19-2"></a><span class="fu">library</span>(data.table)</span>
 <span id="cb19-3"><a href="#cb19-3"></a><span class="fu">library</span>(openxlsx)</span>
 <span id="cb19-4"><a href="#cb19-4"></a><span class="fu">library</span>(patchwork)</span>
-<span id="cb19-5"><a href="#cb19-5"></a><span class="fu">library</span>(vegan)</span>
-<span id="cb19-6"><a href="#cb19-6"></a><span class="fu">library</span>(GEOquery)</span>
-<span id="cb19-7"><a href="#cb19-7"></a><span class="fu">library</span>(limma)</span>
-<span id="cb19-8"><a href="#cb19-8"></a><span class="fu">library</span>(DESeq2)</span>
-<span id="cb19-9"><a href="#cb19-9"></a><span class="fu">library</span>(edgeR)</span>
-<span id="cb19-10"><a href="#cb19-10"></a><span class="fu">library</span>(sva)</span>
-<span id="cb19-11"><a href="#cb19-11"></a><span class="fu">library</span>(org.Hs.eg.db)</span>
-<span id="cb19-12"><a href="#cb19-12"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(<span class="st">"TxDb.Hsapiens.UCSC.hg38.knownGene"</span>)) {</span>
-<span id="cb19-13"><a href="#cb19-13"></a>  BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">"TxDb.Hsapiens.UCSC.hg38.knownGene"</span>)</span>
-<span id="cb19-14"><a href="#cb19-14"></a>}</span>
-<span id="cb19-15"><a href="#cb19-15"></a><span class="fu">library</span>(TxDb.Hsapiens.UCSC.hg38.knownGene)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb19-5"><a href="#cb19-5"></a><span class="fu">library</span>(ggrepel)</span>
+<span id="cb19-6"><a href="#cb19-6"></a><span class="fu">library</span>(vegan)</span>
+<span id="cb19-7"><a href="#cb19-7"></a><span class="fu">library</span>(GEOquery)</span>
+<span id="cb19-8"><a href="#cb19-8"></a><span class="fu">library</span>(limma)</span>
+<span id="cb19-9"><a href="#cb19-9"></a><span class="fu">library</span>(DESeq2)</span>
+<span id="cb19-10"><a href="#cb19-10"></a><span class="fu">library</span>(edgeR)</span>
+<span id="cb19-11"><a href="#cb19-11"></a><span class="fu">library</span>(sva)</span>
+<span id="cb19-12"><a href="#cb19-12"></a><span class="fu">library</span>(org.Hs.eg.db)</span>
+<span id="cb19-13"><a href="#cb19-13"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(<span class="st">"TxDb.Hsapiens.UCSC.hg38.knownGene"</span>)) {</span>
+<span id="cb19-14"><a href="#cb19-14"></a>  BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">"TxDb.Hsapiens.UCSC.hg38.knownGene"</span>)</span>
+<span id="cb19-15"><a href="#cb19-15"></a>}</span>
+<span id="cb19-16"><a href="#cb19-16"></a><span class="fu">library</span>(TxDb.Hsapiens.UCSC.hg38.knownGene)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="step-1-rnaseq-datasets" class="level2" data-number="2.2">
@@ -1462,18 +1460,19 @@ Table&nbsp;2.. Statistics of ZWHQD-related potential targets.
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a><span class="co"># Filtering Pheno Data of Good Samples </span></span>
 <span id="cb29-2"><a href="#cb29-2"></a>pheno <span class="ot">&lt;-</span> pheno[<span class="fu">rownames</span>(pheno) <span class="sc">%in%</span> <span class="fu">colnames</span>(counts),]</span>
 <span id="cb29-3"><a href="#cb29-3"></a></span>
-<span id="cb29-4"><a href="#cb29-4"></a>Normal <span class="ot">&lt;-</span> pheno<span class="sc">$</span>etiology <span class="sc">==</span> <span class="st">"NF"</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(pheno<span class="sc">$</span>LVEF) <span class="sc">&amp;</span> pheno<span class="sc">$</span>LVEF <span class="sc">&gt;=</span> <span class="fl">0.5</span> <span class="sc">&amp;</span> pheno<span class="sc">$</span>LVEF <span class="sc">&lt;=</span> <span class="fl">0.7</span></span>
-<span id="cb29-5"><a href="#cb29-5"></a>DCM_HFrEF  <span class="ot">&lt;-</span> pheno<span class="sc">$</span>etiology <span class="sc">==</span> <span class="st">"DCM"</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(pheno<span class="sc">$</span>LVEF) <span class="sc">&amp;</span> pheno<span class="sc">$</span>LVEF <span class="sc">&lt;=</span> <span class="fl">0.4</span></span>
-<span id="cb29-6"><a href="#cb29-6"></a></span>
-<span id="cb29-7"><a href="#cb29-7"></a>keep_samples <span class="ot">&lt;-</span> <span class="fu">rownames</span>(pheno)[Normal <span class="sc">|</span> DCM_HFrEF]</span>
-<span id="cb29-8"><a href="#cb29-8"></a>pheno <span class="ot">&lt;-</span> pheno[keep_samples, ]</span>
-<span id="cb29-9"><a href="#cb29-9"></a>counts_keep <span class="ot">&lt;-</span> counts[, keep_samples]</span>
-<span id="cb29-10"><a href="#cb29-10"></a></span>
-<span id="cb29-11"><a href="#cb29-11"></a>pheno<span class="sc">$</span>group <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">ifelse</span>(pheno<span class="sc">$</span>etiology <span class="sc">==</span> <span class="st">"NF"</span>, <span class="st">"Normal"</span>, <span class="st">"DCM_HFrEF"</span>), <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Normal"</span>,<span class="st">"DCM_HFrEF"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb29-4"><a href="#cb29-4"></a><span class="co"># Normal &lt;- pheno$etiology == "NF" &amp; !is.na(pheno$LVEF) &amp; pheno$LVEF &gt;= 0.5 &amp; pheno$LVEF &lt;= 0.7</span></span>
+<span id="cb29-5"><a href="#cb29-5"></a>Normal <span class="ot">&lt;-</span> pheno<span class="sc">$</span>etiology <span class="sc">==</span> <span class="st">"NF"</span> </span>
+<span id="cb29-6"><a href="#cb29-6"></a>DCM_HFrEF  <span class="ot">&lt;-</span> pheno<span class="sc">$</span>etiology <span class="sc">==</span> <span class="st">"DCM"</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(pheno<span class="sc">$</span>LVEF) <span class="sc">&amp;</span> pheno<span class="sc">$</span>LVEF <span class="sc">&lt;=</span> <span class="fl">0.4</span></span>
+<span id="cb29-7"><a href="#cb29-7"></a></span>
+<span id="cb29-8"><a href="#cb29-8"></a>keep_samples <span class="ot">&lt;-</span> <span class="fu">rownames</span>(pheno)[Normal <span class="sc">|</span> DCM_HFrEF]</span>
+<span id="cb29-9"><a href="#cb29-9"></a>pheno <span class="ot">&lt;-</span> pheno[keep_samples, ]</span>
+<span id="cb29-10"><a href="#cb29-10"></a>counts_keep <span class="ot">&lt;-</span> counts[, keep_samples]</span>
+<span id="cb29-11"><a href="#cb29-11"></a></span>
+<span id="cb29-12"><a href="#cb29-12"></a>pheno<span class="sc">$</span>group <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">ifelse</span>(pheno<span class="sc">$</span>etiology <span class="sc">==</span> <span class="st">"NF"</span>, <span class="st">"Normal"</span>, <span class="st">"DCM_HFrEF"</span>), <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Normal"</span>,<span class="st">"DCM_HFrEF"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-3-gene-annotation" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="step-3-gene-annotation"><span class="header-section-number">3.3</span> Step 3: Gene Annotation</h2>
+<section id="step-3-gene-annotationprobe-id-converted-to-gene-symbol" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="step-3-gene-annotationprobe-id-converted-to-gene-symbol"><span class="header-section-number">3.3</span> Step 3: Gene Annotation(Probe ID converted to gene symbol)</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a><span class="co"># Obtaining gene length from TxDb</span></span>
 <span id="cb30-2"><a href="#cb30-2"></a>txdb <span class="ot">&lt;-</span> TxDb.Hsapiens.UCSC.hg38.knownGene</span>
@@ -1527,8 +1526,8 @@ Table&nbsp;2.. Statistics of ZWHQD-related potential targets.
 <span id="cb31-2"><a href="#cb31-2"></a><span class="fu">rownames</span>(counts_anno_mat) <span class="ot">&lt;-</span> gene_anno_filt<span class="sc">$</span>Symbol[<span class="fu">match</span>(<span class="fu">rownames</span>(counts_anno_mat), gene_anno_filt<span class="sc">$</span>EntrezID)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-5-merge-duplicate-genes-take-the-average" class="level2" data-number="3.5">
-<h2 data-number="3.5" class="anchored" data-anchor-id="step-5-merge-duplicate-genes-take-the-average"><span class="header-section-number">3.5</span> Step 5: Merge duplicate genes (take the average)</h2>
+<section id="step-5-processing-duplicate-genes-take-the-average" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="step-5-processing-duplicate-genes-take-the-average"><span class="header-section-number">3.5</span> Step 5: Processing duplicate genes (take the average)</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a>counts_dup_filt <span class="ot">&lt;-</span> limma<span class="sc">::</span><span class="fu">avereps</span>(counts_anno_mat) <span class="sc">%&gt;%</span></span>
 <span id="cb32-2"><a href="#cb32-2"></a>  <span class="fu">round</span>() <span class="sc">%&gt;%</span> </span>
@@ -1584,7 +1583,7 @@ Table&nbsp;2.. Statistics of ZWHQD-related potential targets.
 <section id="step-8-sva-batch-correction-for-counts" class="level2" data-number="3.8">
 <h2 data-number="3.8" class="anchored" data-anchor-id="step-8-sva-batch-correction-for-counts"><span class="header-section-number">3.8</span> Step 8: SVA Batch Correction for Counts</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a><span class="co"># log2 (CPM+1) matrix (using TMM normalization factor)</span></span>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a><span class="co"># log2 (CPM+1) matrix </span></span>
 <span id="cb35-2"><a href="#cb35-2"></a>dge_norm <span class="ot">&lt;-</span> <span class="fu">calcNormFactors</span>(<span class="fu">DGEList</span>(counts_final))</span>
 <span id="cb35-3"><a href="#cb35-3"></a>logcpm <span class="ot">&lt;-</span> <span class="fu">cpm</span>(dge_norm, <span class="at">log =</span> <span class="cn">TRUE</span>, <span class="at">prior.count =</span> <span class="dv">1</span>)   <span class="co"># log2(CPM+1)</span></span>
 <span id="cb35-4"><a href="#cb35-4"></a></span>
@@ -1595,35 +1594,27 @@ Table&nbsp;2.. Statistics of ZWHQD-related potential targets.
 <span id="cb35-9"><a href="#cb35-9"></a><span class="co"># Estimate the number of potential factors</span></span>
 <span id="cb35-10"><a href="#cb35-10"></a>n.sv <span class="ot">&lt;-</span> <span class="fu">num.sv</span>(<span class="fu">as.matrix</span>(logcpm), mod, <span class="at">method=</span><span class="st">"leek"</span>)</span>
 <span id="cb35-11"><a href="#cb35-11"></a></span>
-<span id="cb35-12"><a href="#cb35-12"></a><span class="co"># svobj &lt;- svaseq(as.matrix(logcpm), mod, mod0, n.sv = n.sv)</span></span>
-<span id="cb35-13"><a href="#cb35-13"></a><span class="co"># counts_corr &lt;- t( t(logcpm) - svobj$sv %*% solve(t(svobj$sv) %*% svobj$sv) %*% t(svobj$sv) %*% t(cpms_log) )</span></span>
-<span id="cb35-14"><a href="#cb35-14"></a><span class="co"># </span></span>
-<span id="cb35-15"><a href="#cb35-15"></a><span class="co"># # Add SVA to pheno</span></span>
-<span id="cb35-16"><a href="#cb35-16"></a><span class="co"># svdf &lt;- svobj$sv</span></span>
-<span id="cb35-17"><a href="#cb35-17"></a><span class="co"># colnames(svdf) &lt;- paste0("SVA",1:ncol(svdf))</span></span>
-<span id="cb35-18"><a href="#cb35-18"></a><span class="co"># pheno_final &lt;- cbind(pheno, svdf)</span></span>
-<span id="cb35-19"><a href="#cb35-19"></a></span>
-<span id="cb35-20"><a href="#cb35-20"></a><span class="cf">if</span> (n.sv <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb35-21"><a href="#cb35-21"></a>  <span class="co"># SVA</span></span>
-<span id="cb35-22"><a href="#cb35-22"></a>  svobj <span class="ot">&lt;-</span><span class="fu">sva</span>(<span class="fu">as.matrix</span>(logcpm), mod, mod0, <span class="at">n.sv =</span> n.sv)</span>
-<span id="cb35-23"><a href="#cb35-23"></a>  </span>
-<span id="cb35-24"><a href="#cb35-24"></a>  <span class="co"># Correct logCPM </span></span>
-<span id="cb35-25"><a href="#cb35-25"></a>  expr_counts_corr <span class="ot">&lt;-</span> <span class="fu">removeBatchEffect</span>(logcpm, <span class="at">covariates =</span> svobj<span class="sc">$</span>sv, <span class="at">design =</span> mod)</span>
-<span id="cb35-26"><a href="#cb35-26"></a>  </span>
-<span id="cb35-27"><a href="#cb35-27"></a>  <span class="co"># Correct logFPKM</span></span>
-<span id="cb35-28"><a href="#cb35-28"></a>  logfpkm <span class="ot">&lt;-</span> <span class="fu">log2</span>(fpkm_final <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb35-29"><a href="#cb35-29"></a>  expr_fpkm_corr <span class="ot">&lt;-</span> <span class="fu">removeBatchEffect</span>(logfpkm, <span class="at">covariates =</span> svobj<span class="sc">$</span>sv, <span class="at">design =</span> mod)</span>
-<span id="cb35-30"><a href="#cb35-30"></a>  </span>
-<span id="cb35-31"><a href="#cb35-31"></a>  <span class="co"># 将 SVA 因子添加到表型数据中</span></span>
-<span id="cb35-32"><a href="#cb35-32"></a>  svdf <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(svobj<span class="sc">$</span>sv)</span>
-<span id="cb35-33"><a href="#cb35-33"></a>  <span class="fu">colnames</span>(svdf) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"SVA"</span>, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(svdf))</span>
-<span id="cb35-34"><a href="#cb35-34"></a>  pheno_final <span class="ot">&lt;-</span> <span class="fu">cbind</span>(pheno, svdf)</span>
-<span id="cb35-35"><a href="#cb35-35"></a>} <span class="cf">else</span> {</span>
-<span id="cb35-36"><a href="#cb35-36"></a>  expr_counts_corr <span class="ot">&lt;-</span> logcpm</span>
-<span id="cb35-37"><a href="#cb35-37"></a>  expr_fpkm_corr <span class="ot">&lt;-</span> <span class="fu">log2</span>(fpkm_final <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb35-38"><a href="#cb35-38"></a>  pheno_final <span class="ot">&lt;-</span> pheno</span>
-<span id="cb35-39"><a href="#cb35-39"></a>  <span class="fu">warning</span>(<span class="st">"No significant surrogate variables found. Proceeding without batch correction."</span>)</span>
-<span id="cb35-40"><a href="#cb35-40"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb35-12"><a href="#cb35-12"></a><span class="cf">if</span> (n.sv <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb35-13"><a href="#cb35-13"></a>  <span class="co"># SVA</span></span>
+<span id="cb35-14"><a href="#cb35-14"></a>  svobj <span class="ot">&lt;-</span><span class="fu">sva</span>(<span class="fu">as.matrix</span>(logcpm), mod, mod0, <span class="at">n.sv =</span> n.sv)</span>
+<span id="cb35-15"><a href="#cb35-15"></a>  </span>
+<span id="cb35-16"><a href="#cb35-16"></a>  <span class="co"># Correct logCPM </span></span>
+<span id="cb35-17"><a href="#cb35-17"></a>  expr_counts_corr <span class="ot">&lt;-</span> <span class="fu">removeBatchEffect</span>(logcpm, <span class="at">covariates =</span> svobj<span class="sc">$</span>sv, <span class="at">design =</span> mod)</span>
+<span id="cb35-18"><a href="#cb35-18"></a>  </span>
+<span id="cb35-19"><a href="#cb35-19"></a>  <span class="co"># Correct logFPKM</span></span>
+<span id="cb35-20"><a href="#cb35-20"></a>  logfpkm <span class="ot">&lt;-</span> <span class="fu">log2</span>(fpkm_final <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb35-21"><a href="#cb35-21"></a>  expr_fpkm_corr <span class="ot">&lt;-</span> <span class="fu">removeBatchEffect</span>(logfpkm, <span class="at">covariates =</span> svobj<span class="sc">$</span>sv, <span class="at">design =</span> mod)</span>
+<span id="cb35-22"><a href="#cb35-22"></a>  </span>
+<span id="cb35-23"><a href="#cb35-23"></a>  <span class="co"># 将 SVA 因子添加到表型数据中</span></span>
+<span id="cb35-24"><a href="#cb35-24"></a>  svdf <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(svobj<span class="sc">$</span>sv)</span>
+<span id="cb35-25"><a href="#cb35-25"></a>  <span class="fu">colnames</span>(svdf) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"SVA"</span>, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(svdf))</span>
+<span id="cb35-26"><a href="#cb35-26"></a>  pheno_final <span class="ot">&lt;-</span> <span class="fu">cbind</span>(pheno, svdf)</span>
+<span id="cb35-27"><a href="#cb35-27"></a>} <span class="cf">else</span> {</span>
+<span id="cb35-28"><a href="#cb35-28"></a>  expr_counts_corr <span class="ot">&lt;-</span> logcpm</span>
+<span id="cb35-29"><a href="#cb35-29"></a>  expr_fpkm_corr <span class="ot">&lt;-</span> <span class="fu">log2</span>(fpkm_final <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb35-30"><a href="#cb35-30"></a>  pheno_final <span class="ot">&lt;-</span> pheno</span>
+<span id="cb35-31"><a href="#cb35-31"></a>  <span class="fu">warning</span>(<span class="st">"No significant surrogate variables found. Proceeding without batch correction."</span>)</span>
+<span id="cb35-32"><a href="#cb35-32"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="step-8-saving-data-for-deg-wgcna-immune-infiltration-analysis-ml" class="level2" data-number="3.9">
@@ -1666,69 +1657,71 @@ Table&nbsp;2.. Statistics of ZWHQD-related potential targets.
 <span id="cb37-12"><a href="#cb37-12"></a>p_before <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(pca_before, <span class="fu">aes</span>(<span class="at">x =</span> PC1, <span class="at">y =</span> PC2, <span class="at">color =</span> group, <span class="at">fill =</span> group)) <span class="sc">+</span></span>
 <span id="cb37-13"><a href="#cb37-13"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
 <span id="cb37-14"><a href="#cb37-14"></a>  <span class="fu">stat_ellipse</span>(<span class="at">type =</span> <span class="st">"t"</span>, <span class="at">level =</span> <span class="fl">0.95</span>, <span class="at">geom =</span> <span class="st">"polygon"</span>, <span class="at">alpha =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
-<span id="cb37-15"><a href="#cb37-15"></a>  <span class="fu">xlab</span>(<span class="fu">paste0</span>(<span class="st">"PC1: "</span>, var_before[<span class="dv">1</span>], <span class="st">"% variance"</span>)) <span class="sc">+</span></span>
-<span id="cb37-16"><a href="#cb37-16"></a>  <span class="fu">ylab</span>(<span class="fu">paste0</span>(<span class="st">"PC2: "</span>, var_before[<span class="dv">2</span>], <span class="st">"% variance"</span>)) <span class="sc">+</span></span>
-<span id="cb37-17"><a href="#cb37-17"></a>  <span class="fu">ggtitle</span>(<span class="st">"Before Batch Correction"</span>) <span class="sc">+</span></span>
-<span id="cb37-18"><a href="#cb37-18"></a>  <span class="fu">theme_bw</span>(<span class="at">base_size =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
-<span id="cb37-19"><a href="#cb37-19"></a>  <span class="fu">labs</span>(<span class="at">tag =</span> <span class="st">"A"</span>) <span class="sc">+</span> </span>
-<span id="cb37-20"><a href="#cb37-20"></a>  <span class="fu">theme</span>(</span>
-<span id="cb37-21"><a href="#cb37-21"></a>    <span class="at">plot.tag.position =</span> <span class="fu">c</span>(<span class="fl">0.10</span>, <span class="fl">0.90</span>),</span>
-<span id="cb37-22"><a href="#cb37-22"></a>    <span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb37-23"><a href="#cb37-23"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
-<span id="cb37-24"><a href="#cb37-24"></a>    <span class="at">legend.position =</span> <span class="st">"none"</span></span>
-<span id="cb37-25"><a href="#cb37-25"></a>  )</span>
-<span id="cb37-26"><a href="#cb37-26"></a></span>
-<span id="cb37-27"><a href="#cb37-27"></a><span class="co"># PCA plot AFTER batch correction</span></span>
-<span id="cb37-28"><a href="#cb37-28"></a><span class="fu">assay</span>(vsd) <span class="ot">&lt;-</span> expr_counts_corr</span>
-<span id="cb37-29"><a href="#cb37-29"></a></span>
-<span id="cb37-30"><a href="#cb37-30"></a>pca_after <span class="ot">&lt;-</span> <span class="fu">plotPCA</span>(vsd, <span class="at">intgroup =</span> <span class="st">"group"</span>, <span class="at">returnData =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb37-31"><a href="#cb37-31"></a>var_after <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">attr</span>(pca_after, <span class="st">"percentVar"</span>))</span>
-<span id="cb37-32"><a href="#cb37-32"></a></span>
-<span id="cb37-33"><a href="#cb37-33"></a>p_after <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(pca_after, <span class="fu">aes</span>(<span class="at">x =</span> PC1, <span class="at">y =</span> PC2, <span class="at">color =</span> group, <span class="at">fill =</span> group)) <span class="sc">+</span></span>
-<span id="cb37-34"><a href="#cb37-34"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb37-35"><a href="#cb37-35"></a>  <span class="fu">stat_ellipse</span>(<span class="at">type =</span> <span class="st">"t"</span>, <span class="at">level =</span> <span class="fl">0.95</span>, <span class="at">geom =</span> <span class="st">"polygon"</span>, <span class="at">alpha =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
-<span id="cb37-36"><a href="#cb37-36"></a>  <span class="fu">xlab</span>(<span class="fu">paste0</span>(<span class="st">"PC1: "</span>, var_after[<span class="dv">1</span>], <span class="st">"% variance"</span>)) <span class="sc">+</span></span>
-<span id="cb37-37"><a href="#cb37-37"></a>  <span class="fu">ylab</span>(<span class="fu">paste0</span>(<span class="st">"PC2: "</span>, var_after[<span class="dv">2</span>], <span class="st">"% variance"</span>)) <span class="sc">+</span></span>
-<span id="cb37-38"><a href="#cb37-38"></a>  <span class="fu">ggtitle</span>(<span class="st">"After SVA Batch Correction"</span>) <span class="sc">+</span></span>
-<span id="cb37-39"><a href="#cb37-39"></a>  <span class="fu">theme_bw</span>(<span class="at">base_size =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
-<span id="cb37-40"><a href="#cb37-40"></a>  <span class="fu">labs</span>(<span class="at">tag =</span> <span class="st">"B"</span>) <span class="sc">+</span></span>
-<span id="cb37-41"><a href="#cb37-41"></a>  <span class="fu">theme</span>(</span>
-<span id="cb37-42"><a href="#cb37-42"></a>    <span class="at">plot.tag.position =</span> <span class="fu">c</span>(<span class="fl">0.10</span>, <span class="fl">0.90</span>),</span>
-<span id="cb37-43"><a href="#cb37-43"></a>    <span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb37-44"><a href="#cb37-44"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
-<span id="cb37-45"><a href="#cb37-45"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span></span>
-<span id="cb37-46"><a href="#cb37-46"></a>  )</span>
-<span id="cb37-47"><a href="#cb37-47"></a></span>
-<span id="cb37-48"><a href="#cb37-48"></a><span class="co"># Combine plots with shared legend and add internal A/B tags</span></span>
-<span id="cb37-49"><a href="#cb37-49"></a>p_combined <span class="ot">&lt;-</span> (p_before <span class="sc">+</span> p_after) <span class="sc">+</span></span>
-<span id="cb37-50"><a href="#cb37-50"></a>  <span class="fu">plot_annotation</span>(<span class="at">tag_levels =</span> <span class="st">"A"</span>) <span class="sc">+</span></span>
-<span id="cb37-51"><a href="#cb37-51"></a>  <span class="fu">theme</span>(</span>
-<span id="cb37-52"><a href="#cb37-52"></a>    <span class="at">plot.tag.position =</span> <span class="fu">c</span>(<span class="fl">0.10</span>, <span class="fl">0.90</span>),</span>
-<span id="cb37-53"><a href="#cb37-53"></a>    <span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>, <span class="at">face =</span> <span class="st">"bold"</span>)</span>
-<span id="cb37-54"><a href="#cb37-54"></a>  )</span>
-<span id="cb37-55"><a href="#cb37-55"></a></span>
-<span id="cb37-56"><a href="#cb37-56"></a><span class="fu">ggsave</span>(<span class="st">"Figure_S1_A_PCA_counts_before.pdf"</span>, p_before, <span class="at">path =</span> <span class="st">"../results/figures/supplementary"</span>, <span class="at">width=</span><span class="dv">7</span>, <span class="at">height=</span><span class="dv">5</span>)</span>
-<span id="cb37-57"><a href="#cb37-57"></a><span class="fu">ggsave</span>(<span class="st">"Figure_S1_B_PCA_counts_after.pdf"</span>,  p_after,  <span class="at">path =</span> <span class="st">"../results/figures/supplementary"</span>, <span class="at">width=</span><span class="dv">7</span>, <span class="at">height=</span><span class="dv">5</span>)</span>
-<span id="cb37-58"><a href="#cb37-58"></a></span>
-<span id="cb37-59"><a href="#cb37-59"></a></span>
-<span id="cb37-60"><a href="#cb37-60"></a><span class="co"># Save combined PCA plot</span></span>
-<span id="cb37-61"><a href="#cb37-61"></a><span class="fu">ggsave</span>(</span>
-<span id="cb37-62"><a href="#cb37-62"></a>  <span class="st">"Figure_S1_PCA_Combined_Before_After.pdf"</span>, </span>
-<span id="cb37-63"><a href="#cb37-63"></a>  <span class="at">plot =</span> p_combined, </span>
-<span id="cb37-64"><a href="#cb37-64"></a>  <span class="at">path =</span> <span class="st">"../results/figures/supplementary"</span>, </span>
-<span id="cb37-65"><a href="#cb37-65"></a>  <span class="at">width =</span> <span class="dv">14</span>, </span>
-<span id="cb37-66"><a href="#cb37-66"></a>  <span class="at">height =</span> <span class="dv">6</span>, </span>
-<span id="cb37-67"><a href="#cb37-67"></a>  <span class="at">dpi =</span> <span class="dv">300</span></span>
-<span id="cb37-68"><a href="#cb37-68"></a>)</span>
-<span id="cb37-69"><a href="#cb37-69"></a></span>
-<span id="cb37-70"><a href="#cb37-70"></a><span class="fu">ggsave</span>(</span>
-<span id="cb37-71"><a href="#cb37-71"></a>  <span class="at">filename =</span> <span class="st">"Figure_S1_PCA_Combined_Before_After.png"</span>,</span>
-<span id="cb37-72"><a href="#cb37-72"></a>  <span class="at">plot =</span> p_combined,</span>
-<span id="cb37-73"><a href="#cb37-73"></a>  <span class="at">path =</span> <span class="st">"../results/figures/supplementary"</span>,</span>
-<span id="cb37-74"><a href="#cb37-74"></a>  <span class="at">width =</span> <span class="dv">14</span>,</span>
-<span id="cb37-75"><a href="#cb37-75"></a>  <span class="at">height =</span> <span class="dv">6</span>,</span>
-<span id="cb37-76"><a href="#cb37-76"></a>  <span class="at">dpi =</span> <span class="dv">300</span></span>
-<span id="cb37-77"><a href="#cb37-77"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb37-15"><a href="#cb37-15"></a>  <span class="fu">geom_text_repel</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">rownames</span>(pca_before)), <span class="at">size =</span> <span class="dv">3</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span> </span>
+<span id="cb37-16"><a href="#cb37-16"></a>  <span class="fu">xlab</span>(<span class="fu">paste0</span>(<span class="st">"PC1: "</span>, var_before[<span class="dv">1</span>], <span class="st">"% variance"</span>)) <span class="sc">+</span></span>
+<span id="cb37-17"><a href="#cb37-17"></a>  <span class="fu">ylab</span>(<span class="fu">paste0</span>(<span class="st">"PC2: "</span>, var_before[<span class="dv">2</span>], <span class="st">"% variance"</span>)) <span class="sc">+</span></span>
+<span id="cb37-18"><a href="#cb37-18"></a>  <span class="fu">ggtitle</span>(<span class="st">"Before Batch Correction"</span>) <span class="sc">+</span></span>
+<span id="cb37-19"><a href="#cb37-19"></a>  <span class="fu">theme_bw</span>(<span class="at">base_size =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb37-20"><a href="#cb37-20"></a>  <span class="fu">labs</span>(<span class="at">tag =</span> <span class="st">"A"</span>) <span class="sc">+</span> </span>
+<span id="cb37-21"><a href="#cb37-21"></a>  <span class="fu">theme</span>(</span>
+<span id="cb37-22"><a href="#cb37-22"></a>    <span class="at">plot.tag.position =</span> <span class="fu">c</span>(<span class="fl">0.10</span>, <span class="fl">0.90</span>),</span>
+<span id="cb37-23"><a href="#cb37-23"></a>    <span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb37-24"><a href="#cb37-24"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb37-25"><a href="#cb37-25"></a>    <span class="at">legend.position =</span> <span class="st">"none"</span></span>
+<span id="cb37-26"><a href="#cb37-26"></a>  )</span>
+<span id="cb37-27"><a href="#cb37-27"></a></span>
+<span id="cb37-28"><a href="#cb37-28"></a><span class="co"># PCA plot AFTER batch correction</span></span>
+<span id="cb37-29"><a href="#cb37-29"></a><span class="fu">assay</span>(vsd) <span class="ot">&lt;-</span> expr_counts_corr</span>
+<span id="cb37-30"><a href="#cb37-30"></a></span>
+<span id="cb37-31"><a href="#cb37-31"></a>pca_after <span class="ot">&lt;-</span> <span class="fu">plotPCA</span>(vsd, <span class="at">intgroup =</span> <span class="st">"group"</span>, <span class="at">returnData =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb37-32"><a href="#cb37-32"></a>var_after <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">attr</span>(pca_after, <span class="st">"percentVar"</span>))</span>
+<span id="cb37-33"><a href="#cb37-33"></a></span>
+<span id="cb37-34"><a href="#cb37-34"></a>p_after <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(pca_after, <span class="fu">aes</span>(<span class="at">x =</span> PC1, <span class="at">y =</span> PC2, <span class="at">color =</span> group, <span class="at">fill =</span> group)) <span class="sc">+</span></span>
+<span id="cb37-35"><a href="#cb37-35"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb37-36"><a href="#cb37-36"></a>  <span class="fu">stat_ellipse</span>(<span class="at">type =</span> <span class="st">"t"</span>, <span class="at">level =</span> <span class="fl">0.95</span>, <span class="at">geom =</span> <span class="st">"polygon"</span>, <span class="at">alpha =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
+<span id="cb37-37"><a href="#cb37-37"></a>  <span class="fu">geom_text_repel</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">rownames</span>(pca_after)), <span class="at">size =</span> <span class="dv">3</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span> </span>
+<span id="cb37-38"><a href="#cb37-38"></a>  <span class="fu">xlab</span>(<span class="fu">paste0</span>(<span class="st">"PC1: "</span>, var_after[<span class="dv">1</span>], <span class="st">"% variance"</span>)) <span class="sc">+</span></span>
+<span id="cb37-39"><a href="#cb37-39"></a>  <span class="fu">ylab</span>(<span class="fu">paste0</span>(<span class="st">"PC2: "</span>, var_after[<span class="dv">2</span>], <span class="st">"% variance"</span>)) <span class="sc">+</span></span>
+<span id="cb37-40"><a href="#cb37-40"></a>  <span class="fu">ggtitle</span>(<span class="st">"After SVA Batch Correction"</span>) <span class="sc">+</span></span>
+<span id="cb37-41"><a href="#cb37-41"></a>  <span class="fu">theme_bw</span>(<span class="at">base_size =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb37-42"><a href="#cb37-42"></a>  <span class="fu">labs</span>(<span class="at">tag =</span> <span class="st">"B"</span>) <span class="sc">+</span></span>
+<span id="cb37-43"><a href="#cb37-43"></a>  <span class="fu">theme</span>(</span>
+<span id="cb37-44"><a href="#cb37-44"></a>    <span class="at">plot.tag.position =</span> <span class="fu">c</span>(<span class="fl">0.10</span>, <span class="fl">0.90</span>),</span>
+<span id="cb37-45"><a href="#cb37-45"></a>    <span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb37-46"><a href="#cb37-46"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb37-47"><a href="#cb37-47"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span></span>
+<span id="cb37-48"><a href="#cb37-48"></a>  )</span>
+<span id="cb37-49"><a href="#cb37-49"></a></span>
+<span id="cb37-50"><a href="#cb37-50"></a><span class="co"># Combine plots with shared legend and add internal A/B tags</span></span>
+<span id="cb37-51"><a href="#cb37-51"></a>p_combined <span class="ot">&lt;-</span> (p_before <span class="sc">+</span> p_after) <span class="sc">+</span></span>
+<span id="cb37-52"><a href="#cb37-52"></a>  <span class="fu">plot_annotation</span>(<span class="at">tag_levels =</span> <span class="st">"A"</span>) <span class="sc">+</span></span>
+<span id="cb37-53"><a href="#cb37-53"></a>  <span class="fu">theme</span>(</span>
+<span id="cb37-54"><a href="#cb37-54"></a>    <span class="at">plot.tag.position =</span> <span class="fu">c</span>(<span class="fl">0.10</span>, <span class="fl">0.90</span>),</span>
+<span id="cb37-55"><a href="#cb37-55"></a>    <span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>, <span class="at">face =</span> <span class="st">"bold"</span>)</span>
+<span id="cb37-56"><a href="#cb37-56"></a>  )</span>
+<span id="cb37-57"><a href="#cb37-57"></a></span>
+<span id="cb37-58"><a href="#cb37-58"></a><span class="fu">ggsave</span>(<span class="st">"Figure_S1_A_PCA_counts_before.pdf"</span>, p_before, <span class="at">path =</span> <span class="st">"../results/figures/supplementary"</span>, <span class="at">width=</span><span class="dv">7</span>, <span class="at">height=</span><span class="dv">5</span>)</span>
+<span id="cb37-59"><a href="#cb37-59"></a><span class="fu">ggsave</span>(<span class="st">"Figure_S1_B_PCA_counts_after.pdf"</span>,  p_after,  <span class="at">path =</span> <span class="st">"../results/figures/supplementary"</span>, <span class="at">width=</span><span class="dv">7</span>, <span class="at">height=</span><span class="dv">5</span>)</span>
+<span id="cb37-60"><a href="#cb37-60"></a></span>
+<span id="cb37-61"><a href="#cb37-61"></a></span>
+<span id="cb37-62"><a href="#cb37-62"></a><span class="co"># Save combined PCA plot</span></span>
+<span id="cb37-63"><a href="#cb37-63"></a><span class="fu">ggsave</span>(</span>
+<span id="cb37-64"><a href="#cb37-64"></a>  <span class="st">"Figure_S1_PCA_Combined_Before_After.pdf"</span>, </span>
+<span id="cb37-65"><a href="#cb37-65"></a>  <span class="at">plot =</span> p_combined, </span>
+<span id="cb37-66"><a href="#cb37-66"></a>  <span class="at">path =</span> <span class="st">"../results/figures/supplementary"</span>, </span>
+<span id="cb37-67"><a href="#cb37-67"></a>  <span class="at">width =</span> <span class="dv">14</span>, </span>
+<span id="cb37-68"><a href="#cb37-68"></a>  <span class="at">height =</span> <span class="dv">6</span>, </span>
+<span id="cb37-69"><a href="#cb37-69"></a>  <span class="at">dpi =</span> <span class="dv">300</span></span>
+<span id="cb37-70"><a href="#cb37-70"></a>)</span>
+<span id="cb37-71"><a href="#cb37-71"></a></span>
+<span id="cb37-72"><a href="#cb37-72"></a><span class="fu">ggsave</span>(</span>
+<span id="cb37-73"><a href="#cb37-73"></a>  <span class="at">filename =</span> <span class="st">"Figure_S1_PCA_Combined_Before_After.png"</span>,</span>
+<span id="cb37-74"><a href="#cb37-74"></a>  <span class="at">plot =</span> p_combined,</span>
+<span id="cb37-75"><a href="#cb37-75"></a>  <span class="at">path =</span> <span class="st">"../results/figures/supplementary"</span>,</span>
+<span id="cb37-76"><a href="#cb37-76"></a>  <span class="at">width =</span> <span class="dv">14</span>,</span>
+<span id="cb37-77"><a href="#cb37-77"></a>  <span class="at">height =</span> <span class="dv">6</span>,</span>
+<span id="cb37-78"><a href="#cb37-78"></a>  <span class="at">dpi =</span> <span class="dv">300</span></span>
+<span id="cb37-79"><a href="#cb37-79"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="step-10-results-2" class="level2" data-number="3.11">

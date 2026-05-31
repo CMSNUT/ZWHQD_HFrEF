@@ -47,6 +47,45 @@ A: PCA before batch correction, B: PCA after SVA-based batch correction
 
 # Tables
 
+## Table S1.
+```{r}
+#| label: supptbl-1
+#| tbl-cap: "Herbs and corresponding ingredients in Zhenwu Huangqi Decoction (ZWHQD)."
+#| echo: false
+#| eval: true
+#| width: 100%
+#| results: asis
+
+library(tidyverse)
+library(data.table)
+library(knitr)
+library(kableExtra)
+library(openxlsx)
+
+herbs <- read.xlsx("results/tables/supplementary/Table_S1_Herbs_and_Compounds_of_Zhenwu_Huangqi_Decoction.xlsx", sheet = "Final_Active_Compounds", sep.names = " ") 
+
+herbs %>%
+  kbl(
+    caption = NULL,
+    format = "html",
+    escape = FALSE
+  ) %>%
+  kable_styling(
+    full_width = FALSE,
+    font_size = 10,
+    position = "center"  
+  ) %>%
+  row_spec(0, extra_css = "border-top: 1px solid #000 !important;") %>%
+  row_spec(0, extra_css = "border-bottom: 1px solid #000 !important;") %>%
+  row_spec(nrow(herbs), extra_css = "border-bottom: 1px solid #000 !important;") 
+```
+
+
+
+
+
+
+
 ---
 
 <table class="nav-table" width="100%">
