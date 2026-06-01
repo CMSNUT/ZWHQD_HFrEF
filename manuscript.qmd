@@ -1,49 +1,17 @@
 ---
 title: "Network pharmacology combined with bioinformatics and molecular docking reveals the mechanism of Zhenwu-Huangqi Decoction against heart failure with reduced ejection fraction"
-format:
-  html:
-    theme: cosmo
-    toc: true
-    toc-depth: 3
-    number-sections: true
-    smooth-scroll: true
-execute:
-  eval: false
-  echo: true
-  warning: false
-  message: false
+abstract: |
+  **Background:** Zhenwu-Huangqi Decoction (ZWHQD), a classic traditional Chinese medicine formula, is commonly used as an adjunctive treatment for HFrEF and shows beneficial clinical effects. Nevertheless, the molecular mechanisms responsible for its therapeutic action are still unclear. Accordingly, this study intends to systematically uncover the key signaling pathways and critical molecular targets of ZWHQD in HFrEF via network pharmacology and multi-omics approaches. 
+  
+  **Methods:** ...
+  
+  **Results:** ...
+  
+  **Conclusion:** ...
+  
+keywords: [network pharmacology, machine learning, molecular docking]
 ---
 
----
-
-# Abstract {-}
-
-## Object {-}
-
-Zhenwu-Huangqi Decoction (ZWHQD), a classic traditional Chinese medicine formula, is commonly used as an adjunctive treatment for HFrEF and shows beneficial clinical effects. Nevertheless, the molecular mechanisms responsible for its therapeutic action are still unclear. Accordingly, this study intends to systematically uncover the key signaling pathways and critical molecular targets of ZWHQD in HFrEF via network pharmacology and multi-omics approaches. 
-
-
-## Method {-}
-
-kkkkkkkkkkkk
-
-## Result {-}
-
-啦啦啦啦啦啦啦啦啦、
-
-## Conclusion {-}
-
-llll
-
----
-
-# Abbreviations {-}
-
----
-
-CHF, chronic heart failure; HFrEF, Heart Failure with Reduced Ejection Fraction; TCM, traditional Chinese medicine; ZWHQD, Zhenwu-Huangqi decoction; MR, Mendelian randomization; GSEA, gene set enrichment analysis; GEO, Gene Expression Omnibus; RNA-seq, RNA sequencing; scRNA-seq, single-cell RNA sequencing; HC, healthy control; FC, fold change; DEGs, differentially expressed genes; WGCNA, weighted gene co-expression network analysis; GS, gene significance; MM, module membership; DCABM-TCM, Database of Constituents Absorbed into the Blood and Metabolites of Traditional Chinese Medicine, BATMAN-TCM, Bioinformatics Analysis Tool for Molecular mechANism of Traditional Chinese Medicine; MCODE, Molecular Complex Detection; GO, gene ontology; KEGG, Kyoto encyclopedia of genes and genomes; CC, cell component; BP, biological process; MF, molecular function; PCA, principal component analysis; UMAP, Uniform Manifold Approximation and Projection; t-SNE, t-distributed Stochastic Neighbor Embedding; eQTL, expression quantitative trait loci; SNP, single nucleotide polymorphisms; IV, instrumental variable; GWAS, genome-wide association study; PVE, proportion of variance explained; IVW, inverse variance weighted; OR, Odds Ratio; MR-PERSSO, MR pleiotropy residual sum and outlier; PP. H, posterior probability of hypothesis; ROC, receiver operating characteristic; DCA, decision curve analysis; PI3K, phosphoinositide 3 kinase; AKT, serine/threonine kinase; MAPK, mitogen-activated protein kinase; TNF, tumor necrosis factor; IL, interleukin; CD, cluster of differentiation; NK, natural killer; HLA, human leukocyte antigen; PIP2, phosphatidylinositol-4,5-bisphosphate; PIP3, phosphatidylinositol-3, 4, 5-bisphosphate; PTEN, phosphatase and tensin homolog; PDK1, phosphatidylinositol 3-phosphate-dependent protein kinase-1; FLS, fibroblast-like synoviocytes; OC, osteoclast; RANKL, receptor activator for nuclear factor-κB ligand.
-
----
 
 # Introduction
 
@@ -53,14 +21,10 @@ Chronic heart failure (CHF) is an important terminal manifestation of cardiovasc
 
 Traditional Chinese medicine (TCM) has accumulated extensive experience in the adjuvant treatment of CHF [@lan2024TCM]. As a classic TCM formula for warming yang and promoting diuresis, Zhenwu Decoction has demonstrated definite clinical efficacy in the management of HFrEF. Multiple meta-analyses have confirmed that Zhenwu decoction combined with conventional Western medical treatment can significantly improves clinical response rates and enhances cardiac function parameters, with acceptable safety profiles [@mo2017ZWD; @han2022ZWD]. Notably, elderly HFrEF patients are particularly prone to concurrent qi deficiency syndrome. A cross-sectional study of 1,676 hospitalized CHF patients reported that qi deficiency and blood stasis syndrome accounts for 26.19% of cases, ranking second only to phlegm‑turbidity and blood stasis syndrome [@du2024HF]. Clinically, such patients typically present with classic qi deficiency symptoms, including fatigue, spontaneous sweating, shortness of breath and recurrent colds. Therefore, therapeutic strategies that merely warm yang and induce diuresis without concomitant qi supplementation often result in suboptimal outcomes. *Astragalus membranaceus*, a key qi‑tonifying herb, exerts cardiovascular protective effects including improved cardiac function, anti‑inflammation, and anti‑fibrosis [@lu2011HQ; @yang2012HQ]. Added to Zhenwu Decoction, it forms Zhenwu Huangqi Decoction (ZWHQD, [@tbl-1]) to tonify qi, consolidate the exterior, induce diuresis, and reduce edema. In ZWHQD, the sovereign herb *Aconiti Lateralis Radix Praeparata* (Fu Zi) warms the kidney, assists yang, and promotes diuresis by activating qi transformation. The minister herb *Astragalus Membranaceus* (Huang Qi) tonifies qi, consolidates the exterior, and alleviates edema, thus synergizing with *Aconiti Lateralis Radix Praeparata* to strengthen both yang-warming and qi-tonifying effects. The other minister herbs, *Poria* (Fu Ling) and *Atractylodis Macrocephalae Rhizoma* (Bai Zhu) invigorate the spleen and resolve dampness. The assistant herb *Paeonia Lactiflora* (Bai Shao) nourishes yin and astringes to counteract the dry-hot nature of the sovereign herb. Another assistant herb, *Zingiberis Rhizoma Recens* (Sheng Jiang),warms the middle energizer to augment the yang-warming action. Clinical evidence indicates that ZWHQD can significantly improve cardiac function, relieve symptoms of fatigue and edema, and enhance patients’ quality of life [@zhou2023ZWHQD]. Notwithstanding its well-established clinical efficacy, the material basis and exact pharmacological mechanisms of ZWHQD in treating HFrEF remain poorly elucidated.
 
-
-```{r}
-#| label: tbl-1
-#| tbl-cap: "Herbs of Zhenwu Huangqi Decoction (ZWHQD)."
+::: {#tbl-1}
 #| echo: false
 #| eval: true
 #| width: 100%
-#| results: asis
 
 library(tidyverse)
 library(data.table)
@@ -68,12 +32,17 @@ library(knitr)
 library(kableExtra)
 library(openxlsx)
 
-herbs <- read.xlsx("results/tables/main/Table1_Herbs_of_Zhenwu_Huangqi_Decoction.xlsx", sep.names = " ") %>%
-  mutate(`Latin Name` = text_spec(`Latin Name`, italic = TRUE))
+tbl_1 <- read.xlsx("tables/Table1.xlsx", sep.names = " ")  %>%
+  mutate(Herb = Herb.Name.Pinyin,
+         Ingredient = Compound.Name,
+         PubChem_CID = CID
+         ) %>%
+  dplyr::select(Herb,Ingredient,PubChem_CID,SMILES)
 
-herbs %>%
+
+tbl_1 %>%
   kbl(
-    caption = NULL,
+    # caption = NULL,
     format = "html",
     escape = FALSE
   ) %>%
@@ -82,10 +51,19 @@ herbs %>%
     font_size = 10,
     position = "center"  
   ) %>%
+  column_spec(1, width = "15%") %>%      
+  column_spec(2, width = "25%") %>%      
+  column_spec(3, width = "10%") %>%
+  column_spec(4, width = "15%") %>%
+  column_spec(5, width = "35%") %>%
   row_spec(0, extra_css = "border-top: 1px solid #000 !important;") %>%
   row_spec(0, extra_css = "border-bottom: 1px solid #000 !important;") %>%
-  row_spec(nrow(herbs), extra_css = "border-bottom: 1px solid #000 !important;") 
+  row_spec(nrow(tbl_1), extra_css = "border-bottom: 1px solid #000 !important;") 
 ```
+Herbs of Zhenwu Huangqi Decoction (ZWHQD).
+:::
+
+
 
 Identification of the blood-absorbed active components of Zhenwu Huangqi Decoction (ZWHQD) and their potential therapeutic targets represents a fundamental step toward elucidating its molecular mechanisms in HFrEF. Mainstream databases for traditional Chinese medicine (TCM) (e.g., TCMID [@xue2013TCMID], TCMSP [@ru2014TCMSP], ETCM [@xu2019ETCM], HERB [@fang2021HERB]) mainly document the intrinsic chemical components of herbs, yet neglect the actual forms of these agents that enter the systemic circulation following in vivo metabolism. As an orally administered TCM formula, only the blood-migrating components of ZWHQD and their corresponding metabolites can directly interact with biological targets to exert pharmacological actions. Therefore, target prediction based on the "prescription–blood-absorbed components–targets" network pharmacology strategy is more physiologically and pharmacodynamically rational than relying solely on the intrinsic chemical components of TCM herbs. The Database of Constituents Absorbed into the Blood and Metabolites of Traditional Chinese Medicine (DCABM-TCM) [@liu2023DCABM] is the first professional database dedicated to systematically collecting the blood-absorbed components of TCM formulas and single herbs. Through manual literature mining, DCABM-TCM has compiled 1,816 blood-absorbed components (including prototype components and their metabolites) that have been experimentally validated, covering 192 TCM formulas and 194 kinds of TCM herbs.
 
@@ -129,7 +107,7 @@ Finally, we refined the target list through multi‑tool voting combined with li
 
 ## Identification of HFrEF-associated genes
 
-We integrated multiple transcriptome datasets from the GEO database and systematically carried out the screening and validation of target genes related to heart failure with reduced ejection fraction (HFrEF). [GSE141910](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE141910) was selected as data sources for the bulk RNA-seq expression spectrum of HFrEF in this study, and [GSE116250](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE116250), [GSE161472](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE161472), [GSE135055](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135055), [GSE120895](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE120895), and [GSE19303](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE19303) were selected as a validation set to perform the diagnostic value assessment with the sample heart tissues. [GSE183852](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183852) was selected for subsequent 10X single-cell RNA sequencing (scRNA-seq) analysis. ([Supplementary Table S3]()).
+We integrated multiple transcriptome datasets from the GEO database and systematically carried out the screening and validation of target genes related to heart failure with reduced ejection fraction (HFrEF). [GSE141910](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE141910) was selected as data sources for the bulk RNA-seq expression spectrum of HFrEF in this study, and [GSE116250](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE116250), [GSE161472](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE161472), [GSE135055](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135055), [GSE120895](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE120895), and [GSE19303](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE19303) were selected as a validation set to perform the diagnostic value assessment with the sample heart tissues. [GSE183852](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183852) was selected for subsequent 10X single-cell RNA sequencing (scRNA-seq) analysis.
 
 We annotated probes to gene symbols using the org.Hs.eg.db database and retained the maximum expression value for genes with multiple matching probes. We then used the sva package to remove batch effects across series and groups in GSE141910 [@zhang2020SVA].
 
@@ -187,12 +165,12 @@ We obtained the SDF file of the 3D Conformer of the candidate constituents of ZW
 
 ## Active ingredients and target genes of ZWHQD
 
-We identified a total of 101 active ingredients of ZWHQD from the DCABM-TCM Database, with cycloastragenol manually supplemented. Detailed information on these compounds is provided in the [Supplementary Table S1](supplementary.html#supptbl-1). These active ingredients primarily cover flavonoids, terpenoids, phenolic acids, tannins, alkaloids, glycosides, as well as gingerol and shogaol derivatives. We further collected putative target proteins of these active ingredients from seven online databases. All retrieved target entries were standardized to official gene Symbol IDs according to the UniProt database. Ultimately, a total of 811 candidate genes corresponding to 98 effective compounds were obtained for the subsequent mechanistic exploration of ZWHQD, as summarized in the Final_All worksheet of [Supplementary Table S2](supplementary.html#supptbl-2).
+We identified a total of 101 active ingredients of ZWHQD from the DCABM-TCM Database, with cycloastragenol manually supplemented. Detailed information on these compounds is provided in the. These active ingredients primarily cover flavonoids, terpenoids, phenolic acids, tannins, alkaloids, glycosides, as well as gingerol and shogaol derivatives. We further collected putative target proteins of these active ingredients from seven online databases. All retrieved target entries were standardized to official gene Symbol IDs according to the UniProt database. Ultimately, a total of 811 candidate genes corresponding to 98 effective compounds were obtained for the subsequent mechanistic exploration of ZWHQD, as summarized in the Final_All worksheet of.
 
 
 ## Potential HFrEF-associated genes
 
-A gene expression profile dataset with 20,810 genes was obtained by annotating the GSE141910 subsets and removing the batch effect ([Supplementary Figure S1](supplementary.html#suppfig-1)). 
+A gene expression profile dataset with 20,810 genes was obtained by annotating the GSE141910 subsets and removing the batch effect ([Supplementary Figure S1]()). 
 
 Differential expression analysis was performed on 20,810 genes using DESeq2. Genes with |log2FC| > 0.585 (i.e., absolute fold change > 1.5) and adjusted P value (padj) < 0.05 were considered significantly differentially expressed. Differential expression analysis of 21,572 genes was conducted via DESeq2. Genes satisfying the thresholds of |\log_2\text{FoldChange}| > \log_2(1.5) and adjusted P value (padj) < 0.05 were defined as significant differentially expressed genes (DEGs). In total, 3,188 DEGs were screened, consisting of 1,986 upregulated and 1,202 downregulated genes.
 The number of upregulated genes was obviously predominant, reflecting robust activation of inflammatory response, immune function and cellular stress injury-related pathways in HFrEF myocardium. By contrast, fewer genes exhibited decreased expression, among which protective functional genes, metabolic regulators and tissue structural genes were largely suppressed.
@@ -201,11 +179,7 @@ Highly expressed upregulated genes contained COL22A1 (\log_2\text{FC}=4.23), SEZ
 We also examined associations between disease traits and transcriptomic gene expression patterns using WGCNA. 
 **Twenty-one** gene modules were identified in the analysis on the basis of hierarchical clustering dendrograms, and correlations between the modules and their association with disease traits were calculated using the Spearman’s rank correlation test and Mantel test (**Fig. 2E**). WGCNA identified **675** hub genes from MEbrown (r = **0.84**, p = **8e-04**) and MEroyalblue (r = -0.70, p = 8e-07) that were significantly correlated with disease traits (**Fig. 1C, D**). The potential HFrEF genes for the study were formed by combining the DEGs (|log2 FC| > 0.585) with the WGCNA hub genes.
 
-::: {#fig-2}
-
-![](results/figures/main/Figure_2A_deg_volcano.png)
-  
-![](results/figures/main/Figure_2B_DEG_heatmap_Plot.png) 
+ 
 
 
 Identification of potential rheumatoid arthritis genes. A: The volcano diagram of differential expression analysis. Genes would be labeled with the threshold of |log2(FC)| > 0.585; B: The heatmap of differential expression analysis; C: Soft threshold selection and cluster dendrogram. Genes are classified into distinct modules based on hierarchical clustering. D: The heatmap of Weighted gene co-expression network analysis based on the correlation of modules and Normal/HFrEF traits. E: The heatmap of inter-module correlations and associations of modules with disease traits based on Spearman’s rank correlation test and Mantle’s test.
@@ -249,12 +223,11 @@ Calculation of AUCell score for specific cell subpopulation of rheumatoid arthri
 
 ## Causal Core Genes Associated with ZWHQD-HFrEF
 
-We identified eQTL regulating ZWHQD-HFrEF hub genes that were batch-matched as exposure factors for HFrEF outcome, and 289 SNPs that satisfied the correlation hypothesis and the independence assumption hypothesis were considered as IVs for MR analysis. A total of seven ZWHQD-HFrEF core genes, including CASP8, PPARG, IKBKB, PPARA, IFNG, MYC, and STAT3 (Table 2, Fig. 6A), were identified as being causally associated with RA. Among these, CASP8 [IVW, OR = 0.8425, 95 %CI(0.6993, 1.0151), p = 0.0014], PPARG [IVW, OR = 0.8901, 95 % CI(0.8292, 0.9555), p = 0.0013], STAT3 [IVW, OR = 0.8940, 95 %CI (0.8053, 0.9925), p = 0.0356) were the protective factors on RA, while IKBKB (IVW, OR = 1.1310, 95 %CI(1.0032, 1.2751), p = 0.0443), IFNG [IVW, OR = 1.1918, 95 %CI(1.0059, 1.4119), p = 0.0451), MYC [IVW, OR = 1.2673, 95 %CI(1.0482, 1.5322), p = 0.0145], PPARA [WR, OR =  1.2781, 95 %CI(1.0022, 1.6299), p = 0.0480] show the negative correlation with HFrEF (Fig. 6B). The FDR correction, as implemented through the Benjamini-Hochberg method, is designed to exclude false positives for CASP8 (adjusted p = 0.0255) and PPARG. (adjusted p = 0.0373). No heterogeneity or horizontal pleiotropy were significant for the seven genes in the primary analysis.  Bayesian co-localization analysis fairly suggested that CASP8 (coloc. abf-PP.H3 = 0.137, coloc.abf-PP.H4 = 0.484) shared the same variant with RA, quite indicating that PPARG (coloc.abf-PP.H3 = 0.557, coloc. abf-PP.H4 = 0.201), STAT3 (coloc.abf-PP.H3 = 0.537, coloc.abf-PP.H4 = 0.107), IKBKB (coloc.abf-PP.H3 = 0.474, coloc.abf-PP.H4 = 0.0326), MYC (coloc.abf-PP.H3 = 0.693, coloc.abf-PP.H4 = 0.0063), and HFrEF associated different variants in a particular the genomic region. PPARA (coloc.abf-PP.H2 = 0.670, coloc.abf-PP.H3 = 0.0775) and IFNG (coloc.abf-PP.H2 = 0.682, coloc.abf-PP.H3 = 0.194) did not share genetic linkage in genomic region (Table 3, Supplementary Fig. S4). Bidirectional MR analysis was performed to show that HFrEF did not have a causal effect on the levels of the seven identified target genes (Supplementary Fig. S4), and Steiger filtering further ensured the directionality of causal associations (Table 3).
+We identified eQTL regulating ZWHQD-HFrEF hub genes that were batch-matched as exposure factors for HFrEF outcome, and 289 SNPs that satisfied the correlation hypothesis and the independence assumption hypothesis were considered as IVs for MR analysis. A total of seven ZWHQD-HFrEF core genes, including CASP8, PPARG, IKBKB, PPARA, IFNG, MYC, and STAT3 (), were identified as being causally associated with RA. Among these, CASP8 [IVW, OR = 0.8425, 95 %CI(0.6993, 1.0151), p = 0.0014], PPARG [IVW, OR = 0.8901, 95 % CI(0.8292, 0.9555), p = 0.0013], STAT3 [IVW, OR = 0.8940, 95 %CI (0.8053, 0.9925), p = 0.0356) were the protective factors on RA, while IKBKB (IVW, OR = 1.1310, 95 %CI(1.0032, 1.2751), p = 0.0443), IFNG [IVW, OR = 1.1918, 95 %CI(1.0059, 1.4119), p = 0.0451), MYC [IVW, OR = 1.2673, 95 %CI(1.0482, 1.5322), p = 0.0145], PPARA [WR, OR =  1.2781, 95 %CI(1.0022, 1.6299), p = 0.0480] show the negative correlation with HFrEF (Fig. 6B). The FDR correction, as implemented through the Benjamini-Hochberg method, is designed to exclude false positives for CASP8 (adjusted p = 0.0255) and PPARG. (adjusted p = 0.0373). No heterogeneity or horizontal pleiotropy were significant for the seven genes in the primary analysis.  Bayesian co-localization analysis fairly suggested that CASP8 (coloc. abf-PP.H3 = 0.137, coloc.abf-PP.H4 = 0.484) shared the same variant with RA, quite indicating that PPARG (coloc.abf-PP.H3 = 0.557, coloc. abf-PP.H4 = 0.201), STAT3 (coloc.abf-PP.H3 = 0.537, coloc.abf-PP.H4 = 0.107), IKBKB (coloc.abf-PP.H3 = 0.474, coloc.abf-PP.H4 = 0.0326), MYC (coloc.abf-PP.H3 = 0.693, coloc.abf-PP.H4 = 0.0063), and HFrEF associated different variants in a particular the genomic region. PPARA (coloc.abf-PP.H2 = 0.670, coloc.abf-PP.H3 = 0.0775) and IFNG (coloc.abf-PP.H2 = 0.682, coloc.abf-PP.H3 = 0.194) did not share genetic linkage in genomic region (). Bidirectional MR analysis was performed to show that HFrEF did not have a causal effect on the levels of the seven identified target genes (Supplementary Fig. S4), and Steiger filtering further ensured the directionality of causal associations ().
 
-::: {#fig-6}
 
 Identification of ZWHQD-HFrEF core genes with causal association by MR analysis. A: The volcano diagram of MR results for ZWHQD-HFrEF hub genes and the risk of RA. B: The forest plot of MR results for ZWHQD-HFrEF core genes that causally associated with RA.
-::: 
+
 
 ## Diagnostic Value of Core Genes in HFrEF
 
@@ -360,6 +333,20 @@ The undersigned authors certify that they do not have any financial or personal 
 
 # Acknowledgements {-}
 
+# Figure legends {-}
+
+# Supplementary Information {-}
+# Supplementary Information
+
+**Supplementary Figure Legends**
+
+**Figure S1.** ...  
+**Figure S2.** ...  
+
+**Supplementary Tables**
+
+See `supplementary/Supp_Tables.xlsx`
+
 ---
 
 This research would not have been possible without the contributions of all the authors involved in the study. We are grateful to other research group members for their invaluable contributions to this project. We would like to extend our sincerest gratitude to the Figdraw (https ://www.figdraw.com/) for providing invaluable assistance during the creation of the molecular mechanism diagram.
@@ -375,7 +362,7 @@ Supplementary material associated with this article can be found, in the online 
 <table class="nav-table" width="100%">
   <tr>
     <td align="left">
-      [Home](index.qmd) | [About](about.qmd) | [Methods](methods.qmd)
+      [Home](index.qmd) 
     </td>
     <td align="right">
       [Start Analysis](analysis/Part_1_Data_acquisition_and_preprocessing.qmd)
@@ -384,3 +371,5 @@ Supplementary material associated with this article can be found, in the online 
 </table>
 
 # References {-}
+
+

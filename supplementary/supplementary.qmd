@@ -1,18 +1,6 @@
 ---
 title: "Network pharmacology combined with bioinformatics and molecular docking reveals the mechanism of Zhenwu-Huangqi Decoction against heart failure with reduced ejection fraction"
 subtitle: Supplementary
-format:
-  html:
-    theme: cosmo
-    toc: true
-    toc-depth: 3
-    number-sections: true
-    smooth-scroll: true
-execute:
-  eval: false
-  echo: true
-  warning: false
-  message: false
 ---
 
 # Methods
@@ -42,18 +30,20 @@ A: PCA before batch correction, B: PCA after SVA-based batch correction
 
 :::
 
+Abbreviations: BP, biological process; 
 
 
 
 # Tables
 
-## Table S1.
+## Table S1
 
-::: {#supptbl-1}
+:::{#supptbl-1}
+
 ```{r}
 #| echo: false
 #| eval: true
-#| width: 60%
+#| width: 100%
 
 library(tidyverse)
 library(data.table)
@@ -61,11 +51,16 @@ library(knitr)
 library(kableExtra)
 library(openxlsx)
 
-herbs <- read.xlsx("results/tables/supplementary/Table_S1_Herbs_and_Compounds_of_Zhenwu_Huangqi_Decoction.xlsx", sheet = "Final_Active_Compounds", sep.names = " ") 
+tbl_s1 <- read.xlsx("results/tables/supplementary/Table_S1_Herbs_and_Compounds_of_Zhenwu_Huangqi_Decoction.xlsx", sheet = "Final_Active_Compounds", sep.names = " ")  %>%
+  mutate(`Herb(Chinese Pinyin)` = `Chinese Pinyin`,
+         `Herb(Latin)` = `Latin Name`
+         ) %>%
+  mutate(`Dose (g)` = c(9,6,9,9,9,20))
 
-herbs %>%
+
+tbl_s1 %>%
   kbl(
-    caption = NULL,
+    # caption = NULL,
     format = "html",
     escape = FALSE
   ) %>%
@@ -74,20 +69,22 @@ herbs %>%
     font_size = 10,
     position = "center"  
   ) %>%
+  column_spec(1, width = "10%") %>%      
+  column_spec(2, width = "20%") %>%      
+  column_spec(3, width = "10%") %>%
+  column_spec(4, width = "60%") %>%
   row_spec(0, extra_css = "border-top: 1px solid #000 !important;") %>%
   row_spec(0, extra_css = "border-bottom: 1px solid #000 !important;") %>%
-  row_spec(nrow(herbs), extra_css = "border-bottom: 1px solid #000 !important;") 
+  row_spec(nrow(tbl_s1), extra_css = "border-bottom: 1px solid #000 !important;") 
 ```
-
 Herbs and corresponding ingredients in Zhenwu Huangqi Decoction (ZWHQD).
 :::
 
 
-## Table S2.
-::: {#supptbl-2}
+## Table S2
+
+:::{#supptbl-2} 
 ```{r}
-#| label: supptbl-2
-#| tbl-cap: "Herbs, ingredients and corresponding targets in Zhenwu Huangqi Decoction (ZWHQD)."
 #| echo: false
 #| eval: true
 #| width: 100%
@@ -109,7 +106,7 @@ tbl_s2 <- read.xlsx("results/tables/supplementary/Table_S2_Compound_Targets.xlsx
 
 tbl_s2 %>%
   kbl(
-    caption = NULL,
+    # caption = NULL,
     format = "html",
     escape = FALSE
   ) %>%
@@ -118,13 +115,16 @@ tbl_s2 %>%
     font_size = 10,
     position = "center"  
   ) %>%
+  column_spec(1, width = "20%") %>%      
+  column_spec(2, width = "20%") %>%      
+  column_spec(3, width = "10%") %>%
+  column_spec(4, width = "50%") %>%
   row_spec(0, extra_css = "border-top: 1px solid #000 !important;") %>%
   row_spec(0, extra_css = "border-bottom: 1px solid #000 !important;") %>%
-  row_spec(nrow(herbs), extra_css = "border-bottom: 1px solid #000 !important;") 
+  row_spec(nrow(tbl_s2), extra_css = "border-bottom: 1px solid #000 !important;") 
 ```
+Herbs, ingredients and corresponding targets in Zhenwu Huangqi Decoction (ZWHQD).
 :::
-
-
 
 
 ---

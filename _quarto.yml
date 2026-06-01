@@ -69,36 +69,36 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: about.qmd
-        text: About
       - href: manuscript.qmd
-        text: Report
-      - href: supplementary.qmd
-        text: Supplementary Materials
-      - text: Data Analysis
+        text: Main
+      - text: Scripts
         menu:
           - text: "Part 1: Data acquisition and preprocessing"
-            href: "analysis/Part_1_Data_acquisition_and_preprocessing.qmd"
+            href: "scripts/Part_1_Data_acquisition_and_preprocessing.qmd"
           - text: "Part 2: Screening of HFrEF-related genes"
-            href: "analysis/Part_2_Screening_of_HFrEF_related_genes.qmd"
+            href: "scripts/Part_2_Screening_of_HFrEF_related_genes.qmd"
           - text: "Part 3: Mechanism exploration of ZWHQD against HFrEF"
-            href: "analysis/Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.qmd"
+            href: "scripts/Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.qmd"
           - text: "Part 4: Mechanism validation via bioinformatics and docking"
-            href: "analysis/Part_4_Mechanism_validation_via_bioinformatics_and_docking.qmd"
+            href: "scripts/Part_4_Mechanism_validation_via_bioinformatics_and_docking.qmd"
           - text: "Part 5: TF-miRNA regulatory network"
-            href: "analysis/Part_5_TF_miRNA_regulatory_network.qmd"
+            href: "scripts/Part_5_TF_miRNA_regulatory_network.qmd"
 format:
+  # docx:
+  #   toc: false
   html:
     css: style.css
     theme: cosmo
     toc: true
-    toc-depth: 4
+    toc-depth: 3
     toc-location: left
     code-fold: false
     code-tools: false
     code-copy: true
     code-line-numbers: true
     highlight-style: github
+    tbl-cap-location: top
+    supptbl-cap-location: top
     fig-align: center
     fig-dpi: 300
     page-layout: full
