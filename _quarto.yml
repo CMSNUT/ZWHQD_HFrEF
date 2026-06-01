@@ -58,7 +58,7 @@ author:
         postal-code: 710061
 
 bibliography: references.bib
-csl: ../csl/analytical-chemistry.csl
+csl: analytical-chemistry.csl
 
 website:
   title: "ZWHQD for HFrEF"
