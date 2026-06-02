@@ -1455,7 +1455,7 @@ cat("Analysis completed.\n")
 <table class="nav-table" width="100%">
   <tr>
     <td align="left">
-      [Home](../index.qmd) | [About](../about.qmd) | [Methods](../methods.qmd) | [Results](../results.qmd)
+      [Home](../index.qmd) 
     </td>
     <td align="right">
       [Previous](Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.qmd) | [Next](Part_5_TF_miRNA_regulatory_network.qmd)

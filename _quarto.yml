@@ -71,6 +71,8 @@ website:
         text: Home
       - href: manuscript.qmd
         text: Main
+      - href: supplementary/supp_info.qmd
+        text: Supp
       - text: Scripts
         menu:
           - text: "Part 1: Data acquisition and preprocessing"
@@ -90,8 +92,9 @@ format:
     css: style.css
     theme: cosmo
     toc: true
-    toc-depth: 3
+    toc-depth: 4
     toc-location: left
+    toc-expand: false 
     code-fold: false
     code-tools: false
     code-copy: true

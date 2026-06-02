@@ -15,14 +15,6 @@ execute:
 
 ---
 
-# Abstract
-
 This project aims to systematically elucidate the multidimensional pharmacological mechanisms of Zhenwu Huangqi Decoction (ZWHQD), a classic traditional Chinese medicine (TCM) formula, in the treatment of chronic heart failure with reduced ejection fraction (HFrEF). By integrating network pharmacology, bioinformatics, and molecular docking, we intend to clarify the material basis and potential mechanism of ZWHQD in HFrEF, as well as explore its intrinsic regulatory effects on the pathological network of HFrEF.
-
-The background of this project is described in [**About**](about.qmd).
-
-Detailed technical procedures are described in [**Methods**](methods.qmd), and the corresponding executable code for each analysis step is available in [**Analysis**](analysis/Part_1_Data_acquisition_and_preprocessing.qmd).
-
-In addition, [**Results**](results.qmd) provides a comprehensive presentation of all findings.
 
 All materials related to this project, including code and data, are available in the GitHub repository [**ZWHQD_HFrEF**](https://github.com/cmsnut/ZWHQD_HFrEF).

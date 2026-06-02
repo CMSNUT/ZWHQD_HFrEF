@@ -839,7 +839,7 @@ ggsave("../results/figures/main/Figure_4C_Venn_Hub_Genes.png", p, width=6, heigh
 <table class="nav-table" width="100%">
   <tr>
     <td align="left">
-      [Home](../index.qmd) | [About](../about.qmd) | [Methods](../methods.qmd) | [Results](../results.qmd)
+      [Home](../index.qmd) 
     </td>
     <td align="right">
       [Previous](Part_2_Screening_of_HFrEF_related_genes.qmd) | [Next](Part_4_Mechanism_validation_via_bioinformatics_and_docking.qmd)

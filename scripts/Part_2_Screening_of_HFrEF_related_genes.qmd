@@ -126,14 +126,12 @@ p_volcano <- ggplot(deg_all, aes(x = log2FoldChange, y = -log10(padj), color = s
     x = "log2(Fold Change)", 
     y = "-log10(Adjusted P-value)") +
   theme_bw() + theme(
-    plot.title = element_text(hjust = 0.5),
-    # plot.tag.position = c(0.01, 0.98),
-    # plot.tag = element_text(size = 12, face = "bold")
+    plot.title = element_text(hjust = 0.5)
   )
 
-ggsave("Figure_2A_deg_volcano.pdf",plot = p_volcano,path = "../results/figures/main",device = "pdf", width = 7,height = 5,dpi = 300)
+ggsave("Figure_1A.pdf",plot = p_volcano,path = "../figures/main",device = "pdf", width = 7,height = 5,dpi = 300)
 
-ggsave("Figure_2A_deg_volcano.png", plot = p_volcano, path = "../results/figures/main", device = "png", width = 7, height = 5, dpi = 300)
+ggsave("Figure_1A.png", plot = p_volcano, path = "../figures/main", device = "png", width = 7, height = 5, dpi = 300)
 ```
 
 ---
@@ -191,47 +189,23 @@ p_heat <-pheatmap(
   height = 5
 )
 
-ggsave("Figure_2B_DEG_heatmap_Plot.pdf",plot = p_heat,path = "../results/figures/main",device = "pdf", width = 7,height = 5,dpi = 300)
+ggsave("Figure_1B.pdf",plot = p_heat,path = "../figures/main",device = "pdf", width = 7,height = 5,dpi = 300)
 
-ggsave("Figure_2B_DEG_heatmap_Plot.png",plot = p_heat,path = "../results/figures/main",device = "png", width = 7,height = 5,dpi = 300)
+ggsave("Figure_1B.png",plot = p_heat,path = "../figures/main",device = "png", width = 7,height = 5,dpi = 300)
 ```
 
 ## Step 7: Saving DEGs Results
 ```{r}
 save(deg_all,deg_sig,deg_up, deg_down, lfc, file = "../data/processed/geo/GSE141910/degs_results.RData")
 
-write.xlsx(
-  list(
-    DEG_All = deg_all,
-    DEG_Sig = deg_sig
-  ),
-  file = "../results/tables/supplementary/Table_S4_DEG_Results.xlsx",
-  overwrite = TRUE,
-  rowNames = TRUE
-)
+load("../data/processed/geo/GSE141910/degs_results.RData")
+
+save(deg_sig, file = "../supplementary/deg_sig.xlsx")
 ```
-
-## Step 8: Results
-
-Differential expression analysis was performed on 21,572 genes using DESeq2. Genes with |log2FoldChange| > log₂(1.5) (i.e., absolute fold change > 1.5) and adjusted P value (padj) < 0.05 were considered significantly differentially expressed. Differential expression analysis of 21,572 genes was conducted via DESeq2. Genes satisfying the thresholds of \(|\log_2\text{FoldChange}| > \log_2(1.5)\) and adjusted P value (padj) < 0.05 were defined as significant differentially expressed genes (DEGs). In total, 3,188 DEGs were screened, consisting of 1,986 upregulated and 1,202 downregulated genes.
-The number of upregulated genes was obviously predominant, reflecting robust activation of inflammatory response, immune function and cellular stress injury-related pathways in HFrEF myocardium. By contrast, fewer genes exhibited decreased expression, among which protective functional genes, metabolic regulators and tissue structural genes were largely suppressed.
-Highly expressed upregulated genes contained COL22A1 (\(\log_2\text{FC}=4.23\)), SEZ6L (\(3.69\)), TNMD (\(3.38\)), SFRP4 (\(3.22\)), PENK (\(3.20\)), FHAD1-AS1 (\(3.16\)), HBD (\(3.07\)), LYPD1 (\(3.03\)), LAMP5 (\(3.03\)) and CAPN6 (\(2.96\)), which predominantly participate in extracellular matrix remodeling, neuropeptide signaling and cellular stress response. In contrast, downregulated genes were mainly implicated in inflammatory modulation, substance metabolism, ion transport and epithelial differentiation. Representative downregulated genes included IL1RL1 (\(\log_2\text{FC}=-3.88\)), SERPINA3 (\(-3.23\)), RNASE2 (\(-3.07\)), PI15 (\(-3.04\)), LOC105378356 (\(-3.01\)), FAM83B (\(-3.01\)), OVOS2P (\(-3.00\)), LCN6 (\(-2.99\)), TUBA3E (\(-2.87\)) and LBP (\(-2.85\)).  The volcano plot and heatmap of all DEGs are shown in @fig-2 A and B, respectively. 
-
-::: {#fig-2}
-
-  ![](../results/figures/main/Figure_2A_deg_volcano.png)
-  ![](../results/figures/main/Figure_2B_DEG_heatmap_Plot.png) 
-  
-Differential gene expression analysis.
-A: Volcano plot showing the distribution of all expressed genes. Red dots represent significantly upregulated genes, blue dots represent significantly downregulated genes, and gray dots represent non-significant genes.
-B: Heatmap displaying the expression patterns of the top 100 upregulated and top 100 downregulated DEGs. Samples are arranged with heart failure samples on the left and normal samples on the right. 
-
-:::
 
 ---
 
 # Weighted Gene Co-expression Network Analysis (WGCNA)
-
 
 ---
 
@@ -382,7 +356,9 @@ sft$fitIndices[power, 5]
 
 save(sft,file="../data/processed/geo/GSE141910/sft.RData")
 
-pdf("../results/figures/supplementary/Figure_S2_Soft_Threshold.pdf", width = 12, height = 5)
+# load("../data/processed/geo/GSE141910/sft.RData")
+
+pdf("../figures/supplementary/Figure_S2.pdf", width = 12, height = 5)
 
 par(mfrow = c(1,2))
 plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
@@ -390,7 +366,7 @@ plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
      type="n", main = paste("Scale independence"))
 text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
      labels=powers, col="red")
-abline(h=R2, col="blue")
+abline(h=sft$fitIndices[6,2], col="blue")
 
 plot(sft$fitIndices[,1], sft$fitIndices[,5],
      xlab="Soft Threshold (power)", ylab="Mean Connectivity", type="n")
@@ -400,7 +376,7 @@ dev.off()
 
 sft$powerEstimate
 
-pdf("../results/figures/supplementary/Figure_S2_Soft_Threshold.png", width = 12, height = 5)
+pdf("../figures/supplementary/Figure_S2.png", width = 14, height = 5)
 
 par(mfrow = c(1,2))
 plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
@@ -408,7 +384,7 @@ plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
      type="n", main = paste("Scale independence"))
 text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
      labels=powers, col="red")
-abline(h=R2, col="blue")
+abline(h=sft$fitIndices[6,2], col="blue")
 
 plot(sft$fitIndices[,1], sft$fitIndices[,5],
      xlab="Soft Threshold (power)", ylab="Mean Connectivity", type="n")
@@ -743,7 +719,7 @@ ggsave(
 <table class="nav-table" width="100%">
   <tr>
     <td align="left">
-      [Home](../index.qmd) | [About](../about.qmd) | [Methods](../methods.qmd) | [Results](../results.qmd)
+      [Home](../index.qmd) 
     </td>
     <td align="right">
       [Previous](Part_1_Data_acquisition_and_preprocessing.qmd) | [Next](Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.qmd)

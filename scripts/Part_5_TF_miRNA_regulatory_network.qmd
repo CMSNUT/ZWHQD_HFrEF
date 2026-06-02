@@ -33,7 +33,7 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 <table class="nav-table" width="100%">
   <tr>
     <td align="left">
-      [Home](../index.qmd) | [About](../about.qmd) | [Methods](../methods.qmd) | [Results](../results.qmd)
+      [Home](../index.qmd) 
     </td>
     <td align="right">
       [Previous](Part_4_Mechanism_validation_via_bioinformatics_and_docking.qmd)

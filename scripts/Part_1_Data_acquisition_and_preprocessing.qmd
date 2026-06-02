@@ -39,40 +39,6 @@ Finally, to characterize the molecular properties of these candidate active ingr
 
 ---
 
-```{r}
-#| label: tbl-1
-#| tbl-cap: "Herbs of Zhenwu Huangqi Decoction (ZWHQD)."
-#| echo: false
-#| eval: true
-#| width: 100%
-#| results: asis
-
-library(tidyverse)
-library(data.table)
-library(knitr)
-library(kableExtra)
-library(openxlsx)
-
-herbs <- read.xlsx("../results/tables/main/Table1_Herbs_of_Zhenwu_Huangqi_Decoction.xlsx", sep.names = " ") %>%
-  mutate(`Latin Name` = text_spec(`Latin Name`, italic = TRUE))
-
-herbs %>%
-  kbl(
-    caption = NULL,
-    format = "html",
-    escape = FALSE
-  ) %>%
-  kable_styling(
-    full_width = FALSE,
-    font_size = 10,
-    position = "center"  
-  ) %>%
-  row_spec(0, extra_css = "border-top: 1px solid #000 !important;") %>%
-  row_spec(0, extra_css = "border-bottom: 1px solid #000 !important;") %>%
-  row_spec(nrow(herbs), extra_css = "border-bottom: 1px solid #000 !important;") 
-```
-
-
 ### Step 1: Load Raw Data from DCABM-TCM
 ```{r dcabm}
 rm(list = ls())
@@ -91,7 +57,7 @@ save(
 Parse compound names, CIDs, formulas, and clean formatting.
 
 ```{r}
-source("../scripts/utils.R")
+source("utils.R")
 
 compounds_clean <- compounds_raw %>%
   mutate(across(where(is.character), trimws)) %>%
@@ -113,11 +79,6 @@ compounds_clean <- compounds_raw %>%
 save(
   compounds_clean,
   file = "../data/processed/tcm/02_compounds_clean.RData"
-)
-
-write.xlsx(
-  compounds_clean,
-  "../data/processed/tcm/02_compounds_clean.xlsx"
 )
 ```
 
@@ -191,12 +152,12 @@ library(furrr)
 library(progressr)
 
 compounds_pubchem <- compounds_final_filtered %>%
-  mutate(CID = clean_cids(CID)) %>%
+  mutate(`CID` = clean_cids(CID)) %>%
   filter(!is.na(CID)) %>%
   distinct(CID, .keep_all = TRUE)
 
 properties <- c("IUPACName", "MolecularFormula", "MolecularWeight",
-                "SMILES", "InChI", "InChIKey")
+                "SMILES")
 
 unique_cids <- unique(compounds_pubchem$CID)
 cid_batches <- split(unique_cids, ceiling(seq_along(unique_cids)/20))
@@ -220,7 +181,7 @@ compounds_final <- compounds_pubchem %>%
     Herb.Name.Pinyin, 
     # Herb.Name.English,
     Compound.Name, IUPACName, Compound.Category,
-    MolecularFormula, MolecularWeight, CID, SMILES, InChI, InChIKey
+    MolecularFormula, MolecularWeight, CID, SMILES
   ) %>%
   mutate(across(where(is.character), trimws))
 ```
@@ -260,30 +221,6 @@ results <- download_all_sdf(unique_cids, sdf_files)
 
 ---
 
-### Step 9: Export Final Tables
-```{r}
-herbs <- read.xlsx("../results/tables/main/Table1_Herbs_of_Zhenwu_Huangqi_Decoction.xlsx", sep.names = " ")
-
-# Table S1
-write.xlsx(
-  list(
-    Herbs = herbs,
-    Raw_Compounds = compounds_clean,
-    Final_Active_Compounds = compounds_final
-  ),
-  file = "../results/tables/supplementary/Table_S1_Herbs_and_Compounds_of_Zhenwu_Huangqi_Decoction.xlsx",
-  overwrite = TRUE
-)
-```
-
----
-
-### Step 10: Results
-
-All identified active compounds are presented in the Final_Active_Compounds worksheet of Supplementary Table S1 (../results/tables/supplementary/Table_S1_Herbs_and_Compounds_of_Zhenwu_Huangqi_Decoction.xlsx).
-
----
-
 ## Targets Prediction for ZWHQD
 
 we predicted potential targets of the blood-absorbed compounds using seven authoritative online platforms, including three classic mainstream databases and four additional professional target fishing servers: **BATMAN-TCM 2.0** @kong2023batman, **SuperPred 3.0** @gallo2022superpred, **SwissTargetPrediction** @daina2019swiss, **PharmMapper** @liu2010pharm,@Wang2017pharm,  **TargetNet** @yao2016targetnet, **PPB3** @Darsaraee2026ppb3, and **SEA** @keiser2007sea. 
@@ -307,7 +244,7 @@ We retrieved target predictions for each blood‑absorbed compound from the BATM
 ```{r}
 rm(list = ls())
 
-source("../scripts/utils.R")
+source("utils.R")
 
 load("../data/processed/tcm/06_compounds_final.RData")
 load("../data/raw/tcm/batman/batman_target_known.RData")
@@ -340,7 +277,7 @@ save(
 ```{r}
 rm(list = ls())
 
-source("../scripts/utils.R")
+source("utils.R")
 
 load("../data/processed/tcm/06_compounds_final.RData")
 load("../data/raw/uniprot/uniprot_human_reviewed.RData")
@@ -389,7 +326,7 @@ save(
 ```{r}
 rm(list = ls())
 
-source("../scripts/utils.R")
+source("utils.R")
 
 load("../data/processed/tcm/06_compounds_final.RData")
 load("../data/raw/uniprot/uniprot_human_reviewed.RData")
@@ -426,7 +363,7 @@ save(
 ```{r}
 rm(list = ls())
 
-source("../scripts/utils.R")
+source("utils.R")
 
 load("../data/processed/tcm/06_compounds_final.RData")
 load("../data/raw/uniprot/uniprot_human_reviewed.RData")
@@ -460,7 +397,7 @@ save(
 ```{r}
 rm(list = ls())
 
-source("../scripts/utils.R")
+source("utils.R")
 
 load("../data/processed/tcm/06_compounds_final.RData")
 load("../data/raw/uniprot/uniprot_human_reviewed.RData")
@@ -508,7 +445,7 @@ save(
 ```{r}
 rm(list = ls())
 
-source("../scripts/utils.R")
+source("utils.R")
 
 load("../data/processed/tcm/06_compounds_final.RData")
 load("../data/raw/uniprot/uniprot_human_reviewed.RData")
@@ -562,7 +499,7 @@ save(
 ```{r}
 rm(list = ls())
 
-source("../scripts/utils.R")
+source("utils.R")
 
 load("../data/processed/tcm/06_compounds_final.RData")
 load("../data/raw/uniprot/uniprot_human_reviewed.RData")
@@ -610,7 +547,7 @@ cnames <- c(
   # "Herb.Name.Latin",
   "Compound.Name", "IUPACName", "Compound.Category",
   "MolecularFormula", "MolecularWeight", "CID",
-  "SMILES", "InChI", "InChIKey", "Symbol", "Uniprot.ID"
+  "SMILES", "Symbol", "Uniprot.ID"
 )
 
 
@@ -773,36 +710,6 @@ write.xlsx(
   ),
   "../results/tables/supplementary/Table_S2_Compound_Targets.xlsx"
 )
-```
-
-### Step 10: Results
-
-We further collected putative target proteins of these active ingredients from seven online databases. All retrieved target entries were standardized to official gene Symbol IDs according to the UniProt database. Ultimately, a total of 811 candidate genes corresponding to 98 effective compounds were obtained for the subsequent mechanistic exploration of ZWHQD, as summarized in the *Target_Statistics* worksheet of [Supplementary Table S2](../results/tables/supplementary/Table_S1_Herbs_and_Compounds_of_Zhenwu_Huangqi_Decoction.xlsx).
-
-```{r}
-#| label: tbl-2
-#| tbl-cap: "Statistics of ZWHQD-related potential targets."
-#| echo: false
-#| eval: true
-#| width: 100%
-#| results: asis
-
-load("../data/processed/tcm/15_target_statistics.RData")
-
-summary_table %>% 
-  kbl(
-    caption = NULL,
-    format = "html",
-    escape = FALSE
-  ) %>%
-  kable_styling(
-    full_width = FALSE,
-    font_size = 10,
-    position = "center"  
-  ) %>%
-  row_spec(0, extra_css = "border-top: 1px solid #000 !important;") %>%
-  row_spec(0, extra_css = "border-bottom: 1px solid #000 !important;") %>%
-  row_spec(nrow(summary_table), extra_css = "border-bottom: 1px solid #000 !important;") 
 ```
 
 ---
@@ -1239,12 +1146,6 @@ if (n.sv > 0) {
 proc_dir <- "../data/processed/geo/GSE141910"
 if (!dir.exists(proc_dir)) dir.create(proc_dir, recursive = TRUE)
 
-# Original Counts, ie. `counts_final` for DEG
-
-# Corrected log2(CPM+1)/log2(FPKM+1), ie. `expr_counts_corr` / `expr_fpkm_corr` for WGCNA
-
-# Corrected log2(FPKM+1), ie. `expr_fpkm_corr` for Immune infiltration analysis & machine learning )
-
 # Save
 save(
   expr_counts_corr,
@@ -1258,6 +1159,7 @@ save(
 
 ## Step 9: PCA Before / After Correction
 ```{r}
+load("../data/processed/geo/GSE141910/GSE141910_preprocessed_final.RData")
 dds <- DESeqDataSetFromMatrix(
   countData = counts_final, 
   colData = pheno_final, 
@@ -1315,51 +1217,39 @@ p_combined <- (p_before + p_after) +
     plot.tag = element_text(size = 12, face = "bold")
   )
 
-ggsave("Figure_S1_A_PCA_counts_before.pdf", p_before, path = "../results/figures/supplementary", width=7, height=5)
-ggsave("Figure_S1_B_PCA_counts_after.pdf",  p_after,  path = "../results/figures/supplementary", width=7, height=5)
+ggsave("Figure_S1_A.pdf", p_before, path = "../figures/supplementary", width=7, height=5)
+ggsave("Figure_S1_B.pdf",  p_after,  path = "../figures/supplementary", width=7, height=5)
 
 
 # Save combined PCA plot
 ggsave(
-  "Figure_S1_PCA_Combined_Before_After.pdf", 
+  "Figure_S1.pdf", 
   plot = p_combined, 
-  path = "../results/figures/supplementary", 
+  path = "../figures/supplementary", 
   width = 14, 
   height = 6, 
   dpi = 300
 )
 
 ggsave(
-  filename = "Figure_S1_PCA_Combined_Before_After.png",
+  filename = "Figure_S1.png",
   plot = p_combined,
-  path = "../results/figures/supplementary",
+  path = "../figures/supplementary",
   width = 14,
   height = 6,
   dpi = 300
 )
 ```
 
-## Step 10: Results
-
-**Figures**
-
-::: {#suppfig-s1}
-
-![](../results/figures/supplementary/Figure_S1_PCA_Combined_Before_After.png)
-
-Principal component analysis (PCA) of GSE141910 before and after batch correction.
-A: PCA before batch correction, B: PCA after SVA-based batch correction
-::: 
-
 ---
 
 <table class="nav-table" width="100%">
   <tr>
     <td align="left">
-      [Home](../index.qmd) | [About](../about.qmd) | [Methods](../methods.qmd) | [Results](../results.qmd)
+      [Home](../index.qmd) 
     </td>
     <td align="right">
-      [Next](Part_2_Screening_of_DCM_HFrEF_related_genes.qmd)
+      [Next](Part_2_Screening_of_HFrEF_related_genes.qmd)
     </td>
   </tr>
 </table>
