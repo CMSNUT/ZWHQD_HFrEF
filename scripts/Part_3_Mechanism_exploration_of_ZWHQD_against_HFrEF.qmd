@@ -761,29 +761,20 @@ library(rstatix)
 library(corrplot) 
 library(ggpubr) 
 library(ggsci)
+library(IOBR)
 ```
 
-## Step 1: ssGSEA
+## Step 1: ImmuCellAI
 ```{r}
 rm(list = ls())
 load("../data/processed/geo/GSE141910/GSE141910_preprocessed_final.RData")
 
-data(LM22)
+group_info <- pheno_final$group
 
-results <- cibersort(
-  sig_matrix = LM22, 
-  mixture_file = expr_fpkm_corr, 
-  perm = 1000, 
-  QN = TRUE
-)
-
-save(results,file = "../data/processed/tme/cibersort_res.RData")
-write.table(
-  rownames_to_column(as.data.frame(results), 'Sample'), 
-  '../data/processed/tme/cibersort_res.xlsx',  
-  sep = '\t', 
-  quote = F, 
-  row.names = F)
+tme_res <- deconvo_tme(eset = expr_fpkm_corr, 
+                       method = "mcpcounter",
+                       arrays = FALSE, 
+                       tumor = FALSE)   
 ```
 
 ## Step 2: 提取22种免疫细胞的比例数据
