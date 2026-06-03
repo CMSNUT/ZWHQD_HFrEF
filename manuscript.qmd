@@ -36,7 +36,7 @@ In the present study, we aimed to elucidate the therapeutic mechanism of ZWHQD i
 
 ## Collection of active ingredients of ZWHQD
 
-The [DCABM-TCM](http://bionet.ncpsb.org.cn/dcabm-tcm/) database [@liu2023DCABM] was used as the primary source to systematically retrieve blood‑absorbed compounds from each medicinal herb in ZWHQD, along with their chemical structural information. These candidate components were screened according to established criteria, and standardized chemical data were obtained from the [PubChem](https://pubchem.ncbi.nlm.nih.gov/) [@kim2025pubchem] database.
+The [DCABM-TCM](http://bionet.ncpsb.org.cn/dcabm-tcm/) [@liu2023DCABM] database was used as the primary source to systematically retrieve blood‑absorbed compounds from each medicinal herb in ZWHQD, along with their chemical structural information. These candidate components were screened according to established criteria, and standardized chemical data were obtained from the [PubChem](https://pubchem.ncbi.nlm.nih.gov/) [@kim2025pubchem] database.
 
 Specifically, we identified and collected blood-absorbed compounds from six medicinal herbs of ZWHQD (see @tbl-1) by performing Chinese Pinyin-based herb queries in the [DCABM-TCM](http://bionet.ncpsb.org.cn/dcabm-tcm/) [@liu2023DCABM] database. To refine the candidate list, we applied multiple filters: (i) compounds without a valid PubChem Compound Identifier (CID) were discarded; (ii) highly toxic diester diterpenoid alkaloids (e.g., aconitine) derived from *Aconiti Radix Lateralis Preparata* (Fu Zi) were excluded, because during the standard decoction process of ZWHQD, these compounds undergo substantial hydrolysis, converting into less toxic monoester alkaloids (e.g., benzoylaconine) and further into non‑toxic amine alcohol alkaloids (e.g., aconine), resulting in negligible or undetectable levels in the final decoction [@gao2022Aconitine; @huang2007Aconitine]; (iii) ubiquitous endogenous substances, including common saccharides, amino acids, organic acids and their metabolites, as well as other nutritional components, were excluded because they lack target‑specific pharmacological functions and contribute minimally to the therapeutic properties of ZWHQD.
 
@@ -142,18 +142,11 @@ The number of *177* hub genes characterized with both ZWHQD and HFrEF was analyz
 The KEGG signaling pathway analysis demonstrates that the phosphoinositide 3 kinase (PI3K)‐serine/ threonine kinase (AKT) signaling pathway (p = 1.66E-29, Gene Count = 42) is most highly correlated with the ZWHQD-HFrEF hub genes. Some pathways that are reported to be strongly associated with inflammatory response, autoimmune response, and even RA, such as the mitogenactivated protein kinase (MAPK) signaling pathway, the tumor necrosis factor (TNF) signaling pathway and the interleukin-17 (IL-17) signaling pathway are also enriched in the top rank (Fig.3F, Supplementary Fig. S2C, D).
 
 
-::: {#fig-3}
 
-Functional enrichment analysis. A: (a)-(b) The bubble plot and polar chart of the enrichment GO analysis of ZWHQD-HFrEF hub gene set; (c)-(d) The bubble plot and polar chart of the enrichment KEGG analysis of ZWHQD-HFrEF hub gene set. B: The expression of ZWHQD-HFrEF hub genes was investigated in the HC/RA group. C: Single-gene GSEA based on the grouping of the CASP8 expression level.
-:::
 
 ## Immune Infiltration Profiling
 
 Immune infiltration analysis was used to estimate the abundance of immune cells in the gene expression profile dataset (Fig. 4A). Group box plots show the differences in the estimation of cell proportions between the RA/HC sample groups (Fig. 4C), where the cell types with significant  differences were, in descending order, dendritic cells activated (p <  0.05), T cells cluster of differentiation (CD) 8+ (p < 0.05), T cells CD4+ memory resting (p < 0.01), mast cells resting (p < 0.01), macrophages M1 (p < 0.01). Sequential box plot showed the estimation of cell proportions in HFrEF samples (Fig. 4C), natural killer (NK) cells resting, T cells  CD8+, macrophages M0, T cells CD4+ memory resting, and monocytes are considered as the five cell categories with the highest cell proportions in HFrEF samples. Spearman’s rank correlation coefficients were used to characterize the correlation between the expression profiles of the HFrEF hub genes and the abundance of immune cell infiltration, which  are shown in a correlation heat map (Fig. 4B). monocytes, T cells CD8+, dendritic cells activated presented a strong correlation with ZWHQDRA hub genes.
-
-::: {#fig-4}
-Immune Filtration Analysis Based on CIBERSORT Algorithm. A: The estimation of the abundance of immune cells. B: Heatmap of Spearman’s rank correlation between the expression of ZWHQD-HFrEF hub genes that in gene expression profile dataset and the abundance of immune cell infiltration. C: (a) Box plot of the differences in the estimation of cell proportions between the RA/HC sample groups; (b) Sequential box plot of the estimation of cell proportions in HFrEF samples.
-:::
 
 
 ## Cell subpopulation annotation and AUCell scoring in scRNA-seq
@@ -161,11 +154,6 @@ Immune Filtration Analysis Based on CIBERSORT Algorithm. A: The estimation of th
 The scRNA-seq dataset (GSE159117) from the GEO database was filtered and quality controlled to generate normalized Seurat object data containing 2406 genes. The expression characteristics of this HFrEF sample are shown in the violin plot and scatterplot (Supplementary Fig. S3A). We identified the top 2000 HVGs for subsequent PCA (Supplementary Fig. 3C). MZB1 and IGJ are the top two HVGs, all of which have been reported to play a role in IgM assembly and/or biosynthesis. The scaled data can be further processed through a linear downscaling PCA to reduce the scale of the data (Supplementary Fig. 3B). JackStraw plot and ElbowPlot then determine the first 15 dimensions as the number of valid PCs in the dataset (Supplementary Fig. 3D). Based on this, the k-nearest neighbor classification algorithm was constructed based on Euclidean distances in PCA space, edges were drawn between cells with similar feature expression patterns, and downstream clustering resolution was set to 1.5 (Supplementary Fig. 3E). The UMAP and t-SNE techniques revealed 15 cell subclusters after nonlinear dimensionality reduction clustering (Supplementary Fig. 3F, G), which were finally annotated into five cell subpopulations of B cells, T cells, NK cells, classical monocytes, and non-classical monocytes (Fig. 5A, B).
 
 In the subpopulation of scRNA-seq cells, we calculated AUCell scores for the custom ZWHQD-HFrEF hub gene set and its PI3K-AKT signaling pathway with the highest enrichment in enrichment analysis. Highly active cells in the interested gene set would exhibit higher AUCell scores, and the result described that monocytes present a significant degree of activity in these two gene sets (Fig. 5C, D).
-
-::: {#fig-5}
-
-Calculation of AUCell score for specific cell subpopulation of rheumatoid arthritis. A-B: Annotation result of cell subpopulation using clustering and dimensionality reduction analysis. C: The calculation of the AUCell scores for the ZWHQD-HFrEF hub gene set in cell subpopulations. D: The calculation of the AUCell scores for the PI3K-AKT signaling pathway in cell subpopulations.
-:::
 
 ## Causal Core Genes Associated with ZWHQD-HFrEF
 
@@ -178,12 +166,6 @@ Identification of ZWHQD-HFrEF core genes with causal association by MR analysis.
 ## Diagnostic Value of Core Genes in HFrEF
 
 We obtained the bulk RNA dataset (GSE17755) containing CASP8, PPARG, IKBKB, PPARA, IFNG, MYC, and STAT3 in the expression profiles and created a training set (n = 126) and a validation set (n = 31) at a ratio of 7:3 to explore the diagnostic value of ZWHQD-HFrEF core genes. The nomogram shows the results of visualizing the multivariate logistic regression model constructed using the ZWHQD-HFrEF core genes as predictors of HFrEF (Fig. 7A). The ROC curve was created to show that the AUC value was 0.908 [cutoff value = 0.623 (0, 0.783)] for nomogram, 0.807 [cutoff value = 0.681 (0. 167, 0.840)] for STAT3 and 0.760 [cutoff value = 0.646 (0.333, 0.960)] for CASP8 indicating highly discriminative multivariate model fit (Fig. 7B). Meanwhile, the slope of the corrected calibration curve was closer to 1, which means a pretty calibration for predicted probability (Fig. 7C). Furthermore, model evaluation curves of DCA showed that the standard net benefit of the nomogram was higher than any a single factor that we had included in a certain risk threshold, which comprehensively reflected the advantage to clinical diagnostic decisions. It also reflected the pretty prediction effect of the nomogram (Fig. 7D). Several lines of evidence suggest the potential key role played by ZWHQD-HFrEF core genes in causing, diagnosing, and intervening in RA.
-
-::: {#fig-7}
-
-Diagnostic value assessment of ZWHQD-HFrEF core genes in rheumatoid arthritis. A: The nomogram for predicting the risk of RA. B: ROC curve evaluating the discrimination of nomogram (multivariate logistic regression) and each ZWHQD-HFrEF genes (univariate logistic regression) in the validation set. C: Corrected calibration curve of nomogram for comparing predicted (red) and actual (blue) probability of RA. D: DCA for the validation set.
-::: 
-
 
 ## Gene set enrichment analysis of CASP8
 
@@ -273,43 +255,82 @@ The undersigned authors certify that they do not have any financial or personal 
 
 # Figure legends {-}
 
-**Figure 1. Identification of disease‑associated candidate targets.**
-(A) Volcano plot of DEGs (up/down counts labeled) Red dots represent significantly upregulated genes, blue dots represent significantly downregulated genes, and gray dots represent non-significant genes;
+**Figure 1. Scheme of technical approach.**
+
+**Figure 2. Identification of disease‑associated candidate targets.**
+(A) Volcano plot of DEGs, red dots represent significantly upregulated genes, blue dots represent significantly downregulated genes, and gray dots represent non-significant genes;
 (B) Heatmap of top 50 upregulated and top 50 downregulated DEGs; 
 (C) WGCNA sample clustering dendrogram with soft‑thresholding power;
 (D) Module–trait association heatmap (r and p‑values);
 (E) Scatter plot of gene significance (GS) vs. module membership (MM) for key modules;
 (F) Venn diagram showing the intersection of DEGs and WGCNA key module genes.
 
-**Figure 2. Compound–disease target identification and enrichment.**
-(A) Venn diagram of drug targets and disease candidate targets → core compound–disease targets. (B) Herb–compound–target network (node size by degree; targets from panel A). (C) GO enrichment faceted bar plot (top 10 biological process, cellular component, molecular function). (D) KEGG pathway enrichment bubble plot (top 20 pathways; gene count and adjusted p‑value).
+**Figure 3. Compound–disease target identification and enrichment.**
+(A) Venn diagram of drug targets and disease candidate targets;
+(B) Herb–ingredient–target network (node size by degree; targets from panel A); 
+(C) GO enrichment faceted bar plot (top 10 biological process, cellular component, molecular function); 
+(D) KEGG pathway enrichment bubble plot (top 20 pathways; gene count and adjusted p‑value).
 
-**Figure 3. PPI network and hub gene screening.**
-(A) PPI network colored by Degree (darker = higher connectivity). (B) UpSet plot of top 20 nodes from five CytoHubba algorithms (MCC, DMNC, MNC, Degree, EPC). (C) Most significant MCODE cluster network (score ≥ 5). (D) Venn diagram of CytoHubba consensus genes and MCODE cluster genes → hub genes.
+**Figure 4. PPI network and hub gene screening.**
+(A) PPI network; (B) Network and UpSet plot of top 20 genes from MCC, MNC and Degree; (C) Most significant MCODE cluster network (score ≥ 5); (D) Venn diagram of CytoHubba consensus genes and MCODE cluster genes.
 
-**Figure 4.Immune infiltration landscape.**
+**Figure 5.Immune infiltration landscape.**
 (A) Correlation heatmap of 22 immune cell types across all samples. (B) Boxplots of significantly different immune cells between disease and control groups (Wilcoxon test, *p* < 0.05). (C) Chord diagram (or heatmap) of correlations between hub gene expression and abundant immune cells.
 
-**Figure 5. Machine learning‑based core diagnostic gene identification and nomogram.**
+**Figure 6. Machine learning‑based core diagnostic gene identification and nomogram.**
 (A) Venn diagram of variables selected by four algorithms (LASSO, RandomForest, SVM‑RFE, XGBoost) → core genes. (B) Disease risk nomogram based on core genes. (C) ROC curves for training set, test set, and external validation sets (AUC with 95% CI). (D) Calibration curves (Hosmer‑Lemeshow test) for the same datasets. (E) Combined boxplot + violin plot of core gene expression (disease vs. control), faceted by dataset (training, test, validation1, validation2, …).
 
-**Figure 6. Genetic validation and single‑cell enrichment of core genes.**
+**Figure 7. Genetic validation and single‑cell enrichment of core genes.**
 (A) Posterior probability plot for eQTL colocalization of a representative core gene (e.g., AKT1). (B) t‑SNE/UMAP plot of AUCell enrichment scores for the core gene set in single‑cell data. (C) Boxplot of ssGSEA enrichment scores of the core gene set (disease vs. control).
 
-**Figure 7. Molecular docking of key compounds to core target proteins.**
+**Figure 8. Molecular docking of key compounds to core target proteins.**
 (A–D) 3D interaction diagrams of four representative docking complexes. Hydrogen bonds are shown as dashed yellow lines, hydrophobic interactions as pink surfaces, and π‑π stacking as green dashed lines.
 
-**Figure 8. Proposed mechanistic model**
+**Figure 9. Proposed mechanistic model**
 
 - Integrated network: formula → active compounds → core targets → key pathways → immune/disease phenotype
 
+::: {#fig-1}
+![](figures/main/Figure_2.png)
+:::
 
+::: {#fig-2}
+![](figures/main/Figure_2.png)
+:::
+
+::: {#fig-3}
+![](figures/main/Figure_3.png)
+:::
+
+::: {#fig-4}
+![](figures/main/Figure_4.png)
+:::
+
+::: {#fig-5}
+![](figures/main/Figure_2B.png)
+:::
+
+::: {#fig-6}
+![](figures/main/Figure_2B.png)
+:::
+
+::: {#fig-7}
+![](figures/main/Figure_2B.png)
+:::
+
+::: {#fig-8}
+![](figures/main/Figure_2B.png)
+:::
+
+::: {#fig-9}
+![](figures/main/Figure_2B.png)
+:::
 
 ------
 
 # Tables
 
-::: {#tbl-1}
+:::{#tbl-1}
 ```{r}
 #| echo: false
 #| eval: true

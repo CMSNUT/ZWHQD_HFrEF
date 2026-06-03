@@ -96,7 +96,8 @@ res <- lfcShrink(dds, contrast = c("group", "DCM_HFrEF", "Normal"), res = res, t
 # plotMA(res) 
 # plotDispEsts(dds)
 
-lfc <- log2(1.5)
+# lfc <- log2(1.5)
+lfc <- 0.585
 
 deg_all <- as.data.frame(res)
 deg_up <- deg_all %>% filter(padj < 0.05, log2FoldChange > lfc)
@@ -111,6 +112,7 @@ cat("The number of down DEGs:", nrow(deg_down), "\n")
 
 ##  Step 5: Volcano Plot
 ```{r}
+
 deg_all$significance <- ifelse(
   deg_all$padj < 0.05 & abs(deg_all$log2FoldChange) > lfc,
   ifelse(deg_all$log2FoldChange > lfc, "Up", "Down"), "NS")
@@ -129,9 +131,9 @@ p_volcano <- ggplot(deg_all, aes(x = log2FoldChange, y = -log10(padj), color = s
     plot.title = element_text(hjust = 0.5)
   )
 
-ggsave("Figure_1A.pdf",plot = p_volcano,path = "../figures/main",device = "pdf", width = 7,height = 5,dpi = 300)
+ggsave("Figure_2A.pdf",plot = p_volcano,path = "../figures/main",device = "pdf", width = 7,height = 5,dpi = 300)
 
-ggsave("Figure_1A.png", plot = p_volcano, path = "../figures/main", device = "png", width = 7, height = 5, dpi = 300)
+ggsave("Figure_2A.png", plot = p_volcano, path = "../figures/main", device = "png", width = 7, height = 5, dpi = 300)
 ```
 
 ---
@@ -189,9 +191,9 @@ p_heat <-pheatmap(
   height = 5
 )
 
-ggsave("Figure_1B.pdf",plot = p_heat,path = "../figures/main",device = "pdf", width = 7,height = 5,dpi = 300)
+ggsave("Figure_2B.pdf",plot = p_heat,path = "../figures/main",device = "pdf", width = 7,height = 5,dpi = 300)
 
-ggsave("Figure_1B.png",plot = p_heat,path = "../figures/main",device = "png", width = 7,height = 5,dpi = 300)
+ggsave("Figure_2B.png",plot = p_heat,path = "../figures/main",device = "png", width = 7,height = 5,dpi = 300)
 ```
 
 ## Step 7: Saving DEGs Results
@@ -199,8 +201,6 @@ ggsave("Figure_1B.png",plot = p_heat,path = "../figures/main",device = "png", wi
 save(deg_all,deg_sig,deg_up, deg_down, lfc, file = "../data/processed/geo/GSE141910/degs_results.RData")
 
 load("../data/processed/geo/GSE141910/degs_results.RData")
-
-save(deg_sig, file = "../supplementary/deg_sig.xlsx")
 ```
 
 ---
@@ -333,7 +333,7 @@ save(datTraits,datExpr,file = "../data/processed/geo/GSE141910/datExpr.RData")
 ```{r}
 load("../data/processed/geo/GSE141910/datExpr.RData")
 
-R2 <- 0.80
+R2 <- 0.85
 
 enableWGCNAThreads()
 powers <- c(c(1:10), seq(from = 12, to=20, by=2))
@@ -377,19 +377,17 @@ dev.off()
 sft$powerEstimate
 
 pdf("../figures/supplementary/Figure_S2.png", width = 14, height = 5)
-
-par(mfrow = c(1,2))
-plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
-     xlab="Soft Threshold (power)", ylab="Scale Free Topology Model Fit,signed R^2",
-     type="n", main = paste("Scale independence"))
-text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
-     labels=powers, col="red")
-abline(h=sft$fitIndices[6,2], col="blue")
-
-plot(sft$fitIndices[,1], sft$fitIndices[,5],
-     xlab="Soft Threshold (power)", ylab="Mean Connectivity", type="n")
-text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, col="red")
-
+  par(mfrow = c(1,2))
+  plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+       xlab="Soft Threshold (power)", ylab="Scale Free Topology Model Fit,signed R^2",
+       type="n", main = paste("Scale independence"))
+  text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+       labels=powers, col="red")
+  abline(h=sft$fitIndices[6,2], col="blue")
+  
+  plot(sft$fitIndices[,1], sft$fitIndices[,5],
+       xlab="Soft Threshold (power)", ylab="Mean Connectivity", type="n")
+  text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, col="red")
 dev.off()
 
 ```
@@ -446,7 +444,7 @@ print(sort(mean_GS))
 mergedColors <- net$colors
 table(mergedColors)
 
-pdf("../results/figures/main/Figure_3A_Cluster_wgcna.pdf", width = 12, height = 5)
+pdf("../figures/main/Figure_2C.pdf", width = 14, height = 5)
 plotDendroAndColors(
   net$dendrograms[[1]],
   mergedColors[net$blockGenes[[1]]],
@@ -458,7 +456,7 @@ plotDendroAndColors(
 )
 dev.off()
 
-pdf("../results/figures/main/Figure_3A_Cluster_wgcna.png", width = 12, height = 5)
+pdf("../figures/main/Figure_2C.png", width = 12, height = 5)
 plotDendroAndColors(
   net$dendrograms[[1]],
   mergedColors[net$blockGenes[[1]]],
@@ -472,10 +470,6 @@ dev.off()
 ```
 
 ## Step 5: Module correlation with diseases
-
-Module-Trait Correlation: 模块特征基因（eigengene）与性状（如 DCM_HFrEF）的相关系数. 衡量整个模块的表达模式与性状的线性关联强度。正相关表示模块高表达与疾病相关，负相关表示低表达与疾病相关
-
-mean_GS: 模块内所有基因与性状相关系数的平均值. 反映模块内基因整体与性状关联的强弱，是对模块内基因个体相关性的汇总。
 
 ---
 
@@ -500,8 +494,8 @@ textMatrix <- paste(signif(moduleTraitCor, 2), "\n(",
                     signif(moduleTraitPvalue, 1), ")", sep = "")
 dim(textMatrix) <- dim(moduleTraitCor)
 
-pdf("../results/figures/main/Figure_3B_Module_Trait Correlation_wgcna.pdf", width = 8, height = 6)
-par(mar = c(5, 10, 3, 2))
+pdf("../figures/main/Figure_2D.pdf", width = 7, height = 5)
+par(mar = c(5, 5.2, 3, 1), ps = 8)
 labeledHeatmap(
   Matrix = moduleTraitCor,
   xLabels = colnames(datTraits),
@@ -518,12 +512,12 @@ labeledHeatmap(
   xLabelsAngle = 0,    
   xLabelsAdj = 0.5,     
   y.label.width = 0.2,  
-  main = "Module-Trait Correlation (HFrEF vs Normal)"
+  main = "Module-Trait Correlation (DCM-HFrEF vs Normal)"
 )
 dev.off()
 
-pdf("../results/figures/main/Figure_3B_Module_Trait Correlation_wgcna.png", width = 8, height = 6)
-par(mar = c(5, 10, 3, 2))
+pdf("../figures/main/Figure_2D.png", width = 7, height = 5)
+par(mar = c(5, 5.2, 3, 1), ps = 8)
 labeledHeatmap(
   Matrix = moduleTraitCor,
   xLabels = colnames(datTraits),
@@ -540,179 +534,318 @@ labeledHeatmap(
   xLabelsAngle = 0,    
   xLabelsAdj = 0.5,     
   y.label.width = 0.2,      
-  main = "Module-Trait Correlation (HFrEF vs Normal)"
+  main = "Module-Trait Correlation (DCM-HFrEF vs Normal)"
 )
 dev.off()
 ```
 
 
-## Step 6: Extract the module related to HFrEF
+## Step 6: Extract DCM_HFrEF‑related modules and candidate hub genes
 
 ---
 
 ```{r}
-# Filtering significant modules (|r|>0.5 and p<0.05)
-trait_of_interest <- "DCM_HFrEF"   
-idx <- which(colnames(datTraits) == trait_of_interest)
-cor_values <- moduleTraitCor[, idx]
-p_values <- moduleTraitPvalue[, idx]
+# Identify modules significantly associated with the trait
+trait_of_interest <- "DCM_HFrEF"
+trait_idx <- which(colnames(datTraits) == trait_of_interest)
 
-# 显著模块
+cor_values <- moduleTraitCor[, trait_idx]
+p_values   <- moduleTraitPvalue[, trait_idx]
+
+# Modules with |cor| > 0.5 and p < 0.05
 sig_modules <- names(cor_values)[p_values < 0.05 & abs(cor_values) > 0.5]
 
-# 按相关性绝对值降序排序
+# Sort by absolute correlation (strongest first)
 cor_abs <- abs(cor_values[sig_modules])
 sig_modules_sorted <- names(sort(cor_abs, decreasing = TRUE))
 
-# 输出排序后的模块及相关系数
-data.frame(Module = sig_modules_sorted, 
+# Display results
+data.frame(Module = sig_modules_sorted,
            Correlation = cor_values[sig_modules_sorted],
            Abs_Correlation = cor_abs[order(cor_abs, decreasing = TRUE)])
 
+# Print module sizes
 for (mod in sig_modules_sorted) {
-  mod_clean <- gsub("^ME", "", mod)  
+  mod_clean <- sub("^ME", "", mod)
   genes_in_mod <- names(moduleColors)[moduleColors == mod_clean]
   cat(mod, ":", length(genes_in_mod), "genes\n")
 }
 
-# 预先计算所有基因的 GS（与性状的相关系数）
-trait_vec <- datTraits$DCM_HFrEF   # 确保是数值型（0/1 或连续）
+# Gene Significance (GS) for all genes
+trait_vec <- datTraits[[trait_of_interest]]   # numeric vector (0/1 or continuous)
 GS_all <- abs(cor(datExpr, trait_vec, use = "pairwise.complete.obs"))
 names(GS_all) <- colnames(datExpr)
 
-# For each module, extract MM > 0.6 and GS > 0.2, screen core genes
+# Set thresholds for hub gene selection
+use_dynamic_threshold <- FALSE   # set to TRUE for percentile‑based thresholds
+MM_threshold <- 0.6
+GS_threshold <- 0.2
 
-MM_threshold <- 0.6    
-GS_threshold <- 0.2  
+# Percentiles used when dynamic threshold is TRUE (e.g., top 20%)
+percentile_MM <- 0.8
+percentile_GS <- 0.8
 
-# 如果需要动态阈值 (例如 top 20%)，可以取消下面注释
-# use_dynamic_threshold <- TRUE
-# percentile_MM <- 0.8   # top 20% MM
-# percentile_GS <- 0.8   # top 20% GS
-
+# 4. Extract candidate genes from each significant module
 candidate_genes_list <- list()
 plot_list <- list()
 
 for (mod in sig_modules_sorted) {
-  mod_clean <- sub("^ME", "", mod)            
-  inModule <- (moduleColors == mod_clean)     
-  if (sum(inModule) == 0) {
-    warning(paste("模块", mod, "在 moduleColors 中无对应基因, 跳过"))
+  mod_clean <- sub("^ME", "", mod)
+  inModule <- (moduleColors == mod_clean)
+
+  # Skip if the module is too small (optional)
+  if (sum(inModule) < 5) {
+    cat("\n", mod, "skipped: module size < 5\n")
     next
   }
-  
-  # 提取模块内基因的表达数据和 GS
-  expr_mod <- datExpr[, inModule, drop = FALSE]
+
+  # Module Membership (MM) 
+  # Use moduleMembership matrix if available, otherwise compute
+  if (exists("moduleMembership")) {
+    # moduleMembership: rows = genes, cols = modules (named "MEblue", etc.)
+    mod_col <- which(colnames(moduleMembership) == mod)
+    MM_mod <- abs(moduleMembership[inModule, mod_col])
+  } else {
+    # Fallback: recompute MM using module eigengene
+    eigengene_mod <- MEs[[mod]]
+    expr_mod <- datExpr[, inModule, drop = FALSE]
+    MM_mod <- abs(cor(expr_mod, eigengene_mod, use = "pairwise.complete.obs"))
+  }
+  names(MM_mod) <- colnames(datExpr)[inModule]
+
+  # Gene Significance (GS) 
   GS_mod <- GS_all[inModule]
-  
-  # 计算模块特征基因 (eigengene) 用于 MM
-  # 注意: MEs 已包含所有模块的 eigengene, 列名与 mod 一致
-  eigengene_mod <- MEs[[mod]]
-  
-  # 计算 Module Membership (绝对值)
-  MM_mod <- abs(cor(expr_mod, eigengene_mod, use = "pairwise.complete.obs"))
-  names(MM_mod) <- colnames(expr_mod)
-  
-  # 确定阈值 (如果使用动态分位数)
-  if (exists("use_dynamic_threshold") && use_dynamic_threshold) {
+  names(GS_mod) <- colnames(datExpr)[inModule]
+
+  # Determine thresholds (dynamic or fixed)
+  if (use_dynamic_threshold) {
     mm_thresh <- quantile(MM_mod, probs = percentile_MM, na.rm = TRUE)
     gs_thresh <- quantile(GS_mod, probs = percentile_GS, na.rm = TRUE)
   } else {
     mm_thresh <- MM_threshold
     gs_thresh <- GS_threshold
   }
-  
-  # 筛选候选基因
+
+  # Identify candidate hub genes
   candidates <- which(MM_mod > mm_thresh & GS_mod > gs_thresh)
   candidate_genes <- names(MM_mod)[candidates]
   candidate_genes_list[[mod]] <- candidate_genes
-  
-  # 输出统计信息
+
+  # Print summary
   cat("\n", mod, " (", mod_clean, "):\n", sep = "")
-  cat("  模块大小:", sum(inModule), "\n")
-  cat("  候选基因数:", length(candidate_genes), "\n")
-  cat("  使用的阈值: MM >", round(mm_thresh, 3), ", GS >", round(gs_thresh, 3), "\n")
-  
-  # 绘制散点图
-  plot_df <- data.frame(MM = MM_mod, GS = GS_mod)
-plot_df$candidate <- ifelse(rownames(plot_df) %in% candidate_genes, "Yes", "No")
+  cat("  Module size:", sum(inModule), "\n")
+  cat("  Candidate genes:", length(candidate_genes), "\n")
+  cat("  Thresholds used: MM >", round(mm_thresh, 3), ", GS >", round(gs_thresh, 3), "\n")
 
-cor_val <- moduleTraitCor[mod, trait_of_interest]
-p_val <- moduleTraitPvalue[mod, trait_of_interest]
-
-p <- ggplot() +
-  # 非候选基因：灰色半透明点
-  geom_point(data = subset(plot_df, candidate == "No"),
-             aes(x = MM, y = GS),
-             size = 2, alpha = 0.6, color = "gray50") +
-  # 候选基因：按 GS 值渐变颜色
-  geom_point(data = subset(plot_df, candidate == "Yes"),
-             aes(x = MM, y = GS, color = GS),
-             size = 3, alpha = 0.7) +
-  scale_color_gradient(low = "#FDBF6F", high = "#E31A23", name = "|GS|") +
-  geom_vline(xintercept = mm_thresh, linetype = "dashed", color = "blue", linewidth = 0.5) +
-  geom_hline(yintercept = gs_thresh, linetype = "dashed", color = "blue", linewidth = 0.5) +
-  labs(title = gsub("^ME", "", mod),
-       x = "|Module Membership (MM)|", 
-       y = "|Gene Significance (GS)|") +
-  annotate("text", x = -Inf, y = Inf, 
-           label = sprintf("cor = %.3f\np = %.2e", cor_val, p_val),
-           hjust = -0.2, vjust = 1.5, size = 3.5, family = "serif") +
-  theme_bw() +
-  theme(
-    text = element_text(family = "serif"),
-    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
-    axis.line = element_line(color = "black"),
-    axis.ticks = element_line(color = "black"),
-    axis.ticks.length = unit(0.15, "cm"),
-    axis.text = element_text(color = "black", size = 10),
-    axis.title = element_text(color = "black", size = 11),
-    plot.title = element_text(hjust = 0.5, size = 12),
-    legend.position = "bottom",
-    legend.title = element_text(size = 8)  
+  # Scatter plot: MM vs GS
+  plot_df <- data.frame(
+    MM = MM_mod,
+    GS = GS_mod,
+    candidate = ifelse(names(MM_mod) %in% candidate_genes, "Yes", "No")
   )
-  
+
+  # Module‑trait correlation for annotation
+  cor_val <- moduleTraitCor[mod, trait_of_interest]
+  p_val <- moduleTraitPvalue[mod, trait_of_interest]
+
+  p <- ggplot2::ggplot() +
+    # Non‑candidate points (grey)
+    ggplot2::geom_point(data = subset(plot_df, candidate == "No"), aes(x = MM, y = GS), size = 0.5, alpha = 0.6, color = "gray50") +
+    # Candidate points (coloured by GS)
+    ggplot2::geom_point(data = subset(plot_df, candidate == "Yes"), aes(x = MM, y = GS, color = GS), size = 0.5, alpha = 0.7) +
+    ggplot2::scale_color_gradient(low = "#FDBF6F", high = "#E31A23", name = "|GS|") +
+    ggplot2::geom_vline(xintercept = mm_thresh, linetype = "dashed", color = "blue", linewidth = 0.5) +
+    ggplot2::geom_hline(yintercept = gs_thresh, linetype = "dashed", color = "blue", linewidth = 0.5) +
+    ggplot2::labs(title = mod_clean,
+                  x = "|Module Membership (MM)|",
+                  y = "|Gene Significance (GS)|") +
+    ggplot2::annotate("text", x = -Inf, y = Inf,
+                      label = sprintf("cor = %.3f\np = %.2e", cor_val, p_val),
+                      hjust = -0.2, vjust = 1.5, size = 1.5, family = "serif") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      text = element_text(family = "serif"),
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+      axis.line = element_line(color = "black"),
+      axis.ticks = element_line(color = "black"),
+      axis.ticks.length = unit(0.15, "cm"),
+      axis.text = element_text(color = "black", size = 7),
+      axis.title = element_text(color = "black", size = 8),
+      plot.title = element_text(hjust = 0.5, size = 8),
+      legend.position = "bottom",
+      legend.title = element_text(size = 7)
+    )
+
   plot_list[[mod]] <- p
 }
 
-# 打印每个模块的候选基因列表
-print(candidate_genes_list)
+# Combine candidate genes into a single data frame
+if (length(candidate_genes_list) > 0) {
+  wgcna_candidates_genes <- stack(candidate_genes_list)
+  names(wgcna_candidates_genes) <- c("Gene", "Module")
+  cat("\n", nrow(wgcna_candidates_genes), "candidate genes selected from all significant modules.\n")
+} else {
+  wgcna_candidates_genes <- data.frame(Gene = character(), Module = character())
+  cat("\nNo candidate genes found.\n")
+}
 
-# 将所有候选基因合并为一个数据框并保存
-wgcna_candidates_genes <- stack(candidate_genes_list)
-
-cat(nrow(wgcna_candidates_genes), " candidate genes were selected from all significant modules\n")
-
-names(wgcna_candidates_genes) <- c("Gene", "Module")
-
+# Save as RData
 save(wgcna_candidates_genes, file = "../data/processed/geo/GSE141910/wgcna_candidates_genes.RData")
 
-library(patchwork)
-library(cowplot)
-library(ggplot2)
 
-combined <- wrap_plots(plot_list, ncol = 3)  & theme(legend.position = "none")  
+write.xlsx(wgcna_candidates_genes, file = "../tables/wgcna_candidate_genes.xlsx")
 
-combined_clean <- combined + 
-  guides(color = guide_colorbar(barheight = 0.5, barwidth = 10, title.position = "left")) + 
-  theme(legend.position = "bottom") 
 
-ggsave(
-  filename = "../results/figures/main/wgcna_mm_gs.pdf",
-  plot = combined_clean,
-  width = 10,          
-  height = 8,         
-  units = "cm",        
-  dpi = 300,          
-  family = "serif"
-)
+# Combine and save scatter plots
+if (length(plot_list) > 0) {
+  library(patchwork)
+  library(cowplot)
+  library(ggplot2)
+
+  # Combine plots (3 columns)
+  combined <- wrap_plots(plot_list, ncol = 3) & theme(legend.position = "none")
+
+  # Add a shared legend
+  combined_clean <- combined +
+    guides(color = guide_colorbar(barheight = 0.5, barwidth = 10, title.position = "left")) +
+    theme(legend.position = "bottom")
+
+  ggsave(
+    filename = "../figures/main/Figure_2E.pdf",
+    plot = combined_clean,
+    width = 17,
+    height = 14,
+    units = "cm",
+    dpi = 300
+  )
+  
+  ggsave(
+    filename = "../figures/main/Figure_2E.png",
+    plot = combined_clean,
+    width = 17,
+    height = 14,
+    units = "cm",
+    dpi = 300
+  )
+} else {
+  cat("No plots generated (no significant modules or all modules too small).\n")
+}
 ```
 
+## Step 7: Disease_genes: intersecting DEGs and WGCNA
+
+```{r}
+rm(list = ls())
+
+load("../data/processed/geo/GSE141910/degs_results.RData")
+
+deg_sig <- deg_all %>% filter(padj < 0.05, abs(log2FoldChange) > lfc)
+
+deg_genes <- rownames(deg_sig) 
+
+load("../data/processed/geo/GSE141910/wgcna_candidates_genes.RData")
+
+# disease_genes: intersecting DEGs and WGCNA
+disease_genes <- intersect(deg_genes,wgcna_candidates_genes$Gene)
+
+deg_genes_df <- data.frame(Gene = deg_genes) %>%
+  arrange(Gene)
+
+wgcna_genes_df <- data.frame(Gene = wgcna_candidates_genes$Gene) %>%
+  arrange(Gene)
+
+disease_genes_df <- data.frame(Gene = disease_genes) %>%
+  arrange(Gene)
+
+gene_list <- list(
+  DEGs = deg_genes,
+  `WGCNA Genes` = wgcna_candidates_genes$Gene
+)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(4),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=10))
+
+# save
+ggsave("../figures/main/Figure_2F.pdf", p, width=6, height=6, dpi=300)
+ggsave("../figures/main/Figure_2F.png", p, width=6, height=6, dpi=300)
 
 
-## Step 8: Results
+save(deg_genes_df, wgcna_genes_df,disease_genes_df, file = "../data/processed/geo/disease_genes.RData")
+
+write.xlsx(
+  list(
+    HerbTargets = herb_targets_df,
+    DEGs = deg_genes_df,
+    WGCNAGenes = wgcna_genes_df,
+    DiseaseGenes = disease_genes_df,
+    CandidateGenes = candidate_genes_df
+  ),
+  "../results/tables/supplementary/Table_S5_herb_disease_targets.xlsx"
+)
+
+deg_candidate <- deg_all[rownames(deg_all) %in% candidate_genes, ]
+ 
+deg_candidate$regulation <- ifelse(
+  deg_candidate$log2FoldChange >= lfc, "Up",
+  ifelse(deg_candidate$log2FoldChange <= -lfc, "Down", "NS")
+)
+
+deg_candidate$Gene <- rownames(deg_candidate)
+
+up_genes <- deg_candidate$Gene[deg_candidate$regulation == "Up"]
+down_genes <- deg_candidate$Gene[deg_candidate$regulation == "Down"]
+
+cat("Up genes: ", length(up_genes), "\n")
+print(up_genes)
+
+cat("\nDown genes: ", length(down_genes), "\n")
+print(down_genes)
+```
+
+# Figure 2
+```{r}
+library(magick)
+
+files <- c(
+  "../figures/main/Figure_2A.pdf",
+  "../figures/main/Figure_2B.pdf",
+  "../figures/main/Figure_2C.pdf",
+  "../figures/main/Figure_2D.pdf",
+  "../figures/main/Figure_2E.pdf",
+  "../figures/main/Figure_2F.pdf"
+)
+
+labels <- c("A", "B", "C", "D", "E", "F")
+
+pdfs <- list()
+for (i in seq_along(files)) {
+  img <- image_read_pdf(files[i], density = 300)
+  img <- image_annotate(img, labels[i], 
+                        gravity = "northwest",  
+                        location = "+10+10",    
+                        size = 12,                                 weight = 700,    
+                        color = "black")
+  pdfs[[i]] <- img
+}
+
+row1 <- image_append(c(pdfs[[1]],pdfs[[2]],pdfs[[4]]), stack = FALSE)
+row2 <- image_append(c(pdfs[[3]],pdfs[[5]]), stack = FALSE)
 
 
+combined <- image_append(c(row1, row2), stack = TRUE)
+
+image_write(combined, "../figures/main/Figure_2.pdf", format = "pdf")
+image_write(combined, "../figures/main/Figure_2.png", format = "png", density = 300)
+```
 
 ---
 

@@ -294,7 +294,7 @@ div.csl-indent {
 <hr>
 <section id="collection-of-active-ingredients-of-zwhqd" class="level2">
 <h2 class="anchored" data-anchor-id="collection-of-active-ingredients-of-zwhqd">Collection of active ingredients of ZWHQD</h2>
-<p>The <a href="http://bionet.ncpsb.org.cn/dcabm-tcm/">DCABM-TCM</a> database<span class="citation" data-cites="liu2023DCABM"><sup><a href="#ref-liu2023DCABM" role="doc-biblioref">18</a></sup></span> was used as the primary source to systematically retrieve blood‑absorbed compounds from each medicinal herb in ZWHQD, along with their chemical structural information. These candidate components were screened according to established criteria, and standardized chemical data were obtained from the <a href="https://pubchem.ncbi.nlm.nih.gov/">PubChem</a><span class="citation" data-cites="kim2025pubchem"><sup><a href="#ref-kim2025pubchem" role="doc-biblioref">31</a></sup></span> database.</p>
+<p>The <a href="http://bionet.ncpsb.org.cn/dcabm-tcm/">DCABM-TCM</a><span class="citation" data-cites="liu2023DCABM"><sup><a href="#ref-liu2023DCABM" role="doc-biblioref">18</a></sup></span> database was used as the primary source to systematically retrieve blood‑absorbed compounds from each medicinal herb in ZWHQD, along with their chemical structural information. These candidate components were screened according to established criteria, and standardized chemical data were obtained from the <a href="https://pubchem.ncbi.nlm.nih.gov/">PubChem</a><span class="citation" data-cites="kim2025pubchem"><sup><a href="#ref-kim2025pubchem" role="doc-biblioref">31</a></sup></span> database.</p>
 <p>Specifically, we identified and collected blood-absorbed compounds from six medicinal herbs of ZWHQD (see <a href="#tbl-1" class="quarto-xref">Table&nbsp;1</a>) by performing Chinese Pinyin-based herb queries in the <a href="http://bionet.ncpsb.org.cn/dcabm-tcm/">DCABM-TCM</a><span class="citation" data-cites="liu2023DCABM"><sup><a href="#ref-liu2023DCABM" role="doc-biblioref">18</a></sup></span> database. To refine the candidate list, we applied multiple filters: (i) compounds without a valid PubChem Compound Identifier (CID) were discarded; (ii) highly toxic diester diterpenoid alkaloids (e.g., aconitine) derived from <em>Aconiti Radix Lateralis Preparata</em> (Fu Zi) were excluded, because during the standard decoction process of ZWHQD, these compounds undergo substantial hydrolysis, converting into less toxic monoester alkaloids (e.g., benzoylaconine) and further into non‑toxic amine alcohol alkaloids (e.g., aconine), resulting in negligible or undetectable levels in the final decoction<span class="citation" data-cites="gao2022Aconitine huang2007Aconitine"><sup><a href="#ref-gao2022Aconitine" role="doc-biblioref">32</a>,<a href="#ref-huang2007Aconitine" role="doc-biblioref">33</a></sup></span>; (iii) ubiquitous endogenous substances, including common saccharides, amino acids, organic acids and their metabolites, as well as other nutritional components, were excluded because they lack target‑specific pharmacological functions and contribute minimally to the therapeutic properties of ZWHQD.</p>
 <p>Given the notable pharmacological bioactivity of compounds from <em>Astragalus Membranaceus</em>, we manually supplemented cycloastragenol, an in vivo bioactive metabolite of astragaloside IV with well-ocumented effects<span class="citation" data-cites="zhao2025cycloastragenol"><sup><a href="#ref-zhao2025cycloastragenol" role="doc-biblioref">34</a></sup></span>, into the active compound dataset. After completing systematic filtration and manual supplementation, we defined the remaining compounds as the final candidate active ingredients of ZWHQD.</p>
 <p>Finally, to characterize the molecular properties of these candidate active ingredients, we queried each qualified compound in <a href="https://pubchem.ncbi.nlm.nih.gov/">PubChem</a><span class="citation" data-cites="kim2025pubchem"><sup><a href="#ref-kim2025pubchem" role="doc-biblioref">31</a></sup></span>. For each compound, we extracted core chemical data, including IUPAC names, molecular formulas, molecular weights and SMILES strings. Additionally, we downloaded the corresponding SDF files. The SMILES strings (or SDF files) were used for target prediction, and the SDF files also provided the essential 3D conformers for subsequent molecular docking.</p>
@@ -362,52 +362,22 @@ div.csl-indent {
 <section id="potential-hfref-associated-genes" class="level2">
 <h2 class="anchored" data-anchor-id="potential-hfref-associated-genes">Potential HFrEF-associated genes</h2>
 <p>A gene expression profile dataset with 20,810 genes was obtained by annotating the GSE141910 subsets and removing the batch effect (<a href="">Supplementary Figure S1</a>).</p>
-<p>Differential expression analysis was performed on 20,810 genes using DESeq2. Genes with |log2FC| &gt; 0.585 (i.e., absolute fold change &gt; 1.5) and adjusted P value (padj) &lt; 0.05 were considered significantly differentially expressed. Differential expression analysis of 21,572 genes was conducted via DESeq2. Genes satisfying the thresholds of |_2| &gt; _2(1.5) and adjusted P value (padj) &lt; 0.05 were defined as significant differentially expressed genes (DEGs). In total, 3,188 DEGs were screened, consisting of 1,986 upregulated and 1,202 downregulated genes. The number of upregulated genes was obviously predominant, reflecting robust activation of inflammatory response, immune function and cellular stress injury-related pathways in HFrEF myocardium. By contrast, fewer genes exhibited decreased expression, among which protective functional genes, metabolic regulators and tissue structural genes were largely suppressed. Highly expressed upregulated genes contained COL22A1 (_2=4.23), SEZ6L (3.69), TNMD (3.38), SFRP4 (3.22), PENK (3.20), FHAD1-AS1 (3.16), HBD (3.07), LYPD1 (3.03), LAMP5 (3.03) and CAPN6 (2.96), which predominantly participate in extracellular matrix remodeling, neuropeptide signaling and cellular stress response. In contrast, downregulated genes were mainly implicated in inflammatory modulation, substance metabolism, ion transport and epithelial differentiation. Representative downregulated genes included IL1RL1 (_2=-3.88), SERPINA3 (-3.23), RNASE2 (-3.07), PI15 (-3.04), LOC105378356 (-3.01), FAM83B (-3.01), OVOS2P (-3.00), LCN6 (-2.99), TUBA3E (-2.87) and LBP (-2.85). The volcano plot and heatmap of all DEGs are shown in <strong>?@fig-1</strong> A and B, respectively.</p>
+<p>Differential expression analysis was performed on 20,810 genes using DESeq2. Genes with |log2FC| &gt; 0.585 (i.e., absolute fold change &gt; 1.5) and adjusted P value (padj) &lt; 0.05 were considered significantly differentially expressed. Differential expression analysis of 21,572 genes was conducted via DESeq2. Genes satisfying the thresholds of |_2| &gt; _2(1.5) and adjusted P value (padj) &lt; 0.05 were defined as significant differentially expressed genes (DEGs). In total, 3,188 DEGs were screened, consisting of 1,986 upregulated and 1,202 downregulated genes. The number of upregulated genes was obviously predominant, reflecting robust activation of inflammatory response, immune function and cellular stress injury-related pathways in HFrEF myocardium. By contrast, fewer genes exhibited decreased expression, among which protective functional genes, metabolic regulators and tissue structural genes were largely suppressed. Highly expressed upregulated genes contained COL22A1 (_2=4.23), SEZ6L (3.69), TNMD (3.38), SFRP4 (3.22), PENK (3.20), FHAD1-AS1 (3.16), HBD (3.07), LYPD1 (3.03), LAMP5 (3.03) and CAPN6 (2.96), which predominantly participate in extracellular matrix remodeling, neuropeptide signaling and cellular stress response. In contrast, downregulated genes were mainly implicated in inflammatory modulation, substance metabolism, ion transport and epithelial differentiation. Representative downregulated genes included IL1RL1 (_2=-3.88), SERPINA3 (-3.23), RNASE2 (-3.07), PI15 (-3.04), LOC105378356 (-3.01), FAM83B (-3.01), OVOS2P (-3.00), LCN6 (-2.99), TUBA3E (-2.87) and LBP (-2.85). The volcano plot and heatmap of all DEGs are shown in <a href="#fig-1" class="quarto-xref">Figure&nbsp;1</a> A and B, respectively.</p>
 <p>We also examined associations between disease traits and transcriptomic gene expression patterns using WGCNA. <strong>Twenty-one</strong> gene modules were identified in the analysis on the basis of hierarchical clustering dendrograms, and correlations between the modules and their association with disease traits were calculated using the Spearman’s rank correlation test and Mantel test (<strong>Fig. 2E</strong>). WGCNA identified <strong>675</strong> hub genes from MEbrown (r = <strong>0.84</strong>, p = <strong>8e-04</strong>) and MEroyalblue (r = -0.70, p = 8e-07) that were significantly correlated with disease traits (<strong>Fig. 1C, D</strong>). The potential HFrEF genes for the study were formed by combining the DEGs (|log2 FC| &gt; 0.585) with the WGCNA hub genes.</p>
 </section>
 <section id="functional-enrichment-of-zwhqd-hfref-hub-genes" class="level2">
 <h2 class="anchored" data-anchor-id="functional-enrichment-of-zwhqd-hfref-hub-genes">Functional enrichment of ZWHQD-HFrEF hub genes</h2>
 <p>and used to construct the “Herb-Ingredient-Target” visualization network (Fig3A). A total of <em>787</em> nodes and <em>10401</em> edges were included in the PPI network of potential ZWHQD targets and candidate ZWHQD targets. <em>Six</em> subnetworks were co-clustering based on MCODE algorithm. We considered the targets in the two subnetworks with the highest MCODE score as MCODE hub targets (Fig.3B). The top-ranked targets obtained by the local-based and global-based methods of the Cytohubba algorithm served as a complement to the results (Fig.3C), and were compiled into a collection of 117 ZWHQD-HFrEF hub genes (including 68 HFrEF hub genes, 61 ZWHQD genes, and 18 intersected genes) for subsequent studies (Fig.3D).</p>
 <p>The number of <em>177</em> hub genes characterized with both ZWHQD and HFrEF was analyzed based on GO enrichment and KEGG signaling pathway enrichment, which indicates that ZWHQD on GO–CCs focuses on membrane microdomain, membrane raft, cell substrate junction, focal adhesion, and endoplasmic reticulum lumen. It was also involved in sets of GO-BPs, mainly including response to oxidative stress, response to molecule of bacterial origin, response to lipopolysaccharide, epithelial cell proliferation, and response to radiation. Furthermore, ZWHQD was mainly related to DNA binding transcription factor binding, cytokine receptor binding, receptor ligand activity, and RNA polymerase II specific DNA binding transcription factor binding, cytokine activity and some other GO-MFs (Fig.3E; Supplementary Fig. S2A, B). The KEGG signaling pathway analysis demonstrates that the phosphoinositide 3 kinase (PI3K)‐serine/ threonine kinase (AKT) signaling pathway (p = 1.66E-29, Gene Count = 42) is most highly correlated with the ZWHQD-HFrEF hub genes. Some pathways that are reported to be strongly associated with inflammatory response, autoimmune response, and even RA, such as the mitogenactivated protein kinase (MAPK) signaling pathway, the tumor necrosis factor (TNF) signaling pathway and the interleukin-17 (IL-17) signaling pathway are also enriched in the top rank (Fig.3F, Supplementary Fig. S2C, D).</p>
-<div id="fig-3" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<p>Functional enrichment analysis. A: (a)-(b) The bubble plot and polar chart of the enrichment GO analysis of ZWHQD-HFrEF hub gene set; (c)-(d) The bubble plot and polar chart of the enrichment KEGG analysis of ZWHQD-HFrEF hub gene set. B: The expression of ZWHQD-HFrEF hub genes was investigated in the HC/RA group. C: Single-gene GSEA based on the grouping of the CASP8 expression level.</p>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1
-</figcaption>
-</figure>
-</div>
 </section>
 <section id="immune-infiltration-profiling" class="level2">
 <h2 class="anchored" data-anchor-id="immune-infiltration-profiling">Immune Infiltration Profiling</h2>
 <p>Immune infiltration analysis was used to estimate the abundance of immune cells in the gene expression profile dataset (Fig. 4A). Group box plots show the differences in the estimation of cell proportions between the RA/HC sample groups (Fig. 4C), where the cell types with significant differences were, in descending order, dendritic cells activated (p &lt; 0.05), T cells cluster of differentiation (CD) 8+ (p &lt; 0.05), T cells CD4+ memory resting (p &lt; 0.01), mast cells resting (p &lt; 0.01), macrophages M1 (p &lt; 0.01). Sequential box plot showed the estimation of cell proportions in HFrEF samples (Fig. 4C), natural killer (NK) cells resting, T cells CD8+, macrophages M0, T cells CD4+ memory resting, and monocytes are considered as the five cell categories with the highest cell proportions in HFrEF samples. Spearman’s rank correlation coefficients were used to characterize the correlation between the expression profiles of the HFrEF hub genes and the abundance of immune cell infiltration, which are shown in a correlation heat map (Fig. 4B). monocytes, T cells CD8+, dendritic cells activated presented a strong correlation with ZWHQDRA hub genes.</p>
-<div id="fig-4" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<p>Immune Filtration Analysis Based on CIBERSORT Algorithm. A: The estimation of the abundance of immune cells. B: Heatmap of Spearman’s rank correlation between the expression of ZWHQD-HFrEF hub genes that in gene expression profile dataset and the abundance of immune cell infiltration. C: (a) Box plot of the differences in the estimation of cell proportions between the RA/HC sample groups; (b) Sequential box plot of the estimation of cell proportions in HFrEF samples.</p>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2
-</figcaption>
-</figure>
-</div>
 </section>
 <section id="cell-subpopulation-annotation-and-aucell-scoring-in-scrna-seq" class="level2">
 <h2 class="anchored" data-anchor-id="cell-subpopulation-annotation-and-aucell-scoring-in-scrna-seq">Cell subpopulation annotation and AUCell scoring in scRNA-seq</h2>
 <p>The scRNA-seq dataset (GSE159117) from the GEO database was filtered and quality controlled to generate normalized Seurat object data containing 2406 genes. The expression characteristics of this HFrEF sample are shown in the violin plot and scatterplot (Supplementary Fig. S3A). We identified the top 2000 HVGs for subsequent PCA (Supplementary Fig. 3C). MZB1 and IGJ are the top two HVGs, all of which have been reported to play a role in IgM assembly and/or biosynthesis. The scaled data can be further processed through a linear downscaling PCA to reduce the scale of the data (Supplementary Fig. 3B). JackStraw plot and ElbowPlot then determine the first 15 dimensions as the number of valid PCs in the dataset (Supplementary Fig. 3D). Based on this, the k-nearest neighbor classification algorithm was constructed based on Euclidean distances in PCA space, edges were drawn between cells with similar feature expression patterns, and downstream clustering resolution was set to 1.5 (Supplementary Fig. 3E). The UMAP and t-SNE techniques revealed 15 cell subclusters after nonlinear dimensionality reduction clustering (Supplementary Fig. 3F, G), which were finally annotated into five cell subpopulations of B cells, T cells, NK cells, classical monocytes, and non-classical monocytes (Fig. 5A, B).</p>
 <p>In the subpopulation of scRNA-seq cells, we calculated AUCell scores for the custom ZWHQD-HFrEF hub gene set and its PI3K-AKT signaling pathway with the highest enrichment in enrichment analysis. Highly active cells in the interested gene set would exhibit higher AUCell scores, and the result described that monocytes present a significant degree of activity in these two gene sets (Fig. 5C, D).</p>
-<div id="fig-5" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<p>Calculation of AUCell score for specific cell subpopulation of rheumatoid arthritis. A-B: Annotation result of cell subpopulation using clustering and dimensionality reduction analysis. C: The calculation of the AUCell scores for the ZWHQD-HFrEF hub gene set in cell subpopulations. D: The calculation of the AUCell scores for the PI3K-AKT signaling pathway in cell subpopulations.</p>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3
-</figcaption>
-</figure>
-</div>
 </section>
 <section id="causal-core-genes-associated-with-zwhqd-hfref" class="level2">
 <h2 class="anchored" data-anchor-id="causal-core-genes-associated-with-zwhqd-hfref">Causal Core Genes Associated with ZWHQD-HFrEF</h2>
@@ -417,16 +387,6 @@ Figure&nbsp;3
 <section id="diagnostic-value-of-core-genes-in-hfref" class="level2">
 <h2 class="anchored" data-anchor-id="diagnostic-value-of-core-genes-in-hfref">Diagnostic Value of Core Genes in HFrEF</h2>
 <p>We obtained the bulk RNA dataset (GSE17755) containing CASP8, PPARG, IKBKB, PPARA, IFNG, MYC, and STAT3 in the expression profiles and created a training set (n = 126) and a validation set (n = 31) at a ratio of 7:3 to explore the diagnostic value of ZWHQD-HFrEF core genes. The nomogram shows the results of visualizing the multivariate logistic regression model constructed using the ZWHQD-HFrEF core genes as predictors of HFrEF (Fig. 7A). The ROC curve was created to show that the AUC value was 0.908 [cutoff value = 0.623 (0, 0.783)] for nomogram, 0.807 [cutoff value = 0.681 (0. 167, 0.840)] for STAT3 and 0.760 [cutoff value = 0.646 (0.333, 0.960)] for CASP8 indicating highly discriminative multivariate model fit (Fig. 7B). Meanwhile, the slope of the corrected calibration curve was closer to 1, which means a pretty calibration for predicted probability (Fig. 7C). Furthermore, model evaluation curves of DCA showed that the standard net benefit of the nomogram was higher than any a single factor that we had included in a certain risk threshold, which comprehensively reflected the advantage to clinical diagnostic decisions. It also reflected the pretty prediction effect of the nomogram (Fig. 7D). Several lines of evidence suggest the potential key role played by ZWHQD-HFrEF core genes in causing, diagnosing, and intervening in RA.</p>
-<div id="fig-7" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-7-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<p>Diagnostic value assessment of ZWHQD-HFrEF core genes in rheumatoid arthritis. A: The nomogram for predicting the risk of RA. B: ROC curve evaluating the discrimination of nomogram (multivariate logistic regression) and each ZWHQD-HFrEF genes (univariate logistic regression) in the validation set. C: Corrected calibration curve of nomogram for comparing predicted (red) and actual (blue) probability of RA. D: DCA for the validation set.</p>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-7-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4
-</figcaption>
-</figure>
-</div>
 </section>
 <section id="gene-set-enrichment-analysis-of-casp8" class="level2">
 <h2 class="anchored" data-anchor-id="gene-set-enrichment-analysis-of-casp8">Gene set enrichment analysis of CASP8</h2>
@@ -457,7 +417,7 @@ Figure&nbsp;4
 <p>In this study, we constructed the “Chinese Materia MedicaIngredient-Target “network of ZWHQD and identified 117 ZWHQDRA hub genes at the bulk and single-cell levels. Seven ZWHQD-HFrEF core genes with causal associations on HFrEF were identified by MR analysis and co-localization analysis. A nomogram of CASP8, PPARG, IKBKB, PPARA, IFNG, MYC, and STAT3 was constructed to clarify their value as potential predictors of HFrEF. Molecular docking shows that CASP8 and ZWHQD have high docking scores for three key constituents (quercetin, kaempferol, and diosmetin). The results showed that ZWHQD might regulate the abnormal over-proliferation and apoptotic imbalance of FLS in HFrEF patients by inhibiting the signal transduction of the PI3K-AKT signaling pathway and activating the pro-apoptotic effect through CASP8 (Fig. 9). It may also be effective in inhibiting, either directly or indirectly, the differentiation of monocytes into OCs, which may ultimately improve the poor prognosis of joint destruction in patients with HFrEF. These results may provide direction and a reference for further exploring the mechanism of action of ZWHQD in intervening HFrEF. In addition to providing more options for HFrEF patients to improve the quality of their survival, they also provide a rationale for the application of classical TCM formulas to specific diseases.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>(9306 words)</code></pre>
+<pre><code>(9063 words)</code></pre>
 </div>
 </div>
 <hr>
@@ -490,17 +450,108 @@ Figure&nbsp;4
 </section>
 <section id="figure-legends" class="level1 unnumbered">
 <h1 class="unnumbered">Figure legends</h1>
-<p><strong>Figure 1. Identification of disease‑associated candidate targets.</strong> (A) Volcano plot of DEGs (up/down counts labeled) Red dots represent significantly upregulated genes, blue dots represent significantly downregulated genes, and gray dots represent non-significant genes; (B) Heatmap of top 50 upregulated and top 50 downregulated DEGs; (C) WGCNA sample clustering dendrogram with soft‑thresholding power; (D) Module–trait association heatmap (r and p‑values); (E) Scatter plot of gene significance (GS) vs.&nbsp;module membership (MM) for key modules; (F) Venn diagram showing the intersection of DEGs and WGCNA key module genes.</p>
-<p><strong>Figure 2. Compound–disease target identification and enrichment.</strong> (A) Venn diagram of drug targets and disease candidate targets → core compound–disease targets. (B) Herb–compound–target network (node size by degree; targets from panel A). (C) GO enrichment faceted bar plot (top 10 biological process, cellular component, molecular function). (D) KEGG pathway enrichment bubble plot (top 20 pathways; gene count and adjusted p‑value).</p>
-<p><strong>Figure 3. PPI network and hub gene screening.</strong> (A) PPI network colored by Degree (darker = higher connectivity). (B) UpSet plot of top 20 nodes from five CytoHubba algorithms (MCC, DMNC, MNC, Degree, EPC). (C) Most significant MCODE cluster network (score ≥ 5). (D) Venn diagram of CytoHubba consensus genes and MCODE cluster genes → hub genes.</p>
-<p><strong>Figure 4.Immune infiltration landscape.</strong> (A) Correlation heatmap of 22 immune cell types across all samples. (B) Boxplots of significantly different immune cells between disease and control groups (Wilcoxon test, <em>p</em> &lt; 0.05). (C) Chord diagram (or heatmap) of correlations between hub gene expression and abundant immune cells.</p>
-<p><strong>Figure 5. Machine learning‑based core diagnostic gene identification and nomogram.</strong> (A) Venn diagram of variables selected by four algorithms (LASSO, RandomForest, SVM‑RFE, XGBoost) → core genes. (B) Disease risk nomogram based on core genes. (C) ROC curves for training set, test set, and external validation sets (AUC with 95% CI). (D) Calibration curves (Hosmer‑Lemeshow test) for the same datasets. (E) Combined boxplot + violin plot of core gene expression (disease vs.&nbsp;control), faceted by dataset (training, test, validation1, validation2, …).</p>
-<p><strong>Figure 6. Genetic validation and single‑cell enrichment of core genes.</strong> (A) Posterior probability plot for eQTL colocalization of a representative core gene (e.g., AKT1). (B) t‑SNE/UMAP plot of AUCell enrichment scores for the core gene set in single‑cell data. (C) Boxplot of ssGSEA enrichment scores of the core gene set (disease vs.&nbsp;control).</p>
-<p><strong>Figure 7. Molecular docking of key compounds to core target proteins.</strong> (A–D) 3D interaction diagrams of four representative docking complexes. Hydrogen bonds are shown as dashed yellow lines, hydrophobic interactions as pink surfaces, and π‑π stacking as green dashed lines.</p>
-<p><strong>Figure 8. Proposed mechanistic model</strong></p>
+<p><strong>Figure 1. Scheme of technical approach.</strong></p>
+<p><strong>Figure 2. Identification of disease‑associated candidate targets.</strong> (A) Volcano plot of DEGs, red dots represent significantly upregulated genes, blue dots represent significantly downregulated genes, and gray dots represent non-significant genes; (B) Heatmap of top 50 upregulated and top 50 downregulated DEGs; (C) WGCNA sample clustering dendrogram with soft‑thresholding power; (D) Module–trait association heatmap (r and p‑values); (E) Scatter plot of gene significance (GS) vs.&nbsp;module membership (MM) for key modules; (F) Venn diagram showing the intersection of DEGs and WGCNA key module genes.</p>
+<p><strong>Figure 3. Compound–disease target identification and enrichment.</strong> (A) Venn diagram of drug targets and disease candidate targets; (B) Herb–ingredient–target network (node size by degree; targets from panel A); (C) GO enrichment faceted bar plot (top 10 biological process, cellular component, molecular function); (D) KEGG pathway enrichment bubble plot (top 20 pathways; gene count and adjusted p‑value).</p>
+<p><strong>Figure 4. PPI network and hub gene screening.</strong> (A) PPI network; (B) Network and UpSet plot of top 20 genes from MCC, MNC and Degree; (C) Most significant MCODE cluster network (score ≥ 5); (D) Venn diagram of CytoHubba consensus genes and MCODE cluster genes.</p>
+<p><strong>Figure 5.Immune infiltration landscape.</strong> (A) Correlation heatmap of 22 immune cell types across all samples. (B) Boxplots of significantly different immune cells between disease and control groups (Wilcoxon test, <em>p</em> &lt; 0.05). (C) Chord diagram (or heatmap) of correlations between hub gene expression and abundant immune cells.</p>
+<p><strong>Figure 6. Machine learning‑based core diagnostic gene identification and nomogram.</strong> (A) Venn diagram of variables selected by four algorithms (LASSO, RandomForest, SVM‑RFE, XGBoost) → core genes. (B) Disease risk nomogram based on core genes. (C) ROC curves for training set, test set, and external validation sets (AUC with 95% CI). (D) Calibration curves (Hosmer‑Lemeshow test) for the same datasets. (E) Combined boxplot + violin plot of core gene expression (disease vs.&nbsp;control), faceted by dataset (training, test, validation1, validation2, …).</p>
+<p><strong>Figure 7. Genetic validation and single‑cell enrichment of core genes.</strong> (A) Posterior probability plot for eQTL colocalization of a representative core gene (e.g., AKT1). (B) t‑SNE/UMAP plot of AUCell enrichment scores for the core gene set in single‑cell data. (C) Boxplot of ssGSEA enrichment scores of the core gene set (disease vs.&nbsp;control).</p>
+<p><strong>Figure 8. Molecular docking of key compounds to core target proteins.</strong> (A–D) 3D interaction diagrams of four representative docking complexes. Hydrogen bonds are shown as dashed yellow lines, hydrophobic interactions as pink surfaces, and π‑π stacking as green dashed lines.</p>
+<p><strong>Figure 9. Proposed mechanistic model</strong></p>
 <ul>
 <li>Integrated network: formula → active compounds → core targets → key pathways → immune/disease phenotype</li>
 </ul>
+<div id="fig-1" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1
+</figcaption>
+</figure>
+</div>
+<div id="fig-2" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2
+</figcaption>
+</figure>
+</div>
+<div id="fig-3" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_3.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3
+</figcaption>
+</figure>
+</div>
+<div id="fig-4" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_4.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4
+</figcaption>
+</figure>
+</div>
+<div id="fig-5" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5
+</figcaption>
+</figure>
+</div>
+<div id="fig-6" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-6-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-6-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6
+</figcaption>
+</figure>
+</div>
+<div id="fig-7" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-7-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-7-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7
+</figcaption>
+</figure>
+</div>
+<div id="fig-8" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-8-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-8-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8
+</figcaption>
+</figure>
+</div>
+<div id="fig-9" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-9-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-9-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9
+</figcaption>
+</figure>
+</div>
 <hr>
 </section>
 <section id="tables" class="level1">

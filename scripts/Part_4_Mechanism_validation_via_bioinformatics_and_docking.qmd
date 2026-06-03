@@ -1002,6 +1002,12 @@ unique(hit_core$Herb.Name.Pinyin)
 
 hit_core[,c("Herb.Name.Pinyin", "Compound.Name","Symbol")]
 ```
+
+# Figure 6
+```{r}
+```
+
+
 # Single‑Cell Transcriptome Expression Mapping
 ## Load Packages
 ```{r}
@@ -1411,13 +1417,13 @@ cat("\n=== 5. Running Jurgens colocalisation (P‑value based) ===\n")
 res_jurgens <- run_parallel_pval(matched_jurgens_final, N_total_jurgens, s_jurgens, ncores = ncores)
 ```
 
-## 11. Identify high‑confidence colocalisation (PP.H4 > 0.8) 
+## Step: 11. Identify high‑confidence colocalisation (PP.H4 > 0.8) 
 ```{r}
 hits_hermes <- res_hermes %>% dplyr::filter(PP.H4 > 0.8)
 hits_jurgens <- res_jurgens %>% dplyr::filter(PP.H4 > 0.8)
 ```
 
-## 12. Save results
+## Step 12. Save results
 ```{r}
 fwrite(res_hermes, file.path(out_dir, "coloc_results_HERMES_pval.csv"))
 fwrite(hits_hermes, file.path(out_dir, "coloc_hits_HERMES_pval_PPH4_0.8.csv"))
@@ -1425,7 +1431,7 @@ fwrite(res_jurgens, file.path(out_dir, "coloc_results_Jurgens_pval.csv"))
 fwrite(hits_jurgens, file.path(out_dir, "coloc_hits_Jurgens_pval_PPH4_0.8.csv"))
 ```
 
-## 13. Summary 
+## Step 13. Summary 
 ```{r}
 cat("\n========== FINAL SUMMARY ==========\n")
 cat("HERMES: analysed", nrow(res_hermes), "genes; high‑confidence hits (PP.H4>0.8):", nrow(hits_hermes), "\n")
@@ -1446,10 +1452,17 @@ cat("Analysis completed.\n")
 
 # GSEA Pathway Analysis of Causal Genes
 
+# Figure 7
+```{r}
+```
 ---
 
 # Docking of Active Ingredients and Core Targets
 
+
+# Figure 8
+```{r}
+```
 ---
 
 <table class="nav-table" width="100%">

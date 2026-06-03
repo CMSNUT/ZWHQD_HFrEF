@@ -215,31 +215,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#herb-ingredient-target" id="toc-herb-ingredient-target" class="nav-link" data-scroll-target="#herb-ingredient-target"><span class="header-section-number">1.10</span> herb-ingredient-target</a></li>
   </ul></li>
-  <li><a href="#singlecell-transcriptome-expression-mapping" id="toc-singlecell-transcriptome-expression-mapping" class="nav-link" data-scroll-target="#singlecell-transcriptome-expression-mapping"><span class="header-section-number">2</span> Single‑Cell Transcriptome Expression Mapping</a>
+  <li><a href="#figure-6" id="toc-figure-6" class="nav-link" data-scroll-target="#figure-6"><span class="header-section-number">2</span> Figure 6</a></li>
+  <li><a href="#singlecell-transcriptome-expression-mapping" id="toc-singlecell-transcriptome-expression-mapping" class="nav-link" data-scroll-target="#singlecell-transcriptome-expression-mapping"><span class="header-section-number">3</span> Single‑Cell Transcriptome Expression Mapping</a>
   <ul>
-  <li><a href="#load-packages-1" id="toc-load-packages-1" class="nav-link" data-scroll-target="#load-packages-1"><span class="header-section-number">2.1</span> Load Packages</a></li>
-  <li><a href="#step-1-loading-data-1" id="toc-step-1-loading-data-1" class="nav-link" data-scroll-target="#step-1-loading-data-1"><span class="header-section-number">2.2</span> Step 1: Loading data</a></li>
-  <li><a href="#step-2-细胞注释umap" id="toc-step-2-细胞注释umap" class="nav-link" data-scroll-target="#step-2-细胞注释umap"><span class="header-section-number">2.3</span> Step 2: 细胞注释UMAP</a></li>
+  <li><a href="#load-packages-1" id="toc-load-packages-1" class="nav-link" data-scroll-target="#load-packages-1"><span class="header-section-number">3.1</span> Load Packages</a></li>
+  <li><a href="#step-1-loading-data-1" id="toc-step-1-loading-data-1" class="nav-link" data-scroll-target="#step-1-loading-data-1"><span class="header-section-number">3.2</span> Step 1: Loading data</a></li>
+  <li><a href="#step-2-细胞注释umap" id="toc-step-2-细胞注释umap" class="nav-link" data-scroll-target="#step-2-细胞注释umap"><span class="header-section-number">3.3</span> Step 2: 细胞注释UMAP</a></li>
   </ul></li>
-  <li><a href="#bayesian-co-localization-analysis" id="toc-bayesian-co-localization-analysis" class="nav-link" data-scroll-target="#bayesian-co-localization-analysis"><span class="header-section-number">3</span> Bayesian co-localization analysis</a>
+  <li><a href="#bayesian-co-localization-analysis" id="toc-bayesian-co-localization-analysis" class="nav-link" data-scroll-target="#bayesian-co-localization-analysis"><span class="header-section-number">4</span> Bayesian co-localization analysis</a>
   <ul>
-  <li><a href="#load-packages-2" id="toc-load-packages-2" class="nav-link" data-scroll-target="#load-packages-2"><span class="header-section-number">3.1</span> Load Packages</a></li>
-  <li><a href="#step-1-set-paths" id="toc-step-1-set-paths" class="nav-link" data-scroll-target="#step-1-set-paths"><span class="header-section-number">3.2</span> Step 1: Set paths</a></li>
-  <li><a href="#step-2-reading-and-cleaning-gtex-eqtl-data" id="toc-step-2-reading-and-cleaning-gtex-eqtl-data" class="nav-link" data-scroll-target="#step-2-reading-and-cleaning-gtex-eqtl-data"><span class="header-section-number">3.3</span> Step 2: reading and cleaning GTEx eQTL data</a></li>
-  <li><a href="#step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38" id="toc-step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38" class="nav-link" data-scroll-target="#step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38"><span class="header-section-number">3.4</span> Step 3: reading and lifting over HERMES GWAS (hg19 → hg38)</a></li>
-  <li><a href="#step-4-reading-jurgens-gwas-hg38" id="toc-step-4-reading-jurgens-gwas-hg38" class="nav-link" data-scroll-target="#step-4-reading-jurgens-gwas-hg38"><span class="header-section-number">3.5</span> Step 4: reading Jurgens GWAS (hg38)</a></li>
-  <li><a href="#step-5-matching-snps-only-identical-alleles-no-flipping" id="toc-step-5-matching-snps-only-identical-alleles-no-flipping" class="nav-link" data-scroll-target="#step-5-matching-snps-only-identical-alleles-no-flipping"><span class="header-section-number">3.6</span> Step 5: matching SNPs (only identical alleles, no flipping)</a></li>
-  <li><a href="#step-6-evaluating-match-quality" id="toc-step-6-evaluating-match-quality" class="nav-link" data-scroll-target="#step-6-evaluating-match-quality"><span class="header-section-number">3.7</span> Step 6: evaluating match quality</a></li>
-  <li><a href="#step-7-filtering-genes-with-10-snps" id="toc-step-7-filtering-genes-with-10-snps" class="nav-link" data-scroll-target="#step-7-filtering-genes-with-10-snps"><span class="header-section-number">3.8</span> Step 7: filtering genes with ≥10 SNPs</a></li>
-  <li><a href="#step-8-running-pvalue-based-colocalisation-in-parallel" id="toc-step-8-running-pvalue-based-colocalisation-in-parallel" class="nav-link" data-scroll-target="#step-8-running-pvalue-based-colocalisation-in-parallel"><span class="header-section-number">3.9</span> Step 8: running P‑value based colocalisation in parallel</a></li>
-  <li><a href="#step-9-parallel-wrapper" id="toc-step-9-parallel-wrapper" class="nav-link" data-scroll-target="#step-9-parallel-wrapper"><span class="header-section-number">3.10</span> Step 9: Parallel wrapper</a></li>
-  <li><a href="#step-10-run-colocalisation" id="toc-step-10-run-colocalisation" class="nav-link" data-scroll-target="#step-10-run-colocalisation"><span class="header-section-number">3.11</span> Step 10: Run colocalisation</a></li>
-  <li><a href="#identify-highconfidence-colocalisation-pp.h4-0.8" id="toc-identify-highconfidence-colocalisation-pp.h4-0.8" class="nav-link" data-scroll-target="#identify-highconfidence-colocalisation-pp.h4-0.8"><span class="header-section-number">3.12</span> 11. Identify high‑confidence colocalisation (PP.H4 &gt; 0.8)</a></li>
-  <li><a href="#save-results" id="toc-save-results" class="nav-link" data-scroll-target="#save-results"><span class="header-section-number">3.13</span> 12. Save results</a></li>
-  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">3.14</span> 13. Summary</a></li>
+  <li><a href="#load-packages-2" id="toc-load-packages-2" class="nav-link" data-scroll-target="#load-packages-2"><span class="header-section-number">4.1</span> Load Packages</a></li>
+  <li><a href="#step-1-set-paths" id="toc-step-1-set-paths" class="nav-link" data-scroll-target="#step-1-set-paths"><span class="header-section-number">4.2</span> Step 1: Set paths</a></li>
+  <li><a href="#step-2-reading-and-cleaning-gtex-eqtl-data" id="toc-step-2-reading-and-cleaning-gtex-eqtl-data" class="nav-link" data-scroll-target="#step-2-reading-and-cleaning-gtex-eqtl-data"><span class="header-section-number">4.3</span> Step 2: reading and cleaning GTEx eQTL data</a></li>
+  <li><a href="#step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38" id="toc-step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38" class="nav-link" data-scroll-target="#step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38"><span class="header-section-number">4.4</span> Step 3: reading and lifting over HERMES GWAS (hg19 → hg38)</a></li>
+  <li><a href="#step-4-reading-jurgens-gwas-hg38" id="toc-step-4-reading-jurgens-gwas-hg38" class="nav-link" data-scroll-target="#step-4-reading-jurgens-gwas-hg38"><span class="header-section-number">4.5</span> Step 4: reading Jurgens GWAS (hg38)</a></li>
+  <li><a href="#step-5-matching-snps-only-identical-alleles-no-flipping" id="toc-step-5-matching-snps-only-identical-alleles-no-flipping" class="nav-link" data-scroll-target="#step-5-matching-snps-only-identical-alleles-no-flipping"><span class="header-section-number">4.6</span> Step 5: matching SNPs (only identical alleles, no flipping)</a></li>
+  <li><a href="#step-6-evaluating-match-quality" id="toc-step-6-evaluating-match-quality" class="nav-link" data-scroll-target="#step-6-evaluating-match-quality"><span class="header-section-number">4.7</span> Step 6: evaluating match quality</a></li>
+  <li><a href="#step-7-filtering-genes-with-10-snps" id="toc-step-7-filtering-genes-with-10-snps" class="nav-link" data-scroll-target="#step-7-filtering-genes-with-10-snps"><span class="header-section-number">4.8</span> Step 7: filtering genes with ≥10 SNPs</a></li>
+  <li><a href="#step-8-running-pvalue-based-colocalisation-in-parallel" id="toc-step-8-running-pvalue-based-colocalisation-in-parallel" class="nav-link" data-scroll-target="#step-8-running-pvalue-based-colocalisation-in-parallel"><span class="header-section-number">4.9</span> Step 8: running P‑value based colocalisation in parallel</a></li>
+  <li><a href="#step-9-parallel-wrapper" id="toc-step-9-parallel-wrapper" class="nav-link" data-scroll-target="#step-9-parallel-wrapper"><span class="header-section-number">4.10</span> Step 9: Parallel wrapper</a></li>
+  <li><a href="#step-10-run-colocalisation" id="toc-step-10-run-colocalisation" class="nav-link" data-scroll-target="#step-10-run-colocalisation"><span class="header-section-number">4.11</span> Step 10: Run colocalisation</a></li>
+  <li><a href="#step-11.-identify-highconfidence-colocalisation-pp.h4-0.8" id="toc-step-11.-identify-highconfidence-colocalisation-pp.h4-0.8" class="nav-link" data-scroll-target="#step-11.-identify-highconfidence-colocalisation-pp.h4-0.8"><span class="header-section-number">4.12</span> Step: 11. Identify high‑confidence colocalisation (PP.H4 &gt; 0.8)</a></li>
+  <li><a href="#step-12.-save-results" id="toc-step-12.-save-results" class="nav-link" data-scroll-target="#step-12.-save-results"><span class="header-section-number">4.13</span> Step 12. Save results</a></li>
+  <li><a href="#step-13.-summary" id="toc-step-13.-summary" class="nav-link" data-scroll-target="#step-13.-summary"><span class="header-section-number">4.14</span> Step 13. Summary</a></li>
   </ul></li>
-  <li><a href="#gsea-pathway-analysis-of-causal-genes" id="toc-gsea-pathway-analysis-of-causal-genes" class="nav-link" data-scroll-target="#gsea-pathway-analysis-of-causal-genes"><span class="header-section-number">4</span> GSEA Pathway Analysis of Causal Genes</a></li>
-  <li><a href="#docking-of-active-ingredients-and-core-targets" id="toc-docking-of-active-ingredients-and-core-targets" class="nav-link" data-scroll-target="#docking-of-active-ingredients-and-core-targets"><span class="header-section-number">5</span> Docking of Active Ingredients and Core Targets</a></li>
+  <li><a href="#gsea-pathway-analysis-of-causal-genes" id="toc-gsea-pathway-analysis-of-causal-genes" class="nav-link" data-scroll-target="#gsea-pathway-analysis-of-causal-genes"><span class="header-section-number">5</span> GSEA Pathway Analysis of Causal Genes</a></li>
+  <li><a href="#figure-7" id="toc-figure-7" class="nav-link" data-scroll-target="#figure-7"><span class="header-section-number">6</span> Figure 7</a></li>
+  <li><a href="#docking-of-active-ingredients-and-core-targets" id="toc-docking-of-active-ingredients-and-core-targets" class="nav-link" data-scroll-target="#docking-of-active-ingredients-and-core-targets"><span class="header-section-number">7</span> Docking of Active Ingredients and Core Targets</a></li>
+  <li><a href="#figure-8" id="toc-figure-8" class="nav-link" data-scroll-target="#figure-8"><span class="header-section-number">8</span> Figure 8</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
 </nav>
@@ -1296,10 +1299,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 </section>
-<section id="singlecell-transcriptome-expression-mapping" class="level1" data-number="2">
-<h1 data-number="2"><span class="header-section-number">2</span> Single‑Cell Transcriptome Expression Mapping</h1>
-<section id="load-packages-1" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="load-packages-1"><span class="header-section-number">2.1</span> Load Packages</h2>
+<section id="figure-6" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Figure 6</h1>
+</section>
+<section id="singlecell-transcriptome-expression-mapping" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Single‑Cell Transcriptome Expression Mapping</h1>
+<section id="load-packages-1" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="load-packages-1"><span class="header-section-number">3.1</span> Load Packages</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="fu">library</span>(Seurat)</span>
 <span id="cb23-2"><a href="#cb23-2"></a><span class="fu">library</span>(ggplot2)</span>
@@ -1309,8 +1315,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb23-6"><a href="#cb23-6"></a><span class="fu">library</span>(harmony)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-1-loading-data-1" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="step-1-loading-data-1"><span class="header-section-number">2.2</span> Step 1: Loading data</h2>
+<section id="step-1-loading-data-1" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="step-1-loading-data-1"><span class="header-section-number">3.2</span> Step 1: Loading data</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>())</span>
 <span id="cb24-2"><a href="#cb24-2"></a><span class="fu">gc</span>()</span>
@@ -1333,8 +1339,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb24-19"><a href="#cb24-19"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-2-细胞注释umap" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="step-2-细胞注释umap"><span class="header-section-number">2.3</span> Step 2: 细胞注释UMAP</h2>
+<section id="step-2-细胞注释umap" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="step-2-细胞注释umap"><span class="header-section-number">3.3</span> Step 2: 细胞注释UMAP</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">DimPlot</span>(HDCM, <span class="at">label =</span> <span class="cn">TRUE</span>, <span class="at">repel =</span> <span class="cn">TRUE</span>, <span class="at">pt.size =</span> <span class="fl">0.1</span>, <span class="at">label.size =</span> <span class="fl">2.5</span>) <span class="sc">+</span></span>
 <span id="cb25-2"><a href="#cb25-2"></a>  <span class="fu">theme_bw</span>(<span class="at">base_family =</span> <span class="st">"sans"</span>) <span class="sc">+</span>  </span>
@@ -1356,10 +1362,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <hr>
 </section>
 </section>
-<section id="bayesian-co-localization-analysis" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> Bayesian co-localization analysis</h1>
-<section id="load-packages-2" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="load-packages-2"><span class="header-section-number">3.1</span> Load Packages</h2>
+<section id="bayesian-co-localization-analysis" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Bayesian co-localization analysis</h1>
+<section id="load-packages-2" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="load-packages-2"><span class="header-section-number">4.1</span> Load Packages</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="fu">library</span>(data.table)   </span>
 <span id="cb26-2"><a href="#cb26-2"></a><span class="fu">library</span>(ggplot2)      </span>
@@ -1372,8 +1378,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb26-9"><a href="#cb26-9"></a><span class="fu">library</span>(future.apply)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-1-set-paths" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="step-1-set-paths"><span class="header-section-number">3.2</span> Step 1: Set paths</h2>
+<section id="step-1-set-paths" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="step-1-set-paths"><span class="header-section-number">4.2</span> Step 1: Set paths</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a><span class="co"># download.file("http://hgdownload.cse.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz", destfile = "../data/raw/opengwas/hg19ToHg38.over.chain.gz")</span></span>
 <span id="cb27-2"><a href="#cb27-2"></a></span>
@@ -1397,8 +1403,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb27-20"><a href="#cb27-20"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-2-reading-and-cleaning-gtex-eqtl-data" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="step-2-reading-and-cleaning-gtex-eqtl-data"><span class="header-section-number">3.3</span> Step 2: reading and cleaning GTEx eQTL data</h2>
+<section id="step-2-reading-and-cleaning-gtex-eqtl-data" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="step-2-reading-and-cleaning-gtex-eqtl-data"><span class="header-section-number">4.3</span> Step 2: reading and cleaning GTEx eQTL data</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="fu">cat</span>(<span class="st">"=== Reading GTEx eQTL (left ventricle) ===</span><span class="sc">\n</span><span class="st">"</span>)</span>
 <span id="cb28-2"><a href="#cb28-2"></a></span>
@@ -1449,8 +1455,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb28-47"><a href="#cb28-47"></a><span class="fu">rm</span>(eqtl_raw, eqtl_clean); <span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38" class="level2" data-number="3.4">
-<h2 data-number="3.4" class="anchored" data-anchor-id="step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38"><span class="header-section-number">3.4</span> Step 3: reading and lifting over HERMES GWAS (hg19 → hg38)</h2>
+<section id="step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="step-3-reading-and-lifting-over-hermes-gwas-hg19-hg38"><span class="header-section-number">4.4</span> Step 3: reading and lifting over HERMES GWAS (hg19 → hg38)</h2>
 <ul>
 <li><p><a href="https://www.kp4cd.org/node/1482">HERMES dilated cardiomyopathy 2024 GWAS: European ancestry</a></p></li>
 <li></li>
@@ -1509,8 +1515,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb29-51"><a href="#cb29-51"></a><span class="fu">rm</span>(hermes_raw, hermes_gr, hermes_gr_hg38, chain, success); <span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-4-reading-jurgens-gwas-hg38" class="level2" data-number="3.5">
-<h2 data-number="3.5" class="anchored" data-anchor-id="step-4-reading-jurgens-gwas-hg38"><span class="header-section-number">3.5</span> Step 4: reading Jurgens GWAS (hg38)</h2>
+<section id="step-4-reading-jurgens-gwas-hg38" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="step-4-reading-jurgens-gwas-hg38"><span class="header-section-number">4.5</span> Step 4: reading Jurgens GWAS (hg38)</h2>
 <ul>
 <li><a href="https://www.kp4cd.org/node/1558">Dilated cardiomyopathy 2024 GWAS: European ancestry</a></li>
 </ul>
@@ -1558,8 +1564,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb30-41"><a href="#cb30-41"></a><span class="fu">rm</span>(jurgens_raw, jurgens_gwas, jurgens_gwas); <span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-5-matching-snps-only-identical-alleles-no-flipping" class="level2" data-number="3.6">
-<h2 data-number="3.6" class="anchored" data-anchor-id="step-5-matching-snps-only-identical-alleles-no-flipping"><span class="header-section-number">3.6</span> Step 5: matching SNPs (only identical alleles, no flipping)</h2>
+<section id="step-5-matching-snps-only-identical-alleles-no-flipping" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="step-5-matching-snps-only-identical-alleles-no-flipping"><span class="header-section-number">4.6</span> Step 5: matching SNPs (only identical alleles, no flipping)</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1"></a>match_identical <span class="ot">&lt;-</span> <span class="cf">function</span>(eqtl_df, gwas_df) {</span>
 <span id="cb31-2"><a href="#cb31-2"></a>  eqtl_match <span class="ot">&lt;-</span> eqtl_df <span class="sc">%&gt;%</span></span>
@@ -1591,8 +1597,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb31-28"><a href="#cb31-28"></a><span class="fu">rm</span>(hermes_gwas, jurgens_gwas); <span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-6-evaluating-match-quality" class="level2" data-number="3.7">
-<h2 data-number="3.7" class="anchored" data-anchor-id="step-6-evaluating-match-quality"><span class="header-section-number">3.7</span> Step 6: evaluating match quality</h2>
+<section id="step-6-evaluating-match-quality" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="step-6-evaluating-match-quality"><span class="header-section-number">4.7</span> Step 6: evaluating match quality</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a>evaluate_matching <span class="ot">&lt;-</span> <span class="cf">function</span>(matched_df, original_eqtl, name) {</span>
 <span id="cb32-2"><a href="#cb32-2"></a>  <span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">========== "</span>, name, <span class="st">" matching quality ==========</span><span class="sc">\n</span><span class="st">"</span>)</span>
@@ -1630,8 +1636,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb32-34"><a href="#cb32-34"></a><span class="fu">evaluate_matching</span>(matched_jurgens, eqtl_original, <span class="st">"Jurgens"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-7-filtering-genes-with-10-snps" class="level2" data-number="3.8">
-<h2 data-number="3.8" class="anchored" data-anchor-id="step-7-filtering-genes-with-10-snps"><span class="header-section-number">3.8</span> Step 7: filtering genes with ≥10 SNPs</h2>
+<section id="step-7-filtering-genes-with-10-snps" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="step-7-filtering-genes-with-10-snps"><span class="header-section-number">4.8</span> Step 7: filtering genes with ≥10 SNPs</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1"></a>filter_genes <span class="ot">&lt;-</span> <span class="cf">function</span>(matched_df) {</span>
 <span id="cb33-2"><a href="#cb33-2"></a>  genes_keep <span class="ot">&lt;-</span> matched_df <span class="sc">%&gt;%</span></span>
@@ -1652,8 +1658,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <hr>
 </section>
-<section id="step-8-running-pvalue-based-colocalisation-in-parallel" class="level2" data-number="3.9">
-<h2 data-number="3.9" class="anchored" data-anchor-id="step-8-running-pvalue-based-colocalisation-in-parallel"><span class="header-section-number">3.9</span> Step 8: running P‑value based colocalisation in parallel</h2>
+<section id="step-8-running-pvalue-based-colocalisation-in-parallel" class="level2" data-number="4.9">
+<h2 data-number="4.9" class="anchored" data-anchor-id="step-8-running-pvalue-based-colocalisation-in-parallel"><span class="header-section-number">4.9</span> Step 8: running P‑value based colocalisation in parallel</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1"></a>run_coloc_pval_gene <span class="ot">&lt;-</span> <span class="cf">function</span>(sub_df, N_gwas, s_gwas, <span class="at">N_eqtl =</span> <span class="dv">386</span>,</span>
 <span id="cb34-2"><a href="#cb34-2"></a>                                <span class="at">p1 =</span> <span class="fl">1e-4</span>, <span class="at">p2 =</span> <span class="fl">1e-4</span>, <span class="at">p12 =</span> <span class="fl">1e-5</span>) {</span>
@@ -1680,8 +1686,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb34-23"><a href="#cb34-23"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-9-parallel-wrapper" class="level2" data-number="3.10">
-<h2 data-number="3.10" class="anchored" data-anchor-id="step-9-parallel-wrapper"><span class="header-section-number">3.10</span> Step 9: Parallel wrapper</h2>
+<section id="step-9-parallel-wrapper" class="level2" data-number="4.10">
+<h2 data-number="4.10" class="anchored" data-anchor-id="step-9-parallel-wrapper"><span class="header-section-number">4.10</span> Step 9: Parallel wrapper</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a>run_parallel_pval <span class="ot">&lt;-</span> <span class="cf">function</span>(matched_df, N_gwas, s_gwas, <span class="at">ncores =</span> <span class="dv">8</span>) {</span>
 <span id="cb35-2"><a href="#cb35-2"></a>  gene_list <span class="ot">&lt;-</span> <span class="fu">split</span>(matched_df, matched_df<span class="sc">$</span>gene_id)</span>
@@ -1696,8 +1702,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb35-11"><a href="#cb35-11"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="step-10-run-colocalisation" class="level2" data-number="3.11">
-<h2 data-number="3.11" class="anchored" data-anchor-id="step-10-run-colocalisation"><span class="header-section-number">3.11</span> Step 10: Run colocalisation</h2>
+<section id="step-10-run-colocalisation" class="level2" data-number="4.11">
+<h2 data-number="4.11" class="anchored" data-anchor-id="step-10-run-colocalisation"><span class="header-section-number">4.11</span> Step 10: Run colocalisation</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">=== 4. Running HERMES colocalisation (P‑value based) ===</span><span class="sc">\n</span><span class="st">"</span>)</span>
 <span id="cb36-2"><a href="#cb36-2"></a></span>
@@ -1708,15 +1714,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb36-7"><a href="#cb36-7"></a>res_jurgens <span class="ot">&lt;-</span> <span class="fu">run_parallel_pval</span>(matched_jurgens_final, N_total_jurgens, s_jurgens, <span class="at">ncores =</span> ncores)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="identify-highconfidence-colocalisation-pp.h4-0.8" class="level2" data-number="3.12">
-<h2 data-number="3.12" class="anchored" data-anchor-id="identify-highconfidence-colocalisation-pp.h4-0.8"><span class="header-section-number">3.12</span> 11. Identify high‑confidence colocalisation (PP.H4 &gt; 0.8)</h2>
+<section id="step-11.-identify-highconfidence-colocalisation-pp.h4-0.8" class="level2" data-number="4.12">
+<h2 data-number="4.12" class="anchored" data-anchor-id="step-11.-identify-highconfidence-colocalisation-pp.h4-0.8"><span class="header-section-number">4.12</span> Step: 11. Identify high‑confidence colocalisation (PP.H4 &gt; 0.8)</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1"></a>hits_hermes <span class="ot">&lt;-</span> res_hermes <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(PP.H4 <span class="sc">&gt;</span> <span class="fl">0.8</span>)</span>
 <span id="cb37-2"><a href="#cb37-2"></a>hits_jurgens <span class="ot">&lt;-</span> res_jurgens <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(PP.H4 <span class="sc">&gt;</span> <span class="fl">0.8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="save-results" class="level2" data-number="3.13">
-<h2 data-number="3.13" class="anchored" data-anchor-id="save-results"><span class="header-section-number">3.13</span> 12. Save results</h2>
+<section id="step-12.-save-results" class="level2" data-number="4.13">
+<h2 data-number="4.13" class="anchored" data-anchor-id="step-12.-save-results"><span class="header-section-number">4.13</span> Step 12. Save results</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1"></a><span class="fu">fwrite</span>(res_hermes, <span class="fu">file.path</span>(out_dir, <span class="st">"coloc_results_HERMES_pval.csv"</span>))</span>
 <span id="cb38-2"><a href="#cb38-2"></a><span class="fu">fwrite</span>(hits_hermes, <span class="fu">file.path</span>(out_dir, <span class="st">"coloc_hits_HERMES_pval_PPH4_0.8.csv"</span>))</span>
@@ -1724,8 +1730,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb38-4"><a href="#cb38-4"></a><span class="fu">fwrite</span>(hits_jurgens, <span class="fu">file.path</span>(out_dir, <span class="st">"coloc_hits_Jurgens_pval_PPH4_0.8.csv"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="summary" class="level2" data-number="3.14">
-<h2 data-number="3.14" class="anchored" data-anchor-id="summary"><span class="header-section-number">3.14</span> 13. Summary</h2>
+<section id="step-13.-summary" class="level2" data-number="4.14">
+<h2 data-number="4.14" class="anchored" data-anchor-id="step-13.-summary"><span class="header-section-number">4.14</span> Step 13. Summary</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">========== FINAL SUMMARY ==========</span><span class="sc">\n</span><span class="st">"</span>)</span>
 <span id="cb39-2"><a href="#cb39-2"></a><span class="fu">cat</span>(<span class="st">"HERMES: analysed"</span>, <span class="fu">nrow</span>(res_hermes), <span class="st">"genes; high‑confidence hits (PP.H4&gt;0.8):"</span>, <span class="fu">nrow</span>(hits_hermes), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
@@ -1745,12 +1751,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 </section>
-<section id="gsea-pathway-analysis-of-causal-genes" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> GSEA Pathway Analysis of Causal Genes</h1>
+<section id="gsea-pathway-analysis-of-causal-genes" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> GSEA Pathway Analysis of Causal Genes</h1>
+</section>
+<section id="figure-7" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Figure 7</h1>
 <hr>
 </section>
-<section id="docking-of-active-ingredients-and-core-targets" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> Docking of Active Ingredients and Core Targets</h1>
+<section id="docking-of-active-ingredients-and-core-targets" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Docking of Active Ingredients and Core Targets</h1>
+</section>
+<section id="figure-8" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Figure 8</h1>
 <hr>
 <table class="nav-table" width="100%">
 <tbody><tr>

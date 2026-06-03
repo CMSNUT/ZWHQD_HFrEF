@@ -39,7 +39,14 @@ Finally, to characterize the molecular properties of these candidate active ingr
 
 ---
 
-### Step 1: Load Raw Data from DCABM-TCM
+### Loading Packages
+```{r}
+library(tidyverse)
+library(data.table)
+library(openxlsx)
+```
+
+### Step 1: Loading Raw Data from DCABM-TCM
 ```{r dcabm}
 rm(list = ls())
 
@@ -708,7 +715,60 @@ write.xlsx(
     Final_All = compound_target_export,
     Target_Statistics = summary_table
   ),
-  "../results/tables/supplementary/Table_S2_Compound_Targets.xlsx"
+  "../tables/Table_S2.xlsx"
+)
+```
+
+```{r}
+add_platform <- function(df, platform_name) {
+  df %>%
+    mutate(
+      Prediction_platform = platform_name,
+      Target_gene_name = as.character(!!sym("Symbol")), 
+      UniProt_ID = as.character(!!sym("Uniprot.ID"))      
+    ) %>%
+    select(Target_gene_name, UniProt_ID, Prediction_platform)
+}
+
+platform_list <- list(
+  BATMAN_Known_Tagets = compound_target_known_batman,
+  BATMAN_Pred_Tagets  = compound_target_pred_batman,
+  Super_Known_Tagets  = compound_target_known_super,
+  Super_Pred_Tagets   = compound_target_pred_super,
+  Swiss_Pred_Tagets   = compound_target_pred_swiss,
+  Pharm_Pred_Tagets   = compound_target_pred_pharm,
+  TargetNet_Pred_Tagets = compound_target_pred_targetnet,
+  PPB3_Pred_Tagets    = compound_target_pred_ppb3,
+  SEA_Pred_Tagets     = compound_target_pred_sea
+)
+
+all_platforms <- bind_rows(
+  lapply(names(platform_list), function(name) {
+    df <- platform_list[[name]]
+    if(is.null(df) || nrow(df) == 0) return(NULL)
+    add_platform(df, name)   
+  })
+)
+
+final_intersection <- compound_target_known %>% 
+  distinct(Symbol, Uniprot.ID) %>%
+  mutate(In_intersection = "Yes")
+
+table_S2_grouped <- all_platforms %>%
+  group_by(Target_gene_name, UniProt_ID) %>%
+  summarise(
+    Prediction_platform = paste(unique(Prediction_platform), collapse = "; "),
+    .groups = "drop"
+  )
+
+table_S2 <- table_S2_grouped %>%
+  left_join(final_intersection, by = c( "Target_gene_name" ="Symbol" , "UniProt_ID" = "Uniprot.ID" )) %>%
+  mutate(`Included in intersection` = ifelse(is.na(In_intersection), "No", "Yes")) %>%
+  select(-In_intersection)
+
+write.xlsx(
+  list(`Table S2` = table_S2),
+  "../tables/Table_S2.xlsx"
 )
 ```
 
