@@ -764,23 +764,43 @@ library(ggsci)
 library(IOBR)
 ```
 
-## Step 1: ImmuCellAI
+https://www.medrxiv.org/content/10.1101/2024.04.26.24306471v1
+
+We first determined the levels of immune cells in failing myocardium using five immune infiltration algorithms: Cibersort, xCell, ssGSEA, MCPcounter, and QuanTIseq.
+
+## Step 1: FPKM 
+
 ```{r}
 rm(list = ls())
 load("../data/processed/geo/GSE141910/GSE141910_preprocessed_final.RData")
 
 group_info <- pheno_final$group
 
-tme_res <- deconvo_tme(eset = expr_fpkm_corr, 
-                       method = "mcpcounter",
-                       arrays = FALSE, 
-                       tumor = FALSE)   
+fpkm <- 2^expr_fpkm_corr - 1
+fpkm[fpkm < 0] <- 0
 ```
 
-## Step 2: 提取22种免疫细胞的比例数据
+## Step 2: deconvo_tme
 ```{r}
-cell_cols <- intersect(colnames(results), colnames(LM22)) 
-cibersort_result <- results[, cell_cols] %>% as.data.frame()
+# CIBERSORT
+res_ciber <- deconvo_tme(eset = fpkm,method = "cibersort",arrays = F,perm = 100)
+
+# MCPcounter
+res_mcp <- deconvo_tme(eset = fpkm,method = "mcpcounter",arrays = F)
+
+# QuanTIseq
+res_quant <- deconvo_tme(eset = fpkm,method = "quantiseq",arrays = F)
+
+# ssGSEA（IOBR sigScore，immune gene set）
+im_sig <- get_sig(signature = "immune") 
+res_ssgsea <- sigScore(eset = fpkm,signature = im_sig,method = "ssgsea")
+
+# xCell
+res_xcell <- deconvo_tme(eset = fpkm,method = "xcell",arrays = F)
+
+# Extract sample immune abundance matrix 
+imm_mat <- res_mcp[,!colnames(res_mcp)%in%"ID"]
+rownames(imm_mat) <- res_mcp$ID
 ```
 
 ## Step 3: Adding group infos
@@ -987,7 +1007,11 @@ dev.off()
 ```
 
 # Figure 5
+
+Immune cell infiltration analysis between HF and control. (A) Result of Cibersort algorithm. (B) Result of MCPcounter algorithm. (C) Result of QuanTIseq algorithm. (D) Result of ssGSEA algorithm. (E) Result of xCell algorithm.
+
 ```{r}
+
 ```
 
 ---

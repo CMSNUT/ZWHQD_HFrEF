@@ -85,6 +85,12 @@ After obtaining the ZWHQD-HFrEF hub genes, which is characterized by both ZWHQD 
 
 To investigate the composition of the immune micro-environment in HFrEF peripheral blood tissue samples and to further analyze the classes of immune cells that play an important role in RA. This algorithm is based on linear support vector regression and was used for deconvolution analysis. Using LM22 as the reference dataset for gene expression labeling of immune cell types, the deconvo\_tme() function in the [CIBERSORT](https://github.com/Moonerss/CIBERSORT) package was applied to estimate the abundance and relative proportions of immune cell subpopulations in each sample. The distribution of these relative cell subpopulations within the HFrEF group, between the HFrEF and HC groups, and the Spearman’s rank correlation with the ZWHQD-HFrEF genes were also examined. 
 
+## Identification and Diagnostic Analysis of Core Genes in ZWHQD-Targeted DCM-HFrEF
+
+To investigate the diagnostic value of ZWHQD-HFrEF core genes that are causally associated with RA, we would utilize them as variables for HFrEF diagnostic prediction analysis. Logistic regression models were constructed using the lrm() function in the rms package. Genes with a significant association (p < 0.1) in the univariate logistic regression were included in the multivariate logistic regression. Nomograms were then generated using the nomogram() function.  
+
+To evaluate the model fit (discrimination) and predicted probability (calibration), we utilized the roc() function and the calibrate() function from the pROC package to create a ROC curve and a corrected calibration curve. Additionally, we performed decision curve analysis (DCA) using the decision\_curve() function in the rmda package to ascertain the extent of risk or benefit associated with clinical decisions that impact patients.
+
 ##  Identification of causally associated ZWHQD-HFrEF core genes via Mendelian Randomization
 
 MR analysis was conducted to investigate the potential causal relationship between the ZWHQD-HFrEF genes and RA. As “exposure” factors for HFrEF “outcome”, we batch matched the expression quantitative trait loci (eQTL) that regulate the appropriate ZWHQD-HFrEF hub gene. The TwoSampleMR package (https://github.com/MRCIEU/TwoSampleMR) was utilized for the purpose of performing MR analysis. Single nucleotide polymorphisms (SNPs) that were significantly associated with eQTLs regulating ZWHQD-HFrEF hub genes were extracted as instrumental variables (IVs) at the traditional genome-wide level (correlation hypothesis, threshold chosen as p < 5 × 10^-8). Meanwhile, IVs in strong linkage disequilibrium were excluded (independence hypothesis, r2 < 0.001, kb = 10,000). The IEU open genome-wide association study (GWAS) project (https://gwas.mrcieu.ac.uk/) was then queried, and the GWAS dataset with ID ebi-a-GCST90018910 was selected as the source of HFrEF “outcome”. The harmonise\_data() function was used to align the effect alleles and effect sizes between the eQTL “exposure” data of ZWHQD genes and the “outcome” GWAS data of HFrEF for MR analysis. To ensure that the SNPs can be used as proxies for “exposure” to reflect their association with “outcome”, and to avoid the effects of weak instrument bias, the F statistic was used to circumvent the strength of the genetic variant IVs. The explanatory effect of each IV on the “exposure” variance is also independent, as each selected IV is independent of the others. Therefore, the phenotypic variance explained (PVE) is calculated as the sum of the proportions of the exposure variance explained by each IV.  
@@ -93,11 +99,7 @@ For the primary MR analysis, the inverse variance weighted (IVW) method was sele
 
 The Bayesian co-localization analysis, conducted with the Coloc package (https://github.com/chr1swallace/coloc), provides further reinforcement and clarification of causal associations through the exploitation of vertical pleiotropy, whereby the gene eQTL acts as the "exposure". On this basis, the Steiger directionality test and reverse MR analysis would be employed to further investigate the directionality of causal associations to circumvent endogeneity bias, particularly bidirectional causality, and so forth (exclusivity hypothesis).  
 
-## Assessment of the Diagnostic Value of ZWHQD-HFrEF Core Genes
-
-To investigate the diagnostic value of ZWHQD-HFrEF core genes that are causally associated with RA, we would utilize them as variables for HFrEF diagnostic prediction analysis. Logistic regression models were constructed using the lrm() function in the rms package. Genes with a significant association (p < 0.1) in the univariate logistic regression were included in the multivariate logistic regression. Nomograms were then generated using the nomogram() function.  
-
-To evaluate the model fit (discrimination) and predicted probability (calibration), we utilized the roc() function and the calibrate() function from the pROC package to create a ROC curve and a corrected calibration curve. Additionally, we performed decision curve analysis (DCA) using the decision\_curve() function in the rmda package to ascertain the extent of risk or benefit associated with clinical decisions that impact patients. 
+ 
 
 ## Estimation of AUCell Scores for Target Cell Subsets
 
@@ -105,17 +107,13 @@ In order to convert the post-read HFrEF patient samples to Seurat objects, the *
 
 The AUCell package was utilized to identify enriched pathways and gene expression of the ZWHQD-HFrEF core gene set in cells for scRNA-seq. The *AUCell\_buildRankings()* function and the *AUCell\_calcAUC()* function were used to compute the gene expression rankings and the AUCs enriched in cells, respectively, which were then mapped to the UMAP and t-SNE visualizations of the cell subpopulations and visualized the density distribution by heatmap. 
 
-
-
-
-
 ## Single gene set enrichment analysis of interested gene
 
 The expression of the interested gene in the set of ZWHQD-HFrEF core genes served as the basis for grouping. The bulk RNA samples were then categorized into high-expression and low-expression groups. Differences between groups (p < 0.05, |log2 FC| > 1) were analyzed using the limma package. The groups were then ordered according to the log2 FC, which indicates the correlation between the sample genes and the phenotypes of the interested genes. A GSEA should be conducted on the genes of interest that are associated with the differentially expressed genes, utilizing the clusterProfiler package.  
 
-## Molecular docking of Key ZWHQD constituents with interested gene
+## Molecular docking of Key ZWHQD ingredients with interested gene
 
-We obtained the SDF file of the 3D Conformer of the candidate constituents of ZWHQD from the PubChem compound database (https://pubchem.ncbi.nlm.nih.gov/) and the 3D structure of the interested targets from the Protein Data Bank (PDB, http://www.rcsb.org/). The Maestro 13.5 interface of Schr ̈odinger software was applied to perform the requisite pre-processing. This included the removal of water molecules, the addition of polar hydrogen atoms, and the generation of grid binding pockets (SiteScore > 1, DScore > 1, balance > 0.3, volume > 225). Molecular docking was performed between the receptor of the interested target gene and the ligand of the candidate constituent. The grid module was then applied to obtain the docking score. Subsequently, the docked structure files were exported and visualized using PyMol 2.6 software.
+We obtained the 3D structure of the interested targets from the Protein Data Bank (PDB, http://www.rcsb.org/). The Maestro 13.5 interface of Schr ̈odinger software was applied to perform the requisite pre-processing. This included the removal of water molecules, the addition of polar hydrogen atoms, and the generation of grid binding pockets (SiteScore > 1, DScore > 1, balance > 0.3, volume > 225). Molecular docking was performed between the receptor of the interested target gene and the ligand of the candidate constituent. The grid module was then applied to obtain the docking score. Subsequently, the docked structure files were exported and visualized using PyMol 2.6 software.
 
 ---
 
@@ -268,11 +266,11 @@ The undersigned authors certify that they do not have any financial or personal 
 **Figure 1. Scheme of technical approach.**
 
 **Figure 2. Identification of disease‑associated candidate targets.**
-(A) Volcano plot of DEGs, red dots represent significantly upregulated genes, blue dots represent significantly downregulated genes, and gray dots represent non-significant genes;
-(B) Heatmap of top 50 upregulated and top 50 downregulated DEGs; 
-(C) WGCNA sample clustering dendrogram with soft‑thresholding power;
-(D) Module–trait association heatmap (r and p‑values);
-(E) Scatter plot of gene significance (GS) vs. module membership (MM) for key modules;
+(A) Volcano plot of DEGs, red dots represent significantly upregulated genes, blue dots represent significantly downregulated genes, and gray dots represent non-significant genes.
+(B) Heatmap of top 50 upregulated and top 50 downregulated DEGs. 
+(C) WGCNA sample clustering dendrogram with soft‑thresholding power.
+(D) Module–trait association heatmap (r and p‑values).
+(E) Scatter plot of gene significance (GS) vs. module membership (MM) for key modules.
 (F) Venn diagram showing the intersection of DEGs and WGCNA key module genes.
 
 **Figure 3. Compound–disease target identification and enrichment.**

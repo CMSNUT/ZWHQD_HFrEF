@@ -1188,7 +1188,7 @@ if (n.sv > 0) {
   logfpkm <- log2(fpkm_final + 1)
   expr_fpkm_corr <- removeBatchEffect(logfpkm, covariates = svobj$sv, design = mod)
   
-  # 将 SVA 因子添加到表型数据中
+  # Adding SVA factor to phenotype data
   svdf <- as.data.frame(svobj$sv)
   colnames(svdf) <- paste0("SVA", 1:ncol(svdf))
   pheno_final <- cbind(pheno, svdf)
