@@ -35,13 +35,14 @@ library(data.table)
 library(caret)
 library(glmnet)
 library(e1071)
-library(Boruta)
-library(xgboost)
+library(randomForest)
+library(gbm)
 library(pROC)
 library(ggplot2)
 library(ggsci)
 library(corrplot)
 library(openxlsx)
+library(ggvenn)
 ```
 
 ## Step 1: Loading data
@@ -65,7 +66,7 @@ expr_data <- data.frame(expr_matrix, group = group)
 ```{r}
 set.seed(42)
 
-train_index <- createDataPartition(
+train_index <- caret::createDataPartition(
   expr_data$group, 
   p = 0.7, 
   list = FALSE
@@ -151,8 +152,6 @@ write.xlsx(
   hub_genes_tbl2,
   "../tables/Table2_Hub_Genes_AUC.xlsx"
 )
-
-
 ```
 
 ## Step 5: Feature selection
@@ -161,128 +160,126 @@ write.xlsx(
 ```{r}
 rm(list = ls())
 
-source("external_roc_cm.R")
-
 load("../data/processed/ml/01_model_data.RData")
+
+train_data$group <- factor(train_data$group, levels = c(0,1), labels = c("Normal","DCM_HFrEF"))
+
+test_data$group <- factor(test_data$group, levels = c(0,1), labels = c("Normal","DCM_HFrEF"))
+
+df <- train_data
+preProc <- caret::preProcess(df[, -which(colnames(df)=="group")], method = c("center", "scale"))
+
+df_scaled <- df
+df_scaled[, -which(colnames(df)=="group")] <- predict(preProc, df[, -which(colnames(df)=="group")])
+
+set.seed(42)
+train_control <- caret::trainControl(
+  method = "cv",
+  number = 10,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
 ```
 
 ### LASSO
 ```{r}
 set.seed(42)
-cv_lasso <- cv.glmnet(
-  x_train, 
-  y_train, 
-  family = "binomial", 
-  alpha = 1, 
-  nfolds = 10
+
+lasso_model <- caret::train(
+  group ~ .,
+  data = df_scaled,
+  method = "glmnet",
+  metric = "ROC",
+  trControl = train_control,
+  tuneGrid = expand.grid(alpha=1, lambda=seq(0.001,0.1,0.001))
 )
 
-lasso_coef <- coef(cv_lasso, s = "lambda.min")
-
-lasso_selected <- rownames(lasso_coef)[which(lasso_coef[,1] != 0)][-1]
+lasso_coef <- coef(lasso_model$finalModel, lasso_model$bestTune$lambda)
+lasso_selected <- rownames(lasso_coef)[which(lasso_coef[,1]!=0)][-1]
 
 cat("LASSO selected:", length(lasso_selected), "genes\n")
 cat(lasso_selected, "\n")
 
-save(cv_lasso,lasso_selected, file = "../data/processed/ml/02_lasso.RData")
+save(lasso_model,lasso_selected, file = "../data/processed/ml/02_lasso.RData")
 ```
 
 ### SVM-RFE
 ```{r}
 set.seed(42)
 
-svmFuncs <- caretFuncs
-svmFuncs$summary <- function(data, lev = NULL, model = NULL) defaultSummary(data, lev, model)
-rfe_ctrl <- rfeControl(functions = svmFuncs, method = "cv", number = 10, verbose = FALSE)
-svm_rfe <- rfe(x_train_scaled, as.factor(y_train), sizes = c(1:18), rfeControl = rfe_ctrl)
-svm_selected <- predictors(svm_rfe)
+svm_model <- caret::train(
+  group ~ .,
+  data = df_scaled,
+  method = "svmLinear",   
+  metric = "ROC",
+  trControl = train_control  
+)
+
+imp_svm <- varImp(svm_model)$importance
+svm_score <- imp_svm$DCM_HFrEF   
+names(svm_score) <- rownames(imp_svm)
+svm_selected <- names(sort(svm_score, decreasing=TRUE))[svm_score>0]
+
 cat("SVM-RFE selected:", length(svm_selected), "genes\n")
 cat(svm_selected, "\n")
 
-save(svm_rfe,svm_selected, file = "../data/processed/ml/03_svm_rfe.RData")
+save(svm_model,svm_selected, file = "../data/processed/ml/03_svm_rfe.RData")
 ```
 
-### Boruta
+### Random Forest
 ```{r}
 set.seed(42)
-folds <- createFolds(y_train, k = 5, list = TRUE)
+rf_model <- caret::train(
+  group ~ .,
+  data = df_scaled,
+  method = "rf",          
+  metric = "ROC",
+  trControl = train_control,  
+  ntree = 500
+)
+imp_rf <- varImp(rf_model)$importance
+imp_rf <- imp_rf[order(imp_rf$Overall, decreasing = TRUE), , drop=FALSE] 
+rf_selected <- rownames(imp_rf)[imp_rf$Overall > 0] 
 
-importance_list <- list() 
-decision_list <- list()   
+cat("RF selected:", length(rf_selected), "genes\n")
 
-for (i in seq_along(folds)) {
-  train_idx <- folds[[i]]
-  x_sub <- x_train_scaled[train_idx, ]
-  y_sub <- y_train[train_idx]
-  
-  boruta_sub <- Boruta(x_sub, as.factor(y_sub), 
-                       maxRuns = 100, pValue = 0.05, doTrace = 0)
-  
-  imp_stats <- attStats(boruta_sub)
-  importance_list[[i]] <- imp_stats$medianImp
-  names(importance_list[[i]]) <- rownames(imp_stats)
-  
-  decision_list[[i]] <- boruta_sub$finalDecision
-  names(decision_list[[i]]) <- rownames(imp_stats)
-}
+cat(rf_selected, "\n")
 
-all_features <- unique(unlist(lapply(importance_list, names)))
-imp_matrix <- matrix(NA, nrow = length(all_features), ncol = 5,
-                     dimnames = list(all_features, paste0("Fold", 1:5)))
-
-for (i in 1:5) {
-  imp_matrix[names(importance_list[[i]]), i] <- importance_list[[i]]
-}
-
-confirm_matrix <- sapply(decision_list, function(d) {
-    confirmed <- names(d[d == "Confirmed"])
-    return(all_features %in% confirmed)
-})
-confirm_freq <- rowSums(confirm_matrix)   # 频次 0-5
-
-boruta_selected <- all_features[confirm_freq == 5]
-cat("Boruta selected:", length(boruta_selected), "genes\n")
-
-cat("Boruta selected:", length(boruta_selected), "genes\n")
-cat(boruta_selected, "\n")
-
-save(boruta_selected, file = "../data/processed/ml/04_boruta.RData")
+save(rf_model, rf_selected, file = "../data/processed/ml/04_rf.RData")
 ```
 
-### XGBoost
+### GBM
 ```{r}
 set.seed(42)
-
-dtrain <- xgb.DMatrix(data = x_train_scaled, label = y_train)
-
-params <- list(
-  objective = "binary:logistic",
-  max_depth = 3,
-  eta = 0.1,
-  eval_metric = "logloss"
+gbm_grid <- expand.grid(
+  n.trees = 100,
+  interaction.depth = 2,
+  shrinkage = 0.1,
+  n.minobsinnode = 5
 )
 
-xgb_model <- xgb.train(
-  params = params,
-  data = dtrain,
-  nrounds = 100,
-  verbose = 0
+gbm_model <- caret::train(
+  group ~ .,
+  data = df_scaled,
+  method = "gbm",
+  metric = "ROC",
+  trControl = train_control,
+  tuneGrid = gbm_grid,
+  verbose = FALSE 
 )
 
-importance <- xgb.importance(
-  feature_names = colnames(x_train), 
-  model = xgb_model)
+imp_gbm <- varImp(gbm_model)$importance
+gbm_selected <- rownames(imp_gbm)[imp_gbm$Overall > 0]
 
-xgb_selected <- head(importance$Feature, 15)
-cat("XGBoost selected:", length(xgb_selected), "features\n")
-cat(xgb_selected, "\n")
+cat("GBM selected:", length(gbm_selected), "features\n")
+cat(gbm_selected, "\n")
 
-save(xgb_model,xgb_selected, file = "../data/processed/ml/05_xgb.RData")
+save(gbm_model,gbm_selected, file = "../data/processed/ml/05_gbm.RData")
 ```
 
 ### Consensus genes
 ```{r}
-consensus_genes <- Reduce(intersect, list(lasso_selected, svm_selected, boruta_selected, xgb_selected))
+consensus_genes <- Reduce(intersect, list(lasso_selected, svm_selected, rf_selected, gbm_selected))
 cat("Consensus genes:", length(consensus_genes), "\n")
 print(consensus_genes)
 
@@ -294,204 +291,111 @@ write.xlsx(consensus_genes, "../tables/consensus_genes.xlsx")
 ```
 
 ## Step 6: Feature selection Visualization
-### LASSO
 ```{r}
 # Figure S5A
-pdf("../figures/supplementary/Figure_S5A.pdf", width = 7, height = 5)
+lasso_coef <- coef(lasso_model$finalModel, lasso_model$bestTune$lambda)
+lasso_df <- data.frame(
+  Gene = rownames(lasso_coef)[-1],
+  Coef = as.numeric(lasso_coef)[-1]
+) %>% filter(Coef != 0)
 
-plot(cv_lasso, 
-     # main = "LASSO Cross-Validation Error Curve",
-     xlab = expression(-log(lambda)), 
-     ylab = "Partial Likelihood Deviance"
-)
-abline(v = -log(cv_lasso$lambda.min), col = "red", lty = 2)
-abline(v = -log(cv_lasso$lambda.1se), col = "blue", lty = 2)
-legend("topright", 
-       legend = c("lambda.min", "lambda.1se"), 
-       col = c("red", "blue"), 
-       lty = 2, 
-       bty = "n")
-dev.off()
+pS5A <- ggplot(lasso_df, aes(x = reorder(Gene, Coef), y = Coef, fill = Coef > 0)) +
+  geom_col() +
+  coord_flip() +
+  labs( x = "", y = "Coefficient") +
+  theme_bw() +
+  theme(
+    text = element_text( size = 10),
+    axis.text = element_text(size=7),
+    axis.title = element_text(size = 8, face = "bold"),
+    legend.position = "none",
+    panel.grid = element_blank(),
+    # axis.ticks.y = element_blank()
+  )
+ggsave("../figures/supplementary/Figure_S5A.pdf",pS5A, width = 7, height = 5,units = "cm",dpi = 300)
+
 
 # Figure S5B
+imp_svm <- varImp(svm_model)$importance
+svm_df <- data.frame(
+  Gene = rownames(imp_svm),
+  Score = imp_svm$DCM_HFrEF
+) %>% arrange(desc(Score)) %>% head(15)
 
-pdf("../figures/supplementary/Figure_S5B.pdf", width = 7, height = 5)
-
-plot(cv_lasso$glmnet.fit, 
-     # main = "LASSO Coefficient Path", 
-     xvar = "lambda", 
-     label = FALSE)
-abline(v = -log(cv_lasso$lambda.min), col = "red", lty = 2)
-abline(v = -log(cv_lasso$lambda.1se), col = "blue", lty = 2)
-legend("topleft", 
-       legend = c("lambda.min", "lambda.1se"), 
-       col = c("red", "blue"), 
-       lty = 2, 
-       bty = "n")
-dev.off()
-
-  # Figure S5C
-if (length(lasso_selected) <= 30 & length(lasso_selected) > 0) {
-  coef_vals <- as.matrix(lasso_coef)[-1, , drop = FALSE]
-  coef_df <- data.frame(Gene = rownames(coef_vals), Coefficient = coef_vals[,1])
-  coef_df <- coef_df[coef_df$Coefficient != 0, ]
-  coef_df <- coef_df[order(abs(coef_df$Coefficient), decreasing = TRUE), ]
-  p <- ggplot(coef_df, aes(x = reorder(Gene, Coefficient), y = Coefficient, fill = Coefficient > 0)) +
-    geom_bar(stat = "identity") +
-    coord_flip() +
-    labs(
-      title = "LASSO Selected Features Coefficients",
-      x = "Gene", 
-      y = "Coefficient") +
-    scale_fill_manual(values = c("red", "green"), labels = c("Negative", "Positive")) +
-    theme_minimal()
-  ggsave("../figures/supplementary/Figure_S5C.pdf", p, width = 7, height = max(5, length(lasso_selected)*0.3))
-}
-
-```
-
-### SVM-RFE
-```{r}
-# Figure S6A
-plot_data <- svm_rfe$results
-best_idx <- which.max(plot_data$Accuracy)
-best_point <- plot_data[best_idx, ]
-
-p <- ggplot(plot_data, aes(x = Variables, y = Accuracy)) +
-    geom_line() +
-    geom_point(shape = 8, size = 2) + 
-    geom_point(data = best_point, aes(x = Variables, y = Accuracy), 
-               color = "red", size = 4, shape = 16) +
-    labs(x = "Number of Features", y = "Accuracy (Cross-Validation)") +
-    theme_bw()
-ggsave("../figures/supplementary/Figure_S6A.pdf", p, width = 7, height = 5)
-
-# Figure S6B
-if (length(svm_rfe$optVariables) > 0) {
-    top_vars <- svm_rfe$optVariables[1:min(20, length(svm_rfe$optVariables))]
-    importance_score <- rev(seq_along(top_vars))  
-    var_imp_df <- data.frame(
-      Gene = factor(top_vars, levels = rev(top_vars)),
-      Importance = importance_score)
-    
-    p <- ggplot(var_imp_df, aes(x = Gene, y = Importance, fill = Importance)) +
-        geom_bar(stat = "identity") +
-        coord_flip() +
-        scale_fill_gradient(low = "lightblue", high = "darkblue", guide = "none") +
-        labs(
-          # title = "SVM-RFE Feature Ranking", 
-          x = "Gene", 
-          y = "Importance Score (higher = more important)") +
-        theme_minimal() +
-        theme(axis.text.y = element_text(size = 8))
-  ggsave("../figures/supplementary/Figure_S6B.pdf", p, width = 7, height = max(5, length(top_vars)*0.3))
-}
-```
-
-### Boruta
-```{r}
-# Figure S7A
-freq_df <- data.frame(Feature = all_features, Freq = confirm_freq)
-freq_df <- freq_df[order(freq_df$Freq, decreasing = TRUE), ]
-
-top_n <- min(30, nrow(freq_df))
-freq_top <- freq_df[1:top_n, ]
-
-p1 <- ggplot(freq_top, aes(x = reorder(Feature, Freq), y = Freq, fill = Freq)) +
-  geom_bar(stat = "identity") +
+pS5B <- ggplot(svm_df, aes(x = reorder(Gene, Score), y = Score, fill = Score)) +
+  geom_col() +
   coord_flip() +
-  scale_fill_gradient(low = "lightblue", high = "darkblue", breaks = 0:5) +
-  labs(
-    # title = "Boruta Feature Selection Stability Across 5 CV Folds",
-       x = "Feature", y = "Number of Folds where Confirmed") +
-  theme_minimal() +
-  theme(axis.text.y = element_text(size = 8))
-ggsave("../figures/supplementary/Figrue_S7A.pdf", p1, width = 7, height = max(5, top_n*0.25))
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(x = "", y = "Importance") +
+  theme_bw() +
+  theme(
+    text = element_text( size = 10),
+    axis.text = element_text(size=7),
+    axis.title = element_text(size = 8, face = "bold"),
+    legend.position = "none",
+    panel.grid = element_blank(),
+    axis.ticks.y = element_blank()
+  )
 
-# Figure S7B
-library(reshape2)
+ggsave("../figures/supplementary/Figure_S5B.pdf",pS5B, width = 7, height = 5,units = "cm",dpi = 300)
 
-imp_mean <- rowMeans(imp_matrix, na.rm = TRUE)
-ordered_features <- names(sort(imp_mean, decreasing = TRUE))
-imp_melt <- reshape2::melt(imp_matrix[ordered_features, ], 
-                 varnames = c("Feature", "Fold"), 
-                 value.name = "Importance")
 
-p2 <- ggplot(imp_melt, aes(x = Fold, y = Feature, fill = Importance)) +
-  geom_tile() +
-  scale_fill_gradient(low = "white", high = "red", na.value = "grey90") +
-  labs(
-    # title = "Boruta Median Importance Across CV Folds",
-    
-       x = "Cross-Validation Fold", y = "Feature", fill = "Median Imp.") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.text.y = element_text(size = 8))
-ggsave("../figures/supplementary/Figure_S7B.pdf", p2, width = 7, height = max(6, nrow(imp_matrix)*0.1))
+# Figure S5C
+imp_rf <- varImp(rf_model)$importance
+rf_df <- data.frame(
+  Gene = rownames(imp_rf),
+  Score = imp_rf$Overall
+) %>% arrange(desc(Score))
 
-# Figure S7C
-top_features <- names(sort(imp_mean, decreasing = TRUE))
-imp_top <- imp_matrix[top_features, ]
-imp_top_melt <- reshape2::melt(imp_top, varnames = c("Feature", "Fold"), value.name = "Importance")
-
-p3 <- ggplot(imp_top_melt, aes(x = reorder(Feature, -Importance, FUN = median, na.rm = TRUE), 
-                               y = Importance)) +
-  geom_boxplot(fill = "lightblue", outlier.color = "red", outlier.size = 1) +
+pS5C <- ggplot(rf_df, aes(x = reorder(Gene, Score), y = Score, fill = Score)) +
+  geom_col() +
   coord_flip() +
-  labs(x = "Feature", y = "Median Importance") +
-  theme_minimal() +
-  theme(axis.text.y = element_text(size = 10))
-ggsave("../figures/supplementary/Figure_S7C.pdf", p3, width = 7, height = max(5, top_n_box*0.3))
+  labs(x = "", y = "Importance score") +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_bw() +
+  theme(
+    text = element_text( size = 10),
+    axis.text = element_text(size=7),
+    axis.title = element_text(size = 8, face = "bold"),
+    legend.position = "none",
+    panel.grid = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+ggsave("../figures/supplementary/Figure_S5C.pdf", pS5C, width = 7, height = 5)
 
-# Figure S7D
-fold_counts <- data.frame(
-  Fold = paste0("Fold", 1:5),
-  Confirmed = sapply(decision_list, function(d) sum(d == "Confirmed"))
-)
+## Figure S5D
+imp_gbm <- varImp(gbm_model)$importance
+gbm_df <- data.frame(
+  Gene = rownames(imp_gbm),
+  Score = imp_gbm$Overall
+) %>% arrange(desc(Score)) %>% head(15)
 
-p4 <- ggplot(fold_counts, aes(x = Fold, y = Confirmed, fill = Fold)) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = Confirmed), vjust = -0.5) +
-  labs(title = "Number of Boruta-Confirmed Genes per CV Fold",
-       x = "CV Fold", y = "Confirmed Genes") +
-  theme_minimal() +
-  theme(legend.position = "none")
-ggsave("../figures/supplementary/Figure_S7D.pdf", p4, width = 7, height = 5)
+pS5D <- ggplot(gbm_df, aes(x = reorder(Gene, Score), y = Score, fill = Score)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = "", y = "Importance") +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_bw() +
+  theme(
+    text = element_text( size = 10),
+    axis.text = element_text(size=7),
+    axis.title = element_text(size = 8, face = "bold"),
+    legend.position = "none",
+    panel.grid = element_blank(),
+    axis.ticks.y = element_blank()
+  )
 
+ggsave("../figures/supplementary/Figure_S5D.pdf", pS5D, width = 7, height = 5)
 ```
 
-### XGBoost
-```{r}
-importance_matrix <- xgb.importance(feature_names = colnames(x_train), model = xgb_model)
-
-# Figure S8A
-if (nrow(importance_matrix) > 0) {
-  imp_top <- head(importance_matrix, 20)
-  p <- ggplot(imp_top, aes(x = reorder(Feature, Gain), y = Gain, fill = Gain)) +
-    geom_bar(stat = "identity") +
-    coord_flip() +
-    scale_fill_gradient(low = "lightblue", high = "darkblue") +
-    labs(
-      x = "Feature", 
-      y = "Gain") +
-    theme_minimal()
-  ggsave("../figures/supplementary/Figure_S8A.pdf", p, width = 8, height = max(5, nrow(imp_top)*0.3))
-}
-
-# Figure S8B
-pdf("../figures/supplementary/Figure_S8B.pdf", width = 12, height = 8)
-xgb.plot.tree(model = xgb_model, trees = 0:4, render = FALSE)  
-dev.off()
-```
-
-### Consensus genes
+### Venn Plot: Consensus genes 
 ```{r}
 # Venn
 gene_list <- list(
   LASSO = lasso_selected,
   `SVM-RFE` = svm_selected,
-  Boruta = boruta_selected,
-  XGBoost = xgb_selected
+  RF = rf_selected,
+  GBM = gbm_selected
 )
 
 p <- ggvenn(
@@ -547,75 +451,6 @@ dev.off()
 
 ```
 
-```{r}
-# Train set ROC
-train_pred <- predict(lr_model, train_data, type = "response")
-train_roc <- roc(train_data$group, train_pred)
-
-# Test set ROC
-test_pred <- predict(lr_model, test_data, type = "response")
-test_roc <- roc(test_data$group, test_pred)
-
-# AUC
-train_auc <- round(auc(train_roc), 3)
-test_auc <- round(auc(test_roc), 3)
-
-train_roc_smooth <- smooth(train_roc, method = "binormal")
-test_roc_smooth  <- smooth(test_roc,  method = "binormal")
-
-roc_df <- rbind(
-  data.frame(
-    Specificity = 1 - train_roc_smooth$specificities, 
-    Sensitivity = train_roc_smooth$sensitivities,
-    Group = paste0("Train AUC = ", train_auc)
-  ),
-  data.frame(
-    Specificity = 1 - test_roc_smooth$specificities,
-    Sensitivity = test_roc_smooth$sensitivities,
-    Group = paste0("Test AUC = ", test_auc)
-  )
-)
-
-# ROC curve
-p <- ggplot(roc_df, aes(x = Specificity, y = Sensitivity, color = Group)) +
-  geom_line(size = 1.0) +
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray50") + 
-  scale_color_aaas() +  
-  labs(
-    # title = "ROC Curves",
-    x = "1 - Specificity",
-    y = "Sensitivity"
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans", size = 8),
-    legend.position = c(0.7, 0.2),
-    legend.background = element_blank(),  
-    legend.title = element_blank(),
-    legend.text = element_text(size=7)
-  )
-
-ggsave("../figures/main/Figure_6B.pdf", p, width = 7, height = 5,units = "cm",dpi = 300)
-ggsave("../figures/main/Figure_6B.png", p, width = 7, height = 5,units = "cm",dpi = 300)
-
-source("../scripts/external_roc_cm.R")
-
-res_cm_train <- plot_external_cm(
-  lr_model, 
-  train_data, 
-  train_data$group, 
-  dataset_name = "train_data"
-)
-
-res_cm_test <- plot_external_cm(
-  lr_model, 
-  test_data, 
-  test_data$group, 
-  dataset_name = "test_data"
-)
-save(roc_df,res_cm_train,res_cm_test, file = "../data/processed/ml/gse141910_res.RData")
-```
-
 ## Step 8: External validation
 
 ### GSE116250: External validation set
@@ -669,34 +504,14 @@ DCM_HFrEF <- trimws(gse116250_pheno_raw$characteristics_ch1.1) == "disease: dila
 gse116250_expr_filtered <- rbind(gse116250_expr_merged[Normal,],gse116250_expr_merged[DCM_HFrEF,]) %>%
   mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
 
-source("../scripts/external_roc_cm.R")
-
-res_roc <- plot_external_roc(
-  lr_model, 
-  gse116250_expr_filtered, 
-  gse116250_expr_filtered$group,
-  dataset_name = "GSE116250"
-)
-
-res_cm <- plot_external_cm(
-  lr_model, 
-  gse116250_expr_filtered, 
-  gse116250_expr_filtered$group, 
-  dataset_name = "GSE116250"
-)
-
-if (res_roc$auc >= 0.80) {
-  cat("Good dataset\n")
-} else {
-  cat("Bad dataset\n")
-}
-
-save(res_cm,res_roc, file = "../data/processed/ml/gse116250_res.RData")
+save(gse116250_expr_filtered, file = "../data/processed/ml/gse116250.RData")
 ```
 
 ### GSE19303: External validation set  
 ```{r}
 rm(list = ls())
+
+library(AnnoProbe)
 
 load("../data/processed/ml/06_consensus_genes.RData")
 load("../data/processed/ml/07_lr_model.RData")
@@ -747,45 +562,112 @@ DCM_HFrEF <- grepl("^DCM_", gse19303_pheno_raw$title) &
 gse19303_expr_filtered <- rbind(gse19303_expr_merged[Normal,],gse19303_expr_merged[DCM_HFrEF,]) %>%
   mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
 
-source("../scripts/external_roc_cm.R")
-
-res_roc <- plot_external_roc(
-  lr_model, 
-  gse19303_expr_filtered, 
-  gse19303_expr_filtered$group,
-  dataset_name = "GSE19303"
-)
-
-res_cm <- plot_external_cm(
-  lr_model, 
-  gse19303_expr_filtered, 
-  gse19303_expr_filtered$group, 
-  dataset_name = "GSE19303"
-)
-
-if (res_roc$auc >= 0.80) {
-  cat("Good dataset\n")
-} else {
-  cat("Bad dataset\n")
-}
-
-save(res_cm,res_roc, file = "../data/processed/ml/gse19303_res.RData")
+save(gse19303_expr_filtered, file = "../data/processed/ml/gse19303.RData")
 ```
 
 
-## 
+## Step 9: ROC 
 
 
 ```{r}
+rm(list = ls())
+
+source("external_roc_cm.R")
+
+load("../data/processed/ml/01_model_data.RData")
+load("../data/processed/ml/gse116250.RData")
+load("../data/processed/ml/gse19303.RData")
+load("../data/processed/ml/07_lr_model.RData")
+
+dataset_list <- list(
+  Train = list(data=train_data, name="GSE141910_Train"),
+  Test = list(data=test_data, name="GSE141910_Test"),
+  GSE116250 = list(data=gse116250_expr_filtered, name="GSE116250")
+  # ,
+  # GSE19303 = list(data=gse19303_expr_filtered, name="GSE19303")
+)
+
+
+roc_all <- map_dfr(dataset_list, ~calc_roc(lr_model, .x$data, .x$name)$df)
+
+p6C <- ggplot(
+  roc_all, 
+  aes(x=Specificity, y=Sensitivity, color=Group)
+  ) +
+  geom_line(linewidth = 1) +
+  geom_abline(slope=1, intercept=0, linetype="dashed", color="gray50") +
+  scale_color_aaas() +
+  labs(x="1 - Specificity", y="Sensitivity") +
+  theme_bw() + 
+  theme(legend.position = c(0.7,0.2), 
+        legend.background = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 8),
+        axis.title = element_text(size = 10),
+        panel.grid = element_blank(),
+      )
+
+ggsave("../figures/main/Figure_6C.pdf", p6C, width=7, height=7, dpi=300)
 
 ```
 
+## Step 10: calibration curve
+```{r}
+dd <- datadist(train_data)
+options(datadist = "dd")
+form <- as.formula(paste0("group ~ ", paste(consensus_genes$Gene, collapse = "+")))
+fit <- lrm(form,data=train_data,x=T,y=T)
+cal_train <- calibrate(fit,method="boot",B=1000)
 
+cal_manual <- function(testdata,model,name){
+  pred <- predict(model,newdata = testdata,type="fitted")
+  df <- data.frame(pred=pred,obs=testdata$group)
+  fit_loess <- loess(obs~pred,data=df,span=0.75)
+  seq_x <- seq(0,1,length.out=100)
+  seq_y <- predict(fit_loess,newdata=data.frame(pred=seq_x))
+  seq_y[seq_y>1] <-1;seq_y[seq_y<0]<-0
+  return(data.frame(Pred=seq_x,Obs=seq_y,Dataset=name))
+}
 
+df_train <- data.frame(
+  Pred = cal_train[, "predy"],
+  Obs  = cal_train[, "calibrated.corrected"],
+  Dataset = "GSE141910_Train"
+)
+
+cal_manual <- function(newdat, mod, name){
+  pred <- predict(mod, newdata = newdat, type = "fitted")
+  obs <- newdat$group
+  df <- data.frame(pred = pred, obs = obs)
+  lo <- loess(obs ~ pred, data = df, span = 0.75)
+  xseq <- seq(0, 1, length.out = 100)
+  yseq <- predict(lo, newdata = data.frame(pred = xseq))
+  yseq[yseq > 1] <- 1
+  yseq[yseq < 0] <- 0
+  return(data.frame(Pred = xseq, Obs = yseq, Dataset = name))
+}
+
+df_test <- cal_manual(test_data[, c(consensus_genes$Gene, "group")], fit, "GSE141910_Test")
+df_gse116250  <- cal_manual(gse116250_expr_filtered[, c(consensus_genes$Gene, "group")],  fit, "GSE116250")
+
+all_cal <- rbind(df_train, df_test, df_gse116250)
+
+p6D <- ggplot(all_cal, aes(x=Pred, y=Obs, color=Dataset)) +
+  geom_smooth(method="loess", se=F, span=0.8, size=1) +
+  geom_abline(slope=1, intercept=0, linetype="dashed", color="black") +
+  scale_color_brewer(palette = "Set2") +
+  labs(x="Predicted Probability", y="Actual Probability") +
+  xlim(0,1) + ylim(0,1) +
+  theme_bw()+
+  theme(panel.grid=element_blank())
+
+ggsave("../figures/main/Figure_6D.pdf", p6D, width=7, height=7, dpi=300)
+```
 
 ## herb-ingredient-target
 ```{r}
 load("../data/processed/tcm/14_compound_target_final.RData")
+load("../data/processed/ml/06_consensus_genes.RData")
 
 hit_core <- compound_target_final %>%
     dplyr::filter(Symbol %in% consensus_genes$Gene) %>%
@@ -893,15 +775,7 @@ if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 
 # Core genes
 load("../data/processed/ml/06_consensus_genes.RData")
-gene_ids <- c(
-  "ENSG00000162434",  # JAK1
-  "ENSG00000118777",  # ABCG2
-  "ENSG00000113578",  # FGF1
-  "ENSG00000136160",  # EDNRB
-  "ENSG00000100644",  # HIF1A
-  "ENSG00000166825",  # ANPEP
-  "ENSG00000159640"   # ACE
-)
+
 ```
 
 ## Step 2: reading and cleaning GTEx eQTL data
