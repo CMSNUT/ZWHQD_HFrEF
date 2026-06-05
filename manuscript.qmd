@@ -274,15 +274,11 @@ The undersigned authors certify that they do not have any financial or personal 
 **Figure 4. PPI network and hub gene screening.**
 (A) PPI network. (B) Network and UpSet plot of top 20 genes from MCC, MNC and Degree. (C) Most significant MCODE cluster network (score ≥ 5). (D) Venn diagram of CytoHubba consensus genes and MCODE cluster genes.
 
-**Figure 5. Immune cell infiltration landscape between DCM-HFrEF and normal groups.**
-(A) Cell-type enrichment scores determined by xCell algorithm.
-(B) Abundance of immune and stromal cells quantified by MCPcounter.
-(C) Immune cell fractions estimated by quanTIseq algorithm.
-(D) Cellular composition characterized by EPIC algorithm.
-(E) Immune-related signature enrichment scores calculated via ssGSEA.
-(F) Spearman correlation heatmap among all immune cell populations.
-(G) Boxplots of significantly differential immune cells between HF and control groups (Wilcoxon rank-sum test, *p < 0.05).
-(H) Correlation heatmap between hub gene expression and differential immune cells (Spearman correlation; blank indicates p ≥ 0.05).
+**Figure 5. Landscape of myocardial cell infiltration in normal and DCM-HFrEF samples.**
+(A) Boxplots for intergroup abundance comparison of individual cell types; Wilcoxon test-derived *p*-values are marked, and extreme outliers were excluded.
+(B) Percentage stacked bar graph for cellular composition ratios of two groups.
+(C) Fold-change ranking of average cellular abundance (DCM-HFrEF/Normal), red dashed line = 1. (D) Upper-triangle Spearman correlation matrix among seven cell subtypes within DCM-HFrEF samples, numbers denote correlation coefficients.
+(E) Spearman correlation between hub gene expression and infiltrated cell abundance in DCM-HFrEF myocardium. Red: positive correlation; blue: negative correlation; blank: non-significant (p≥0.05).
 
 **Figure 6. Machine learning‑based core diagnostic gene identification and nomogram.**
 (A) Venn diagram of variables selected by four algorithms (LASSO, RandomForest, SVM‑RFE, XGBoost) → core genes. (B) Disease risk nomogram based on core genes. (C) ROC curves for training set, test set, and external validation sets (AUC with 95% CI). (D) Calibration curves (Hosmer‑Lemeshow test) for the same datasets. (E) Combined boxplot + violin plot of core gene expression (disease vs. control), faceted by dataset (training, test, validation1, validation2, …).
@@ -314,7 +310,7 @@ The undersigned authors certify that they do not have any financial or personal 
 :::
 
 ::: {#fig-5}
-![](figures/main/Figure_2B.png)
+![](figures/main/Figure_5.png)
 :::
 
 ::: {#fig-6}

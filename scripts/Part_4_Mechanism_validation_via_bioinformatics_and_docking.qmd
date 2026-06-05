@@ -32,7 +32,6 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 ```{r}
 library(tidyverse)
 library(data.table)
-library(reshape2)
 library(caret)
 library(glmnet)
 library(e1071)
@@ -92,7 +91,14 @@ off_diag_abs <- abs(cor_matrix[lower.tri(cor_matrix)])
 max_abs <- max(off_diag_abs, na.rm = TRUE)
 min_abs <- min(off_diag_abs, na.rm = TRUE)
 
-cor_df <- melt(cor_matrix, varnames = c("Gene1", "Gene2"), value.name = "cor")
+cor_df <- cor_matrix %>%
+  as.data.frame() %>%
+  rownames_to_column("Gene1") %>%  
+  tidyr::pivot_longer(
+    cols = -Gene1,                
+    names_to = "Gene2",            
+    values_to = "cor"              
+  )
 
 cor_df <- cor_df[as.character(cor_df$Gene1) != as.character(cor_df$Gene2), ]
 
@@ -118,7 +124,7 @@ p <- ggplot(cor_df, aes(x = col_id, y = row_id)) +
         legend.position = c(0.85,0.55)) +
   coord_fixed()
 
-ggsave("../results/figures/supplementary/Figure_S3_A_correlation_plot.pdf", p, width = 7, height = 7, dpi = 300)
+ggsave("../figures/supplementary/Figure_S4A.pdf", p, width = 7, height = 7, dpi = 300)
 ```
 
 ## Step 4: ROC-AUC for each gene
@@ -143,13 +149,22 @@ save(gene_auc_df, hub_genes_tbl2,
 
 write.xlsx(
   hub_genes_tbl2,
-  "../results/tables/main/Table2_Hub_Genes_AUC.xlsx"
+  "../tables/Table2_Hub_Genes_AUC.xlsx"
 )
 
 
 ```
 
 ## Step 5: Feature selection
+
+### z-scores
+```{r}
+rm(list = ls())
+
+source("external_roc_cm.R")
+
+load("../data/processed/ml/01_model_data.RData")
+```
 
 ### LASSO
 ```{r}
@@ -179,7 +194,7 @@ set.seed(42)
 svmFuncs <- caretFuncs
 svmFuncs$summary <- function(data, lev = NULL, model = NULL) defaultSummary(data, lev, model)
 rfe_ctrl <- rfeControl(functions = svmFuncs, method = "cv", number = 10, verbose = FALSE)
-svm_rfe <- rfe(x_train, as.factor(y_train), sizes = c(1:18), rfeControl = rfe_ctrl)
+svm_rfe <- rfe(x_train_scaled, as.factor(y_train), sizes = c(1:18), rfeControl = rfe_ctrl)
 svm_selected <- predictors(svm_rfe)
 cat("SVM-RFE selected:", length(svm_selected), "genes\n")
 cat(svm_selected, "\n")
@@ -197,7 +212,7 @@ decision_list <- list()
 
 for (i in seq_along(folds)) {
   train_idx <- folds[[i]]
-  x_sub <- x_train[train_idx, ]
+  x_sub <- x_train_scaled[train_idx, ]
   y_sub <- y_train[train_idx]
   
   boruta_sub <- Boruta(x_sub, as.factor(y_sub), 
@@ -231,14 +246,14 @@ cat("Boruta selected:", length(boruta_selected), "genes\n")
 cat("Boruta selected:", length(boruta_selected), "genes\n")
 cat(boruta_selected, "\n")
 
-save(boruta_result,boruta_selected, file = "../data/processed/ml/04_boruta.RData")
+save(boruta_selected, file = "../data/processed/ml/04_boruta.RData")
 ```
 
 ### XGBoost
 ```{r}
 set.seed(42)
 
-dtrain <- xgb.DMatrix(data = x_train, label = y_train)
+dtrain <- xgb.DMatrix(data = x_train_scaled, label = y_train)
 
 params <- list(
   objective = "binary:logistic",
@@ -271,16 +286,18 @@ consensus_genes <- Reduce(intersect, list(lasso_selected, svm_selected, boruta_s
 cat("Consensus genes:", length(consensus_genes), "\n")
 print(consensus_genes)
 
+consensus_genes <- data.frame(Gene = consensus_genes)
+
 save(consensus_genes, file =  "../data/processed/ml/06_consensus_genes.RData")
 
-write.csv(data.frame(Gene = consensus_genes), "../data/processed/ml/06_consensus_genes.csv", row.names = FALSE)
+write.xlsx(consensus_genes, "../tables/consensus_genes.xlsx")
 ```
 
 ## Step 6: Feature selection Visualization
 ### LASSO
 ```{r}
-# Figure S3A
-pdf("../results/figures/supplementary/Figure_S3_A_LASSO_cv_curve.pdf", width = 7, height = 5)
+# Figure S5A
+pdf("../figures/supplementary/Figure_S5A.pdf", width = 7, height = 5)
 
 plot(cv_lasso, 
      # main = "LASSO Cross-Validation Error Curve",
@@ -296,9 +313,9 @@ legend("topright",
        bty = "n")
 dev.off()
 
-# Figure S3B
+# Figure S5B
 
-pdf("../results/figures/supplementary/Figure_S3_B_LASSO_coef_path.pdf", width = 7, height = 5)
+pdf("../figures/supplementary/Figure_S5B.pdf", width = 7, height = 5)
 
 plot(cv_lasso$glmnet.fit, 
      # main = "LASSO Coefficient Path", 
@@ -313,7 +330,7 @@ legend("topleft",
        bty = "n")
 dev.off()
 
-  # Figure S3C
+  # Figure S5C
 if (length(lasso_selected) <= 30 & length(lasso_selected) > 0) {
   coef_vals <- as.matrix(lasso_coef)[-1, , drop = FALSE]
   coef_df <- data.frame(Gene = rownames(coef_vals), Coefficient = coef_vals[,1])
@@ -328,14 +345,14 @@ if (length(lasso_selected) <= 30 & length(lasso_selected) > 0) {
       y = "Coefficient") +
     scale_fill_manual(values = c("red", "green"), labels = c("Negative", "Positive")) +
     theme_minimal()
-  ggsave("../results/figures/supplementary/Figure_S3_C_LASSO_coef_bar.pdf", p, width = 7, height = max(5, length(lasso_selected)*0.3))
+  ggsave("../figures/supplementary/Figure_S5C.pdf", p, width = 7, height = max(5, length(lasso_selected)*0.3))
 }
 
 ```
 
 ### SVM-RFE
 ```{r}
-# Figure S4A
+# Figure S6A
 plot_data <- svm_rfe$results
 best_idx <- which.max(plot_data$Accuracy)
 best_point <- plot_data[best_idx, ]
@@ -347,9 +364,9 @@ p <- ggplot(plot_data, aes(x = Variables, y = Accuracy)) +
                color = "red", size = 4, shape = 16) +
     labs(x = "Number of Features", y = "Accuracy (Cross-Validation)") +
     theme_bw()
-ggsave("../results/figures/supplementary/Figure_S4_A_SVMRFE_performance.pdf", p, width = 7, height = 5)
+ggsave("../figures/supplementary/Figure_S6A.pdf", p, width = 7, height = 5)
 
-# Figure S4B
+# Figure S6B
 if (length(svm_rfe$optVariables) > 0) {
     top_vars <- svm_rfe$optVariables[1:min(20, length(svm_rfe$optVariables))]
     importance_score <- rev(seq_along(top_vars))  
@@ -367,13 +384,13 @@ if (length(svm_rfe$optVariables) > 0) {
           y = "Importance Score (higher = more important)") +
         theme_minimal() +
         theme(axis.text.y = element_text(size = 8))
-  ggsave("../results/figures/supplementary/Figure_S4_B_SVMRFE_ranking.pdf", p, width = 7, height = max(5, length(top_vars)*0.3))
+  ggsave("../figures/supplementary/Figure_S6B.pdf", p, width = 7, height = max(5, length(top_vars)*0.3))
 }
 ```
 
 ### Boruta
 ```{r}
-# Figure S5A
+# Figure S7A
 freq_df <- data.frame(Feature = all_features, Freq = confirm_freq)
 freq_df <- freq_df[order(freq_df$Freq, decreasing = TRUE), ]
 
@@ -389,19 +406,14 @@ p1 <- ggplot(freq_top, aes(x = reorder(Feature, Freq), y = Freq, fill = Freq)) +
        x = "Feature", y = "Number of Folds where Confirmed") +
   theme_minimal() +
   theme(axis.text.y = element_text(size = 8))
-ggsave("../results/figures/supplementary/Figrue_S5_A_Boruta_CV_Frequency.pdf", p1, width = 7, height = max(5, top_n*0.25))
+ggsave("../figures/supplementary/Figrue_S7A.pdf", p1, width = 7, height = max(5, top_n*0.25))
 
-# # Figure S5B
-# pdf("../results/figures/supplementary/Figure_S5_B_Boruta_decision.pdf", width = 8, height = 6)
-# plotImpHistory(boruta_result, main = "Boruta Importance History")
-# dev.off()
-
-# Figure S5B
+# Figure S7B
 library(reshape2)
 
 imp_mean <- rowMeans(imp_matrix, na.rm = TRUE)
 ordered_features <- names(sort(imp_mean, decreasing = TRUE))
-imp_melt <- melt(imp_matrix[ordered_features, ], 
+imp_melt <- reshape2::melt(imp_matrix[ordered_features, ], 
                  varnames = c("Feature", "Fold"), 
                  value.name = "Importance")
 
@@ -415,25 +427,23 @@ p2 <- ggplot(imp_melt, aes(x = Fold, y = Feature, fill = Importance)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         axis.text.y = element_text(size = 8))
-ggsave("../results/figures/supplementary/Figure_S5_B_Boruta_CV_Heatmap.pdf", p2, width = 7, height = max(6, nrow(imp_matrix)*0.1))
+ggsave("../figures/supplementary/Figure_S7B.pdf", p2, width = 7, height = max(6, nrow(imp_matrix)*0.1))
 
-# Figure S5C
+# Figure S7C
 top_features <- names(sort(imp_mean, decreasing = TRUE))
 imp_top <- imp_matrix[top_features, ]
-imp_top_melt <- melt(imp_top, varnames = c("Feature", "Fold"), value.name = "Importance")
+imp_top_melt <- reshape2::melt(imp_top, varnames = c("Feature", "Fold"), value.name = "Importance")
 
 p3 <- ggplot(imp_top_melt, aes(x = reorder(Feature, -Importance, FUN = median, na.rm = TRUE), 
                                y = Importance)) +
   geom_boxplot(fill = "lightblue", outlier.color = "red", outlier.size = 1) +
   coord_flip() +
-  labs(
-    # title = paste("Top", top_n_box, "Features: Importance Distribution Across Folds"),
-       x = "Feature", y = "Median Importance") +
+  labs(x = "Feature", y = "Median Importance") +
   theme_minimal() +
   theme(axis.text.y = element_text(size = 10))
-ggsave("../results/figures/supplementary/Figure_S5_C_Boruta_CV_TopBoxplot.pdf", p3, width = 7, height = max(5, top_n_box*0.3))
+ggsave("../figures/supplementary/Figure_S7C.pdf", p3, width = 7, height = max(5, top_n_box*0.3))
 
-# Figure S5D
+# Figure S7D
 fold_counts <- data.frame(
   Fold = paste0("Fold", 1:5),
   Confirmed = sapply(decision_list, function(d) sum(d == "Confirmed"))
@@ -446,7 +456,7 @@ p4 <- ggplot(fold_counts, aes(x = Fold, y = Confirmed, fill = Fold)) +
        x = "CV Fold", y = "Confirmed Genes") +
   theme_minimal() +
   theme(legend.position = "none")
-ggsave("../results/figures/supplementary/Figure_S5_D_Boruta_CV_FoldCounts.pdf", p4, width = 7, height = 5)
+ggsave("../figures/supplementary/Figure_S7D.pdf", p4, width = 7, height = 5)
 
 ```
 
@@ -454,7 +464,7 @@ ggsave("../results/figures/supplementary/Figure_S5_D_Boruta_CV_FoldCounts.pdf", 
 ```{r}
 importance_matrix <- xgb.importance(feature_names = colnames(x_train), model = xgb_model)
 
-# Figure S6A
+# Figure S8A
 if (nrow(importance_matrix) > 0) {
   imp_top <- head(importance_matrix, 20)
   p <- ggplot(imp_top, aes(x = reorder(Feature, Gain), y = Gain, fill = Gain)) +
@@ -462,15 +472,14 @@ if (nrow(importance_matrix) > 0) {
     coord_flip() +
     scale_fill_gradient(low = "lightblue", high = "darkblue") +
     labs(
-      # title = "XGBoost Feature Importance (Gain)", 
       x = "Feature", 
       y = "Gain") +
     theme_minimal()
-  ggsave("../results/figures/supplementary/Figure_S6_A_XGBoost_importance.pdf", p, width = 8, height = max(5, nrow(imp_top)*0.3))
+  ggsave("../figures/supplementary/Figure_S8A.pdf", p, width = 8, height = max(5, nrow(imp_top)*0.3))
 }
 
-# Figure S6B
-pdf("../results/figures/supplementary/Figure_S6_B_XGBoost_tree.pdf", width = 12, height = 8)
+# Figure S8B
+pdf("../figures/supplementary/Figure_S8B.pdf", width = 12, height = 8)
 xgb.plot.tree(model = xgb_model, trees = 0:4, render = FALSE)  
 dev.off()
 ```
@@ -481,7 +490,7 @@ dev.off()
 gene_list <- list(
   LASSO = lasso_selected,
   `SVM-RFE` = svm_selected,
-  Bruta = boruta_selected,
+  Boruta = boruta_selected,
   XGBoost = xgb_selected
 )
 
@@ -495,31 +504,11 @@ p <- ggvenn(
   text_color = "white",
   show_percentage = FALSE
 ) +
-  theme(plot.title = element_text(hjust = 0.5, size=10))
+  theme(plot.title = element_text(hjust = 0.5, size=7))
 
 # save
-ggsave("../results/figures/main/Figure_5A_Venn_ML_Core_Genes.pdf", p, width=6, height=6, dpi=300)
-ggsave("../results/figures/main/Figure_5A_Venn_ML_Core_Genes.png", p, width=6, height=6, dpi=300)
-
-
-# Upset
-library(ComplexUpset)
-
-all_features <- unique(unlist(gene_list))
-presence <- sapply(gene_list, function(x) all_features %in% x)
-rownames(presence) <- all_features
-upset_data <- as.data.frame(presence)
-upset_data$feature <- rownames(upset_data)
-upset_plot <- upset(
-    upset_data,
-    intersect = colnames(upset_data),  
-    name = "Fold",
-    width_ratio = 0.1,
-    min_degree = 1,
-    sort_intersections = "ascending"
-)
-ggsave("../results/figures/supplementary/Figure_7A_UpSet_ML_Consensus.pdf", upset_plot, width = 10, height = 6)
-
+ggsave("../figures/main/Figure_6A.pdf", p, width=7, height=5, dpi=300, units="cm")
+ggsave("../figures/main/Figure_6A.png", p, width=7, height=5, dpi=300, units="cm")
 ```
 
 ## Step 7: Logistic regression model
@@ -531,7 +520,34 @@ formula_lr <- as.formula(paste("group ~", paste(consensus_genes$Gene, collapse =
 lr_model <- glm(formula_lr, data = train_data, family = binomial())
 
 save(lr_model, file = "../data/processed/ml/07_lr_model.RData")
+```
 
+## Step 8: Nomogram
+```{r}
+library(rms)
+# rms
+dd <- datadist(train_data)
+options(datadist = dd)
+
+lrm_mod <- lrm(formula_lr, data = train_data, x = TRUE, y = TRUE)
+
+nom <- nomogram(lrm_mod,
+                fun = plogis,          
+                funlabel = "Predicted Probability",
+                fun.at = c(0.05, 0.5,0.95),
+                lp = FALSE)     
+
+pdf("../figures/main/Figure_6B.pdf", width = 7, height = 5)
+par(mar = c(1, 1, 1, 1))  
+plot(nom,
+     xfrac = 0.35,   
+     cex.axis = 0.6, 
+     cex.lab = 0.7)  
+dev.off()
+
+```
+
+```{r}
 # Train set ROC
 train_pred <- predict(lr_model, train_data, type = "response")
 train_roc <- roc(train_data$group, train_pred)
@@ -540,8 +556,7 @@ train_roc <- roc(train_data$group, train_pred)
 test_pred <- predict(lr_model, test_data, type = "response")
 test_roc <- roc(test_data$group, test_pred)
 
-# 构建数据框
-# 计算 AUC 值
+# AUC
 train_auc <- round(auc(train_roc), 3)
 test_auc <- round(auc(test_roc), 3)
 
@@ -563,7 +578,7 @@ roc_df <- rbind(
 
 # ROC curve
 p <- ggplot(roc_df, aes(x = Specificity, y = Sensitivity, color = Group)) +
-  geom_line(size = 1.2) +
+  geom_line(size = 1.0) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray50") + 
   scale_color_aaas() +  
   labs(
@@ -573,13 +588,15 @@ p <- ggplot(roc_df, aes(x = Specificity, y = Sensitivity, color = Group)) +
   ) +
   theme_bw() +
   theme(
-    text = element_text(family = "sans", size = 10),
-    legend.position = c(0.8, 0.2),
+    text = element_text(family = "sans", size = 8),
+    legend.position = c(0.7, 0.2),
     legend.background = element_blank(),  
-    legend.title = element_blank()         
+    legend.title = element_blank(),
+    legend.text = element_text(size=7)
   )
 
-ggsave("../results/figures/main/Figure_5B_ROC_curves.pdf", p, width = 6, height = 6)
+ggsave("../figures/main/Figure_6B.pdf", p, width = 7, height = 5,units = "cm",dpi = 300)
+ggsave("../figures/main/Figure_6B.png", p, width = 7, height = 5,units = "cm",dpi = 300)
 
 source("../scripts/external_roc_cm.R")
 
@@ -677,241 +694,6 @@ if (res_roc$auc >= 0.80) {
 save(res_cm,res_roc, file = "../data/processed/ml/gse116250_res.RData")
 ```
 
-### GSE161472: External validation set
-```{r}
-rm(list = ls())
-
-load("../data/processed/ml/06_consensus_genes.RData")
-load("../data/processed/ml/07_lr_model.RData")
-load("../data/raw/geo/gse161472_raw.RData")
-
-gse161472_expr_trans <- gse161472_fpkm_raw %>%
-  column_to_rownames("GeneID") %>%
-  mutate(across(everything(), ~ .x + 1)) %>%  
-  log2() %>%
-  t() %>% 
-  as.data.frame()
-
-entrez_ids <- colnames(gse161472_expr_trans)  
-symbols <- mapIds(org.Hs.eg.db, keys = entrez_ids, keytype = "ENTREZID", column = "SYMBOL", multiVals = "first")
-
-keep <- !is.na(symbols)
-gse161472_expr_annot <- t(gse161472_expr_trans[, keep]) %>%
-  as.data.frame() %>%
-  mutate(Gene = symbols[keep], .before = 1)
-
-common_genes <- intersect(consensus_genes$Gene, (gse161472_expr_annot$Gene))
-
-if (all(common_genes %in% consensus_genes$Gene)) {
-  cat("Good dataset\n")
-} else {
-  cat("Bad dataset\n")
-}
-
-gse161472_expr_merged <- gse161472_expr_annot %>%
-  as.data.frame() %>%
-  dplyr::filter(Gene %in% common_genes) %>%
-  group_by(Gene) %>%
-  summarise(across(everything(), mean, na.rm = TRUE)) %>%
-  column_to_rownames("Gene") %>%
-  t() %>%                          
-  as.data.frame()
-
-gse161472_expr_merged <- gse161472_expr_merged[,consensus_genes$Gene]
-
-# pheno info
-Normal <- trimws(gse161472_pheno_raw$`disease state:ch1`) == "NF"
-DCM_HFrEF <- trimws(gse161472_pheno_raw$`disease state:ch1`) == "HFrEF"
-
-gse161472_expr_filtered <- rbind(gse161472_expr_merged[Normal,],gse161472_expr_merged[DCM_HFrEF,]) %>%
-  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
-
-source("../scripts/external_roc_cm.R")
-
-res_roc <- plot_external_roc(
-  lr_model, 
-  gse161472_expr_filtered, 
-  gse161472_expr_filtered$group,
-  dataset_name = "GSE161472"
-)
-
-res_cm <- plot_external_cm(
-  lr_model, 
-  gse161472_expr_filtered, 
-  gse161472_expr_filtered$group, 
-  dataset_name = "GSE161472"
-)
-
-if (res_roc$auc >= 0.80) {
-  cat("Good dataset\n")
-} else {
-  cat("Bad dataset\n")
-}
-
-save(res_cm,res_roc, file = "../data/processed/ml/gse161472_res.RData")
-```
-
-### GSE135055: External validation set
-```{r}
-rm(list = ls())
-
-load("../data/processed/ml/06_consensus_genes.RData")
-load("../data/processed/ml/07_lr_model.RData")
-load("../data/raw/geo/gse135055_raw.RData")
-
-gse135055_expr_trans <- gse135055_fpkm_raw %>%
-  column_to_rownames("GeneID") %>%
-  mutate(across(everything(), ~ .x + 1)) %>%  
-  log2() %>%
-  t() %>% 
-  as.data.frame()
-
-entrez_ids <- colnames(gse135055_expr_trans)  
-symbols <- mapIds(org.Hs.eg.db, keys = entrez_ids, keytype = "ENTREZID", column = "SYMBOL", multiVals = "first")
-
-keep <- !is.na(symbols)
-gse135055_expr_annot <- t(gse135055_expr_trans[, keep]) %>%
-  as.data.frame() %>%
-  mutate(Gene = symbols[keep], .before = 1)
-
-common_genes <- intersect(consensus_genes$Gene, (gse135055_expr_annot$Gene))
-
-if (all(common_genes %in% consensus_genes$Gene)) {
-  cat("Good dataset\n")
-} else {
-  cat("Bad dataset\n")
-}
-
-gse135055_expr_merged <- gse135055_expr_annot %>%
-  as.data.frame() %>%
-  dplyr::filter(Gene %in% common_genes) %>%
-  group_by(Gene) %>%
-  summarise(across(everything(), mean, na.rm = TRUE)) %>%
-  column_to_rownames("Gene") %>%
-  t() %>%                          
-  as.data.frame()
-
-gse135055_expr_merged <- gse135055_expr_merged[,consensus_genes$Gene]
-
-gse135055_pheno_filtered <- gse135055_pheno_raw[rownames(gse135055_expr_merged),]
-
-# pheno info
-Normal <- trimws(gse135055_pheno_filtered$`diagnosis:ch1`) == "Not available"
-
-lvef_col <- trimws(gse135055_pheno_filtered$`lvef (%):ch1`)
-lvef_numeric <- ifelse(grepl("^[0-9.]+$", lvef_col), as.numeric(lvef_col), NA)
-
-DCM_HFrEF <- (trimws(gse135055_pheno_filtered$`diagnosis:ch1`) != "Not available") &
-             !is.na(lvef_numeric) &
-             lvef_numeric <= 40
-
-gse135055_expr_filtered <- rbind(gse135055_expr_merged[Normal,],gse135055_expr_merged[DCM_HFrEF,]) %>%
-  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
-
-source("../scripts/external_roc_cm.R")
-
-res_roc <- plot_external_roc(
-  lr_model, 
-  gse135055_expr_filtered, 
-  gse135055_expr_filtered$group,
-  dataset_name = "GSE135055"
-)
-
-res_cm <- plot_external_cm(
-  lr_model, 
-  gse135055_expr_filtered, 
-  gse135055_expr_filtered$group, 
-  dataset_name = "GSE135055"
-)
-
-if (res_roc$auc >= 0.80) {
-  cat("Good dataset\n")
-} else {
-  cat("Bad dataset\n")
-}
-
-save(res_cm,res_roc, file = "../data/processed/ml/gse135055_res.RData")
-```
-
----
-
-### GSE120895: External validation set(array)
-```{r}
-library(AnnoProbe)
-
-rm(list = ls())
-
-load("../data/processed/ml/06_consensus_genes.RData")
-load("../data/processed/ml/07_lr_model.RData")
-load("../data/raw/geo/gse120895_raw.RData")
-
-ex <- gse120895_exprs_raw
-qx <- as.numeric(quantile(ex, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
-
-LogC <- (qx[5] > 100) ||
-          (qx[6]-qx[1] > 50 && qx[2] > 0)
-if (LogC) { ex[which(ex <= 0)] <- NaN
-  ex <- log2(ex + 1) }
-
-probe2gene <- idmap("GPL570")
-gse120895_expr_annot <-  as.data.frame(ex) %>% 
-  rownames_to_column("probe_id") %>%
-  inner_join(probe2gene, by = "probe_id") %>%
-  dplyr::select(-probe_id) %>%
-  mutate(Gene = symbol, .before = 1) %>%
-  dplyr::select(-symbol)
-
-common_genes <- intersect(consensus_genes$Gene, (gse120895_expr_annot$Gene))
-
-if (all(common_genes %in% consensus_genes$Gene)) {
-  cat("Good dataset\n")
-} else {
-  cat("Bad dataset\n")
-}
-
-gse120895_expr_merged <- gse120895_expr_annot %>%
-  as.data.frame() %>%
-  dplyr::filter(Gene %in% common_genes) %>%
-  group_by(Gene) %>%
-  summarise(across(everything(), mean, na.rm = TRUE)) %>%
-  column_to_rownames("Gene") %>%
-  t() %>%                          
-  as.data.frame()
-
-gse120895_expr_merged <- gse120895_expr_merged[,consensus_genes$Gene]
-
-# pheno info
-Normal <- trimws(gse120895_pheno_raw$`condition:ch1`) == "control"
-DCM_HFrEF <- trimws(gse120895_pheno_raw$`condition:ch1`) != "control"
-
-gse120895_expr_filtered <- rbind(gse120895_expr_merged[Normal,],gse120895_expr_merged[DCM_HFrEF,]) %>%
-  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
-
-source("../scripts/external_roc_cm.R")
-
-res_roc <- plot_external_roc(
-  lr_model, 
-  gse120895_expr_filtered, 
-  gse120895_expr_filtered$group,
-  dataset_name = "GSE120895"
-)
-
-res_cm <- plot_external_cm(
-  lr_model, 
-  gse120895_expr_filtered, 
-  gse120895_expr_filtered$group, 
-  dataset_name = "GSE120895"
-)
-
-if (res_roc$auc >= 0.80) {
-  cat("Good dataset\n")
-} else {
-  cat("Bad dataset\n")
-}
-
-save(res_cm,res_roc, file = "../data/processed/ml/gse120895_res.RData")
-```
-
 ### GSE19303: External validation set  
 ```{r}
 rm(list = ls())
@@ -990,6 +772,17 @@ if (res_roc$auc >= 0.80) {
 save(res_cm,res_roc, file = "../data/processed/ml/gse19303_res.RData")
 ```
 
+
+## 
+
+
+```{r}
+
+```
+
+
+
+
 ## herb-ingredient-target
 ```{r}
 load("../data/processed/tcm/14_compound_target_final.RData")
@@ -1000,11 +793,12 @@ hit_core <- compound_target_final %>%
 
 unique(hit_core$Herb.Name.Pinyin)
 
-hit_core[,c("Herb.Name.Pinyin", "Compound.Name","Symbol")]
+key_compounds <- hit_core[,c("Herb.Name.Pinyin", "Compound.Name","Symbol")]
 ```
 
 # Figure 6
 ```{r}
+
 ```
 
 

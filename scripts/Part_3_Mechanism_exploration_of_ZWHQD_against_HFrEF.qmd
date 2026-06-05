@@ -687,7 +687,10 @@ p <- ggvenn(
   text_color = "white",
   show_percentage = FALSE
 ) +
-  theme(plot.title = element_text(hjust = 0.5, size=10))
+  theme(
+    text = element_text(family = "serif", size = 10)
+    plot.title = element_text(hjust = 0.5, size=10)
+    )
 
 # save
 ggsave("../figures/main/Figure_4D.pdf", p, width=2.76, height=2.76, units="in", dpi=300)
@@ -761,7 +764,11 @@ library(rstatix)
 library(corrplot) 
 library(ggpubr) 
 library(ggsci)
+library(ggsignif)
+library(ggplot2)
 library(IOBR)
+library(openxlsx)
+library(Seurat)
 ```
 
 https://www.medrxiv.org/content/10.1101/2024.04.26.24306471v1
@@ -798,293 +805,293 @@ res_quant <- deconvo_tme(eset = fpkm, method = "quantiseq")
 # EPIC
 res_epic  <- deconvo_tme(eset = fpkm, method = "epic")
 
-# ssGSEA
-# signature_score_calculation_methods
-res_ssg <- calculate_sig_score(
-  pdata = NULL,
-  eset = fpkm,
-  signature = load_data("go_bp"),
-  method = "ssgsea",
-  mini_gene_count = 2
-)
-
-save(res_mcp, res_xcell, res_quant, res_epic, res_ssg, file = "../data/processed/ime/res.RData")
+save(res_mcp, res_xcell, res_quant, res_epic, file = "../data/processed/ime/res.RData")
 ```
 
-## Step 3: Visualization function
+## Step 3: Extracting data
 ```{r}
-plot_tme <- function(df, title=NULL){
-  if(!"ID" %in% colnames(df)) df <- rownames_to_column(df, "ID")
-  df_long <- df %>%
-    column_to_rownames("ID") %>%
-    t() %>%
-    as.data.frame() %>%
-    rownames_to_column("cell") %>%
-    reshape2::melt(id.vars="cell", variable.name="Sample", value.name="Score") %>%
-    left_join(group, by = "Sample")
-  
-  df_long <- df_long %>%
-    group_by(Sample) %>%
-    mutate(Percent = Score / sum(Score) * 100) %>%
-    ungroup()
-  
-  ggplot(df_long, aes(x = Sample, y = Percent, fill = cell)) +
-    geom_col(position = "stack", width = 0.9) +
-    facet_wrap(~Group, scales = "free_x") +
-    theme_bw() + 
-    RotatedAxis() +
-    ggtitle(title) +
-    ylab("Proportion (%)") +
-    theme(legend.position = "bottom",axis.text.x = element_blank(),axis.ticks.x = element_blank())
+export_table <- function(res, name){
+  out <- res %>% rename(Sample=ID) %>% left_join(group,by="Sample")
 }
-```
 
-## Step 4: Visualization
-```{r}
-p5A <- plot_tme(res_mcp)
-pS3A <- plot_tme(res_xcell)
-pS3B <- plot_tme(res_quant)
-pS3C <- plot_tme(res_epic)
-pS3D <- plot_tme(res_ssg)
+xCell <- export_table(res_xcell,  "xCell")
+MCPcounter <- export_table(res_mcp,    "MCPcounter")
+quanTIseq <- export_table(res_quant,  "quanTIseq")
+EPIC <- export_table(res_epic,   "EPIC")
 
-ggsave("../figures/Figure_5A.pdf", pA, width = 10, height = 5, units = "cm", dpi = 300)
-ggsave("../figures/Figure_5B.pdf", pB, width = 10, height = 5, units = "cm", dpi = 300)
-ggsave("../figures/Figure_5C.pdf", pC, width = 10, height = 5, units = "cm", dpi = 300)
-ggsave("../figures/Figure_5D.pdf", pD, width = 10, height = 5, units = "cm", dpi = 300)
-ggsave("../figures/Figure_5E.pdf", pE, width = 10, height = 5, units = "cm", dpi = 300)
-
-# Immune cell correlation heatmap
 mcp_mat <- res_mcp %>% column_to_rownames("ID")
-pdf("../figures/Figure_5F.pdf", width = 8, height = 7)
-pheatmap(cor(mcp_mat, method = "spearman"),
-         color = colorRampPalette(c("blue","white","red"))(100),
-         treeheight_col = 15, treeheight_row = 15)
-dev.off()
+colnames(mcp_mat) <- gsub("_MCPcounter", "", names(mcp_mat))
 
-# Differential immune cell box plot
-df_g <- mcp_mat %>% rownames_to_column("Sample") %>% left_join(group)
-pvals <- apply(df_g[,-1:-2], 2, function(x) wilcox.test(x~df_g$Group)$p.value)
-sig_cell <- names(pvals[pvals < 0.05])
+df_all <- mcp_mat %>% 
+  rownames_to_column("Sample") %>%
+  left_join(group,by="Sample")
 
-plot_g <- df_g[,c("Sample","Group",sig_cell)] %>% reshape2::melt(id.vars = c("Sample","Group"))
-pdf("../figures/Figure_5G.pdf", width = 11, height = 5.5)
-ggboxplot(plot_g, x = "variable", y = "value", color = "Group") +
-  stat_compare_means(method = "wilcox.test", label = "p.signif") +
-  theme_bw() + rotate_x_text(45)
-dev.off()
+# Stacking data
+df_stack <- df_all %>%
+  pivot_longer(cols=-c(Sample,Group), names_to="Cell", values_to="Abundance") %>% 
+  group_by(Group, Cell) %>% 
+  summarise(Mean = mean(Abundance), .groups = "drop")
 
-# Hub genes-immune correlation heatmap
-load("../data/processed/network/08_hub_genes.RData")
+pvals <- apply(df_all[,2:(ncol(df_all)-1)], 2, function(x) {
+  wilcox.test(x ~ df_all$Group)$p.value
+})
 
-hub_expr <- t(expr_fpkm_corr[hub_genes,])
-imm_sig_expr <- mcp_mat[,sig_cell]
+sig_cells <- names(pvals)[pvals < 0.05]
 
-cor_mat <- cor(hub_expr, imm_sig_expr, method = "spearman")
-p_mat <- corrplot::cor.mtest(hub_expr, imm_sig_expr)$p
+df_plot <- df_all[,c("Sample","Group",sig_cells)] %>%
+  pivot_longer(cols=-c(Sample,Group), names_to="Cell", values_to="Abundance")
 
-pdf("../figures/Figure_5H.pdf", width = 9, height = 5)
-corrplot(cor_mat, p.mat = p_mat, sig.level = 0.05, insig = "blank",
-         col = colorRampPalette(c("royalblue","white","firebrick"))(200))
-dev.off()
+group_levels <- unique(df_plot$Group)
+comparison_list <- list(c(group_levels[1], group_levels[2]))
 ```
 
-
-## Step 3: 免疫细胞丰度堆叠图（样本比例分布）
-
+## Step 4: Figure 5A~E
 ```{r}
-cibersort_data <- cibersort_result %>% 
-  dplyr::select(where(~ any(. != 0))) %>%
-  tibble::rownames_to_column('sample') %>%  
-  tidyr::pivot_longer(
-    cols = -c(group, sample), 
-    names_to = 'cell', 
-    values_to = 'score'
-)
+# Figure A: Differential immune cell box plot
+df_clean <- df_plot %>%
+  group_by(Cell) %>%
+  mutate(
+    Q1 = quantile(Abundance, 0.25),
+    Q3 = quantile(Abundance, 0.75),
+    IQR = Q3 - Q1,
+    upper_limit = Q3 + 1.5 * IQR
+  ) %>%
+  filter(Abundance <= upper_limit) %>% 
+  ungroup()
 
-p1 <- ggplot(cibersort_data, aes(x = sample, y = score, fill = cell)) +
-  geom_col(position = 'fill', alpha = 0.7) +  
-  labs(x = '', 
-       y = 'Estimated proportion', 
-       fill = 'Cell type'
-  ) + 
-  guides(fill = guide_legend(ncol = 1)) + 
-  theme(
-    axis.text.x = element_blank(),  
-    axis.text.y = element_text(size = 10),  
-    axis.title = element_text(size = 10), 
-    axis.ticks.x = element_blank(),  
-    legend.title = element_text(size = 10),  
-    legend.text = element_text(size = 10),  
-    legend.key.size = unit(2, 'mm'),  
-    strip.text = element_text(size = 10),  
-    strip.background = element_rect(fill = 'gray', colour = 'black'), 
-    panel.grid = element_blank(), 
-    panel.background = element_rect(fill = NA, color = NA)  
+pA <- ggplot(df_clean, aes(x = Group, y = Abundance, fill = Group)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  stat_compare_means(
+    method = "wilcox.test",
+    aes(label = paste0("p = ", ..p.format..)),
+    # parse = TRUE,  
+    size = 2.5,                 
+    vjust = 0.6,               
+    hjust = 0.5,
+    label.x.npc = 0.5,          
+    hide.ns = FALSE      
   ) +
-  facet_grid(. ~ group, scales = "free")  
+  
+  facet_wrap(~Cell, ncol = 4, scales = "free_y") +
 
-print(p1)  
-```
-
-## Step 4: 免疫细胞差异分析及箱线图
-```{r}
-state_result <- cibersort_data %>% 
-  group_by(cell) %>% 
-  wilcox_test(score ~ group, p.adjust.method = 'BH')
-state_result$p <- signif(state_result$p, 3)
-state_result$p.label <- ifelse(state_result$p < 0.05, 
-                               ifelse(state_result$p < 0.01, 
-                                      ifelse(state_result$p < 0.001, 
-                                             ifelse(state_result$p < 0.0001, "****", "***"), "**"), "*"), "ns")
-
-change_all <- cibersort_data %>%
-  group_by(cell) %>%
-  summarise(
-    case_median = median(score[group == "DCM_HFrEF"]),
-    control_median = median(score[group == "Normal"]),
-    signif = ifelse(case_median > control_median, "sig_high", "sig_low")
-  )
-
-change_all$signif <- ifelse(state_result$p.label[match(change_all$cell, state_result$cell)] == "ns", 
-                            "not significant", change_all$signif)
-cibersort_data$change <- change_all$signif[match(cibersort_data$cell, change_all$cell)]
-
-cibersort_data <- cibersort_data %>% arrange(cell)
-cibersort_data$cell <- factor(cibersort_data$cell, levels = unique(cibersort_data$cell))
-
-state_result <- state_result %>%
-  left_join(
-    cibersort_data %>% distinct(cell, group),
-    by = c("cell" = "cell")
-  )
-
-p2 <- ggplot(cibersort_data, aes(x = cell, y = score, fill = group)) +
-  geom_boxplot() +  
-  scale_fill_manual(values = c(Normal = "#4E4E56", DCM_HFrEF = "#DA635D")) +  
-  stat_pvalue_manual(state_result,
-                     x = "cell",
-                     y.position = max(cibersort_data$score) * 1.1,
-                     size = 3,
-                     color = "blue",
-                     label = "p.label") +
-  labs(x = "", y = "Estimated Proportion", fill = "Group") + 
-  theme_minimal() + 
+  scale_fill_jco() +
+  
+  theme_bw(base_size = 10, base_family = "serif") +
   theme(
-    axis.title.y = element_text(size = 10), 
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 10, color = "black"),  
-    axis.text = element_text(size = 10),  
-    legend.text = element_text(size = 10), 
-    legend.position = 'top',  
-    legend.title = element_text(size = 10),  
-    panel.grid.major.x = element_blank(),  
-    panel.grid.minor = element_blank() 
+    axis.text.x = element_text(size = 7),
+    strip.background = element_rect(fill = "gray90"),
+    strip.text = element_text(face = "bold", size = 7),
+    legend.title = element_text(size = 7),
+    legend.text = element_text(size = 6),
+    legend.position = "bottom"
+  ) +
+  labs(x = NULL, y = "Abundance")
+
+ggsave("../figures/main/Figure_5A.pdf",pA,width=14, height=10, units="cm",dpi=300)
+
+# Figure B: Stacking
+pB <- ggplot(df_stack, 
+       aes(x = Group,                
+           y = Mean, 
+           fill = Cell)) +
+  geom_col(position = "fill", width = 0.6) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  ggsci::scale_fill_jco() +
+  labs(x = NULL, y = "Proportion", fill = "Cell") +
+  theme_bw(base_size = 8, base_family = "serif") +
+  theme(
+    axis.text.x = element_text(size = 7),
+    axis.text.y = element_text(size = 7),
+    axis.title = element_text(size = 8),
+    legend.title = element_text(size = 7),  
+    legend.text  = element_text(size = 6), 
+    legend.key.size = unit(0.25, "cm"), 
+    legend.spacing.x = unit(0.15, "cm"),
+    legend.spacing.y = unit(0.05, "cm"),
+    legend.margin = margin(2,2,2,2), 
+    legend.box.margin = margin(0,0,0,0),
+    legend.position = "right",  
+    legend.direction = "vertical"
   )
 
-print(p2)  
-```
+ggsave("../figures/main/Figure_5B.pdf", pB, width=7, height=5, units="cm", dpi=300)
 
-## Step 5: 免疫细胞间相关性分析
-```{r}
-# 相关性分析：仅保留数值列（排除分组等非数值信息）
-numeric_cols <- sapply(cibersort_result, is.numeric)
-# 计算Spearman相关系数（适合非正态分布数据）
-cor_sorce <- cor(cibersort_result[, numeric_cols], method = 'spearman')
-# 计算相关系数的P值（使用WGCNA包的函数）
-cor_sorce_p <- WGCNA::corPvalueStudent(cor_sorce, nrow(cibersort_result))
-# 设置颜色渐变：从深蓝（负相关）到浅黄再到深红（正相关）
-col2 <- colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0",
-                           "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))(50)
-# 定义绘制相关性热图的函数：
-# 上三角显示相关系数数值，下三角显示圆圈（大小表示相关性强弱）和显著性标签
-corr_plot <- function() {
-  corrplot(cor_sorce,
-           na.label = " ",  # 缺失值用空格表示
-           diag = T,  # 显示对角线（自身相关性）
-           method = "number",  # 上三角用数字表示相关系数
-           type = "upper",  # 仅显示上三角
-           tl.pos = "lt",  # 标签位置（左和上）
-           tl.col = "black",  # 标签颜色
-           tl.srt = 90,  # 标签旋转90度
-           tl.cex = 0.9,  # 标签字体大小
-           cl.length = 8,  # 颜色图例的分段数
-           cl.cex = 0.8,  # 颜色图例字体大小
-           col = col2,  # 使用自定义颜色
-           number.cex = 0.7)  # 相关系数数值大小
+# Figure C: Bar chart of differential immune cell sorting
+df_mean <- df_plot %>% 
+  group_by(Cell, Group) %>%
+  summarise(Mean = mean(Abundance), .groups = "drop") %>%
+  pivot_wider(names_from = Group, values_from = Mean)
 
-  # 下三角添加显著性标签
-  corrplot(cor_sorce,
-           p.mat = cor_sorce_p,  # P值矩阵
-           insig = "label_sig",  # 对不显著的相关性标记
-           add = TRUE,  # 在已有图上添加
-           type = "lower",  # 仅显示下三角
-           method = "circle",  # 用圆圈表示相关性
-           col = col2,  # 颜色与上三角一致
-           na.label = " ",  # 缺失值处理
-           diag = FALSE,  # 不显示对角线
-           tl.pos = "n",  # 不显示标签
-           cl.pos = "n",  # 不显示颜色图例
-           sig.level = c(.0001, .001, .01, .05),  # 显著性水平分级
-           pch.cex = 0.9,  # 显著性标签大小
-           pch.col = "black")  # 显著性标签颜色
-}
-corr_plot()  # 绘制并显示相关性热图
-```
+# FC = DCM-HFrEF / Normal
+df_mean$FoldChange <- df_mean[[2]] / df_mean[[3]]
+df_mean <- df_mean %>% arrange(FoldChange)  
 
-## Step 6: 目标基因与免疫细胞的相关性分析
-```{r}
-# 定义您感兴趣的基因（请根据实际研究的基因修改）：这里以ACE和CASP1为例
-interest_genes <- c("ACE","CASP1")  
-gene_expr <- expr_fpkm_corr[rownames(expr_fpkm_corr) %in% interest_genes, , drop = FALSE]
+pC <- ggplot(df_mean, 
+             aes(x = FoldChange, 
+                 y = reorder(Cell, FoldChange), 
+                 fill = Cell)) + 
+  geom_col(width = 0.65) +
+  geom_vline(xintercept = 1, color = "red", linetype = "dashed", linewidth = 0.5) +
+  ggsci::scale_fill_aaas() +   
+  labs(x = "Fold Change (DCM-HFrEF/Normal)", y = "") +
+  theme_bw(base_size = 7, base_family = "serif") + 
+  scale_x_continuous(
+    breaks = seq(0, 1.2, 0.2),
+    expand = c(0, 0) 
+  ) + 
+  theme(
+    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(size = 7),
+    axis.title.x = element_text(size = 7),
+    axis.ticks.y = element_blank(),
+    plot.margin = margin(t = 1, r = 1, b = 1, l = -2, unit = "mm"),
+    legend.position = "none"
+  )
 
-gene_expr_t <- as.data.frame(t(gene_expr))
-colnames(gene_expr_t) <- rownames(gene_expr)  
-common_samples <- intersect(rownames(cibersort_result), rownames(gene_expr_t))
-cibersort_sub <- cibersort_result[common_samples, cell_cols, drop = FALSE] %>%
-  dplyr::select(where(~ any(. != 0)))
+ggsave("../figures/main/Figure_5C.pdf", pC, width=7, height=5, units="cm", dpi=300)
 
-gene_expr_sub <- gene_expr_t[common_samples, , drop = FALSE] 
-combined_data <- cbind(cibersort_sub, gene_expr_sub)
+# Figure D: Heat map of immune cell correlation
+library(corrplot)
+imm_exp  <- mcp_mat[, sig_cells] %>%
+  rownames_to_column("Sample") %>%
+  left_join(group,by="Sample") %>%
+  column_to_rownames("Sample") %>%
+  dplyr::filter(Group=="DCM_HFrEF") %>%
+  dplyr::select(-Group)
 
-correlation_matrix <- cor(combined_data, method = "spearman")
+cor_mat_cell <- cor(imm_exp, method = "spearman")
 
-n_immune <- ncol(cibersort_sub)  
-n_genes <- length(interest_genes)  
-gene_cell_cor <- correlation_matrix[(n_immune + 1):(n_immune + n_genes), 1:n_immune, drop = FALSE]
+pdf("../figures/main/Figure_5D.pdf", width=7, height=5)
+corrplot(
+  cor_mat_cell,
+  method = "color",
+  type = "upper",   
+  diag = FALSE,    
+  order = "original",
+  col = colorRampPalette(c("navy","white","red3"))(100),
+  tl.cex = 0.7,      
+  cl.cex = 0.6,
+  tl.srt = 45,
+  tl.col = "black",
+  mar = c(1, 0, 1, 0),    
+  cl.offset = 0.2,        
+  t.pos = "left",
+  addCoef.col = "black",
+  number.cex = 0.6,
+)
+dev.off()
 
-p_matrix <- matrix(0, nrow = n_genes, ncol = n_immune)
-rownames(p_matrix) <- interest_genes
-colnames(p_matrix) <- colnames(cibersort_sub)
-for (gene in interest_genes) {
-  for (cell in colnames(cibersort_sub)) {
-    test <- cor.test(combined_data[[gene]], combined_data[[cell]], method = "spearman")
-    p_matrix[gene, cell] <- test$p.value  
+# Figure E: Hub genes-immune cell correlation heatmap
+load("../data/processed/network/08_hub_genes.Rdata")
+
+hub_exp  <- expr_fpkm_corr[hub_genes, ] %>%
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column("Sample") %>%
+  left_join(group,by="Sample") %>%
+  column_to_rownames("Sample") %>%
+  dplyr::filter(Group=="DCM_HFrEF") %>%
+  dplyr::select(-Group)
+
+cor_mat <- cor(imm_exp, hub_exp, method="spearman")
+p_mat <- matrix(NA, nrow = ncol(imm_exp), ncol = ncol(hub_exp),
+                dimnames = list(colnames(imm_exp), colnames(hub_exp)))
+
+for(i in 1:ncol(imm_exp)){
+  for(j in 1:ncol(hub_exp)){
+    p_mat[i,j] <- cor.test(imm_exp[,i], hub_exp[,j], method = "spearman")$p.value
   }
 }
 
-sig_matrix <- ifelse(p_matrix < 0.001, "***", 
-                     ifelse(p_matrix < 0.01, "**", 
-                            ifelse(p_matrix < 0.05, "*", "")))
-pheatmap(gene_cell_cor,
-         color = colorRampPalette(c("#2166AC", "white", "#B2182B"))(100), 
-         display_numbers = sig_matrix,  
-         number_color = "black",
-         number_format = "%s",  
-         main = "Correlation between Genes and Immune Cells",  # 图标题
-         treeheight_row = 20,  
-         treeheight_col = 20, 
-         fontsize = 10,  
-         fontsize_row = 12,  
-         fontsize_col = 10,  
-         cellwidth = 25,  
-         cellheight = 30)  
-dev.off()  
+library(ggplot2)
+library(ggsci)
+library(reshape2)
+
+cor_long <- melt(cor_mat)
+p_long <- melt(p_mat)
+cor_long$p <- p_long$value
+colnames(cor_long) <- c("Cell","HubGene","Corr","Pvalue")
+
+pE <- ggplot(cor_long, aes(x = HubGene, y = Cell)) +
+  geom_tile(aes(fill = Corr), color = "gray90", size = 0.1) +
+  scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",midpoint = 0, limits = c(-1,1)) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "serif", size = 7),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 6,margin = margin(t = 0.5, unit = "mm")),
+    axis.text.y = element_text(size = 6,margin = margin(r = 0.5, unit = "mm")),
+    axis.title = element_blank(),
+    legend.position = "right",
+    legend.key.size = unit(0.15, "cm"),  
+    legend.title = element_text(size = 5),
+    legend.text  = element_text(size = 4), 
+    legend.box.spacing = unit(0.01, "cm"), 
+    legend.margin = margin(0,0,0,0),       
+    plot.margin = margin(0.5,0.5,0.5,0.5, "mm"),
+    panel.grid = element_blank()
+  ) +
+  labs(fill = "Correlation")
+
+ggsave("../figures/main/Figure_5E.pdf", pE, width = 7, height = 5, units = "cm", dpi = 300)
 ```
 
-# Figure 5
-
-Immune cell infiltration analysis between HF and control. (A) Result of Cibersort algorithm. (B) Result of MCPcounter algorithm. (C) Result of QuanTIseq algorithm. (D) Result of ssGSEA algorithm. (E) Result of xCell algorithm.
+## Figure 5
 
 ```{r}
+library(magick)
+
+total_width_cm <- 14        
+dpi <- 300                    
+px_per_cm <- dpi / 2.54     
+total_width_px <- round(total_width_cm * px_per_cm) 
+
+ratios_row1 <- c(1)
+ratios_row2 <- c(1, 1) 
+ratios_row3 <- c(1, 1) 
+
+width_row1_left  <- round(total_width_px * ratios_row1[1] / sum(ratios_row1))
+width_row2_left  <- round(total_width_px * ratios_row2[1] / sum(ratios_row2))
+width_row2_right <- round(total_width_px * ratios_row2[2] / sum(ratios_row2))
+
+width_row3_left  <- round(total_width_px * ratios_row3[1] / sum(ratios_row3))
+width_row3_right <- round(total_width_px * ratios_row3[2] / sum(ratios_row3))
+
+ratio <- c(width_row1_left,width_row2_left,width_row2_right,width_row3_left,width_row3_right)
+
+files <- c(
+  "../figures/main/Figure_5A.pdf",
+  "../figures/main/Figure_5B.pdf",
+  "../figures/main/Figure_5C.pdf",
+  "../figures/main/Figure_5D.pdf",
+  "../figures/main/Figure_5E.pdf"
+)
+
+labels <- c("A", "B", "C", "D", "E")
+
+label_size <- 12   
+
+pdfs <- list()
+for (i in seq_along(files)) {
+  img <- image_read_pdf(files[i], density = 300)
+  img <- image_resize(img,ratio[i])
+  img <- image_annotate(img, labels[i], 
+                        gravity = "northwest",  
+                        location = "+10+10",    
+                        size = label_size,     
+                        weight = 700,    
+                        color = "black")
+  pdfs[[i]] <- img
+}
+
+row1 <- image_append(c(pdfs[[1]]), stack = FALSE)
+row2 <- image_append(c(pdfs[[2]], pdfs[[3]]), stack = FALSE)
+row3 <- image_append(c(pdfs[[4]], pdfs[[5]]), stack = FALSE)
+
+combined <- image_append(c(row1, row2, row3), stack = TRUE)
+
+
+image_write(combined, "../figures/main/Figure_5.pdf", format = "pdf")
+image_write(combined, "../figures/main/Figure_5.png", format = "png", density = dpi)
 
 ```
 
