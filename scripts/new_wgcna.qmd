@@ -1,0 +1,481 @@
+---
+title: "Weighted Gene Co-expression Network Analysis (WGCNA)"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+---
+
+# WGCNA
+
+## Load packages
+```{r}
+library(WGCNA)
+library(tidyverse)
+library(ggvenn)
+library(corrplot)
+library(flashClust)
+library(robustbase) 
+library(dynamicTreeCut)
+```
+
+---
+
+## Step 1: Loading Data
+```{r}
+rm(list = ls())
+
+load("../data/processed/geo/gse57338.RData")
+
+# expression matrix
+# WGCNA required: Sample (row) x  Gene(column)
+
+dat <- expr_filt
+
+common_samples <- intersect(colnames(dat), rownames(pheno))
+
+dat <- dat[, common_samples, drop = FALSE]
+pheno <- pheno[match(common_samples, rownames(pheno)), , drop = FALSE]
+
+if (ncol(dat) == nrow(pheno)) {
+  datExpr <- as.data.frame(t(dat))
+} else if (nrow(dat) == nrow(pheno)) {
+  datExpr <- as.data.frame(dat)
+} else {
+  stop("Error: Sample dimension mismatch between expression matrix and phenotype data.")
+} 
+rownames(datExpr) <- common_samples
+
+dim(datExpr)
+
+# trait: group (HC=0, HF=1)
+datTraits <- data.frame(
+  Group = factor(pheno$group)
+)
+rownames(datTraits) <- colnames(expr_filt)
+
+datTraits$Disease <- ifelse(pheno$group == "HF", 1, 0)
+```
+
+
+## Step 2: Sample clustering (checking for outlier samples, quality control) 
+```{r}
+# goodSamplesGenes
+# Quality control: Remove bad genes/samples
+gsg <- goodSamplesGenes(datExpr, verbose = 3)
+if (!gsg$allOK) {
+  if (sum(!gsg$goodGenes) > 0) {
+    printFlush(paste("Removing genes:", paste(names(datExpr)[!gsg$goodGenes], collapse = ",")))
+  }
+  if (sum(!gsg$goodSamples) > 0) {
+    printFlush(paste("Removing samples:", paste(rownames(datExpr)[!gsg$goodSamples], collapse = ",")))
+  }
+  datExpr <- datExpr[gsg$goodSamples, gsg$goodGenes]
+}
+
+# Screening for highly variable genes: MAD. Retain the first 5000
+gene_mad <- apply(datExpr, 2, mad, na.rm = TRUE) 
+N_top <- 5000
+n_select <- min(N_top, ncol(datExpr))   
+selected_genes <- names(sort(gene_mad, decreasing = TRUE)[1:n_select])
+datExpr <- datExpr[, selected_genes]
+cat("Retain the number of highly variable genes：", ncol(datExpr), "\n")
+
+# Sample clustering: sampleTree
+sampleTree <- hclust(dist(datExpr), method = "average")
+group_color = ifelse(pheno$group=="HF","tomato","cyan")
+color_mat <- cbind(Group = group_color)
+
+pdf("../figures/supplementary/nFigure_S2A.pdf", width=10, height=5)
+plotDendroAndColors(sampleTree, color_mat, 
+                    dendroLabels = FALSE, 
+                    addGuide = TRUE,       
+                    guideCol = "grey",   
+                    main = "Sample clustering")
+dev.off()
+
+
+save(datTraits,datExpr,pheno,file = "../data/processed/geo/gse57338_datExpr.RData")
+```
+
+---
+
+## Step 3: Select soft threshold
+
+```{r}
+# load("../data/processed/geo/gse57338_datExpr.RData")
+
+enableWGCNAThreads()
+powers <- c(c(1:10), seq(from = 12, to=30, by=2))
+
+R2_cut <- 0.8
+
+sft <- pickSoftThreshold(
+  datExpr,
+  powerVector = powers,
+  RsquaredCut = R2_cut, 
+  verbose = 5,
+  networkType = "unsigned"
+)
+disableWGCNAThreads()
+
+power <- sft$powerEstimate
+if(is.na(power)) power <- 8  
+cat("power = ", power, "\n")
+
+pdf("../figures/supplementary/nFigure_S2B.pdf", width=14, height=5)
+par(mfrow = c(1,2))
+
+# Left: R2
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Power",ylab="Scale Free R^2",type="n")
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers, col="red")
+abline(h=0.8, col="blue")
+
+# Right: Connectivity
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Power",ylab="Mean Connectivity",type="n")
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, col="red")
+dev.off()
+
+
+save(sft,file="../data/processed/geo/gse57338_sft.RData")
+
+```
+
+## Step 4: Construct a co-expression network
+
+---
+
+```{r}
+enableWGCNAThreads()
+set.seed(123)
+
+net <- blockwiseModules(
+  datExpr,
+  power = power,
+  TOMType = "unsigned",
+  minModuleSize = 30,      # Minimum number of genes in the module
+  mergeCutHeight = 0.25,   # Merge similar modules
+  numericLabels = TRUE,
+  pamRespectsDendro = FALSE,
+  verbose = 3
+)
+disableWGCNAThreads()
+
+save(net,file = "../data/processed/geo/gse57338_net.RData")
+
+```
+
+## Step 5: Clustering
+
+---
+
+```{r}
+load("../data/processed/geo/gse57338_net.RData")
+
+# Convert to Color
+moduleColors <- labels2colors(net$colors)
+table(moduleColors) # Check the number of genes in each module
+
+# Genetree & module color
+pdf("../figures/main/nFigure_2C.pdf", width=14, height=5)
+plotDendroAndColors(
+  net$dendrograms[[1]],
+  moduleColors[net$blockGenes[[1]]],
+  "Module colors",
+  dendroLabels = FALSE,
+  hang = 0.03,
+  addGuide = TRUE,
+  guideHang = 0.05
+)
+dev.off()
+```
+
+## Step 6: Module correlation with diseases
+
+---
+
+```{r}
+load("../data/processed/geo/gse57338_datExpr.RData")
+
+MEs <- net$MEs
+MEs0 <- moduleEigengenes(datExpr, moduleColors)$eigengenes
+MEs <- orderMEs(MEs0)
+
+datTraits <- model.matrix(~0 + group, data = data.frame(group = pheno$group))
+
+colnames(datTraits) <- levels(factor(pheno$group))  
+rownames(datTraits) <- rownames(pheno)
+
+moduleTraitCor <- cor(MEs, datTraits, use = "p")
+moduleTraitPvalue <- corPvalueStudent(moduleTraitCor, nrow(datExpr))
+
+pdf("../figures/main/nFigure_2D.pdf", width = 7, height = 10)
+
+textMatrix <- paste0(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 1), ")")
+dim(textMatrix) <- dim(moduleTraitCor)
+
+labeledHeatmap(
+  Matrix = moduleTraitCor,
+  xLabels = colnames(datTraits),        # HC + HF
+  yLabels = names(MEs),
+  colors = blueWhiteRed(50),
+  textMatrix = textMatrix,
+  setStdMargins = FALSE,
+  cex.text = 0.6,
+  zlim = c(-1, 1),
+  main = "Module-Trait Correlation",
+  xLabelsAngle = 0,        
+  xLabelsAdj = 0.5          
+)
+dev.off()
+```
+
+
+## Step 7: Extract DCM_HFrEF‑related modules and candidate hub genes
+
+---
+
+```{r}
+key_modules <- names(MEs)[abs(moduleTraitCor) > 0.5 & moduleTraitPvalue < 0.05]
+key_modules <- gsub("ME","",key_modules)
+
+print(key_modules)
+
+mod_cor_HF = moduleTraitCor[,"HF"]
+mod_p_HF  = moduleTraitPvalue[,"HF"]
+mod_name = sub("ME","",rownames(moduleTraitCor))
+
+mod_df = data.frame(
+  Module = mod_name,
+  Cor_HF = mod_cor_HF,
+  Pval_HF = mod_p_HF,
+  AbsCor = abs(mod_cor_HF)
+) 
+
+mod_sig <- mod_df %>%
+  dplyr::filter(Pval_HF < 0.05, AbsCor >= 0.5) %>%
+  arrange(desc(AbsCor))
+
+# Calculate kME values for all genes, Module membership degree, screening the internal core of the module
+kME <- signedKME(datExpr, MEs)
+colnames(kME) <- paste0("kME.", gsub("kME", "", colnames(kME)))
+
+# Calculate GS (Gene Disease Correlation)
+colnames(datTraits) <- levels(factor(pheno$group))
+HF <- datTraits[, "HF"] 
+
+GS <- apply(datExpr, 2, function(x) cor(x, HF, use = "p"))
+GS_p <- apply(datExpr, 2, function(x) corPvalueStudent(cor(x, HF, use = "p"), nSamples = nrow(datExpr)))
+
+geneInfo <- data.frame(
+  Gene = colnames(datExpr),
+  Module = moduleColors,
+  GS_HF = GS,
+  GS_pval = GS_p
+)
+geneInfo <- cbind(geneInfo, kME)
+
+# Screening Hub genes (Key Modules + |kME| > 0.6 + |GS| > 0.1)
+
+mm_cut <- 0.7
+gs_cut <- 0.2
+
+# hub genes
+hubGenes <- geneInfo %>%
+  subset(Module %in% mod_sig$Module) %>%
+  rowwise() %>%
+  mutate(
+    own_kME = get(paste0("kME.", Module)), 
+    own_abs_kME = abs(own_kME)
+  ) %>%
+  subset(own_abs_kME > mm_cut & abs(GS_HF) > gs_cut)
+
+cat("Number of screened Hub genes: ", nrow(hubGenes), "\n")
+table(hubGenes$Module)
+
+
+# M~M
+cor_ME <- cor(MEs)
+mod_names <- gsub("ME","",colnames(MEs))
+colnames(cor_ME) <- mod_names
+rownames(cor_ME) <- mod_names
+wgcnacol <- blueWhiteRed(100)
+
+pdf("../figures/main/nFigure_2E.pdf", width=7, height=5)
+par(mar = c(0, 0, 0, 0), oma = c(0, 0, 0, 0))
+corrplot(
+  cor_ME,
+  method = "circle",
+  type = "upper",
+  diag = FALSE,
+  col = wgcnacol,
+  tl.col = "black", 
+  # tl.col = mod_names,
+  tl.cex = 0.90,
+  tl.srt = 45,
+  mar = c(0, 0, 0, 0),   
+  cl.pos = "r",
+  cl.ratio = 0.15,
+  addgrid.col = NA           
+)
+dev.off()
+
+
+# |GS|~|MM|
+library(cowplot)
+
+select_mod <- mod_sig$Module
+
+plot_list <- lapply(select_mod, function(mod) {
+  df <- geneInfo %>% filter(Module == mod)
+  df$MM <- abs(df[[paste0("kME.", mod)]])
+  df$GS_abs <- abs(df$GS_HF)
+  df$group <- ifelse(df$MM > mm_cut & df$GS_abs > gs_cut, "selected", "unselected")
+  
+  ggplot(df, aes(x = MM, y = GS_abs)) +
+    geom_point(aes(color = group), size = 1.3, alpha = 0.6) +
+    scale_color_manual(values = c(selected = "#E6550D", unselected = "gray70")) +
+    geom_vline(xintercept = mm_cut, linetype = "dashed", col = "red") +
+    geom_hline(yintercept = gs_cut, linetype = "dashed", col = "red")  + xlab("|MM|") + ylab("|GS|") +
+    theme_bw() + theme(legend.position = "none")
+})
+
+pdf("../figures/main/nFigure_2F.pdf", width=7, height=5)
+plot_grid(plotlist = plot_list, ncol=3)
+dev.off()
+
+hub_genes_wgcna <- hubGenes[,"Gene"]
+save(hub_genes_wgcna, file =  "../data/processed/geo/gse57338_hub_genes_wgcna.RData")
+```
+
+## Step 8: Disease_genes: intersecting DEGs and WGCNA
+
+```{r}
+rm(list = ls())
+
+load("../data/processed/geo/gse57338_degs_results.RData")
+load("../data/processed/geo/gse57338_hub_genes_wgcna.RData")
+
+deg_genes <- rownames(deg_sig) 
+wgcna_genes <- hub_genes_wgcna$Gene
+
+# disease_genes: intersecting DEGs and WGCNA
+disease_genes <- intersect(deg_genes,wgcna_genes)
+
+deg_genes_df <- data.frame(Gene = deg_genes) %>%
+  arrange(Gene)
+
+wgcna_genes_df <- hub_genes_wgcna %>%
+  arrange(Gene)
+
+disease_genes_df <- data.frame(Gene = disease_genes) %>%
+  arrange(Gene)
+
+gene_list <- list(
+  DEGs = deg_genes,
+  `WGCNA Genes` = wgcna_genes
+)
+
+library(ggsci)
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(2),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=10))
+
+# save
+ggsave("../figures/main/nFigure_2G.pdf", p, width=6, height=6, dpi=300)
+
+
+save(deg_genes_df, wgcna_genes_df,disease_genes_df, file = "../data/processed/geo/disease_genes.RData")
+
+write.xlsx(
+  list(
+    DEGs = deg_genes_df,
+    WGCNAGenes = wgcna_genes_df,
+    DiseaseGenes = disease_genes_df
+  ),
+  "../tables/Table_S3.xlsx"
+)
+
+deg_candidate <- deg_sig[rownames(deg_sig) %in% disease_genes, ]
+
+up_genes <- rownames(deg_candidate[ deg_candidate$significance =="Up(151)",])
+
+down_genes <- rownames(deg_candidate[ deg_candidate$significance =="Down(162)",])
+
+cat("Up genes: ", length(up_genes), "\n")
+print(up_genes)
+
+cat("\nDown genes: ", length(down_genes), "\n")
+print(down_genes)
+```
+
+# Figure 2
+```{r}
+library(magick)
+
+files <- c(
+  "../figures/main/nFigure_2A.pdf",
+  "../figures/main/nFigure_2B.pdf",
+  "../figures/main/nFigure_2C.pdf",
+  "../figures/main/nFigure_2D.pdf",
+  "../figures/main/nFigure_2E.pdf",
+  "../figures/main/nFigure_2F.pdf",
+  "../figures/main/nFigure_2G.pdf"
+)
+
+labels <- c("A", "B", "C", "D", "E", "F","G")
+
+pdfs <- list()
+for (i in seq_along(files)) {
+  img <- image_read_pdf(files[i], density = 300)
+  img <- image_annotate(img, labels[i], 
+                        gravity = "northwest",  
+                        location = "+10+10",    
+                        size = 12,                                 weight = 700,    
+                        color = "black")
+  pdfs[[i]] <- img
+}
+
+row1 <- image_append(c(pdfs[[1]],pdfs[[2]]), stack = FALSE)
+row2 <- image_append(c(pdfs[[3]]), stack = FALSE)
+row3 <- image_append(c(pdfs[[4]],pdfs[[5]]), stack = FALSE)
+row4 <- image_append(c(pdfs[[6]],pdfs[[7]]), stack = FALSE)
+
+combined <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+image_write(combined, "../figures/main/nFigure_2.pdf", format = "pdf")
+image_write(combined, "../figures/main/nFigure_2.png", format = "png", density = 300)
+```
+
+---

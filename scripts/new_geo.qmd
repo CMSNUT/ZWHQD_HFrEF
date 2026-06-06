@@ -57,12 +57,14 @@ Sys.setlocale("LC_ALL", "C")
 gse57338 <- getGEO("GSE57338", destdir = raw_dir, getGPL = TRUE, AnnotGPL = F)
 Sys.setlocale("LC_ALL", "")
 
-gse57338_pheno_raw <- pData(gse120895[[1]])
-gse57338_exprs_raw <- exprs(gse120895[[1]])
+gse57338_pheno_raw <- pData(gse57338[[1]])
+gse57338_exprs_raw <- exprs(gse57338[[1]])
+gse57338_gpl <- gse57338[[1]]@annotation
 
 save(
   gse57338_pheno_raw,
   gse57338_exprs_raw,
+  gse57338_gpl,
   file = "../data/raw/geo/gse57338_raw.RData"
 )
 ```
@@ -80,10 +82,12 @@ Sys.setlocale("LC_ALL", "")
 
 gse5406_pheno_raw <- pData(gse5406[[1]])
 gse5406_exprs_raw <- exprs(gse5406[[1]])
+gse5406_gpl <- gse5406[[1]]@annotation
 
 save(
   gse5406_pheno_raw,
   gse5406_exprs_raw,
+  gse5406_gpl,
   file = "../data/raw/geo/gse5406_raw.RData"
 )
 ```
