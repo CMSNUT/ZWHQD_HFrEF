@@ -136,13 +136,18 @@ save(
 
 ```{r}
 compounds_manual <- read.xlsx("../data/raw/tcm/compounds_properties_manual.xlsx")
+herbs <- compounds_filtered %>%
+  dplyr::select(Herb.Name.Chinese,Herb.Name.Pinyin,Herb.Name.Latin,Herb.Name.English) %>%
+  distinct(Herb.Name.Pinyin, .keep_all = TRUE)
 
 compounds_final_filtered <- compounds_manual %>%
   dplyr::filter(Drop == "No") %>%
   dplyr::select(
     -c(Note, Compound.Toxic, Drop)
-  ) %>%
-  distinct(Herb.Name.Pinyin, CID, .keep_all = TRUE)
+  ) %>% 
+  left_join(herbs, by = c("Herb.Name.Pinyin")) %>%
+  distinct(Herb.Name.Pinyin, CID, .keep_all = TRUE) %>%
+  dplyr::select(Herb.Name.Chinese,Herb.Name.Pinyin,Herb.Name.Latin,Herb.Name.English,CID, Compound.Name, Compound.Category)
 
 save(
   compounds_final_filtered,
@@ -157,6 +162,8 @@ save(
 library(future)
 library(furrr)
 library(progressr)
+
+# load("../data/processed/tcm/05_compounds_final_filtered.RData")
 
 compounds_pubchem <- compounds_final_filtered %>%
   mutate(`CID` = clean_cids(CID)) %>%
@@ -181,14 +188,20 @@ plan(sequential)
 
 
 # Merge & Finalize
-compounds_final <- compounds_pubchem %>%
+compounds_final <- compounds_final_filtered %>%
   left_join(chem_info, by = "CID") %>%
-  select(
-    # Herb.Name.Chinese, 
+  dplyr::select(
+    Herb.Name.Chinese,
     Herb.Name.Pinyin, 
-    # Herb.Name.English,
-    Compound.Name, IUPACName, Compound.Category,
-    MolecularFormula, MolecularWeight, CID, SMILES
+    Herb.Name.Latin,
+    Herb.Name.English,
+    Compound.Name, 
+    IUPACName, 
+    Compound.Category,
+    MolecularFormula, 
+    MolecularWeight, 
+    CID, 
+    SMILES
   ) %>%
   mutate(across(where(is.character), trimws))
 ```
@@ -198,14 +211,16 @@ compounds_final <- compounds_pubchem %>%
 ### Step 7: Compound Sharing Statistics (Across Herbs)
 ```{r}
 compound_sharing <- compounds_final %>%
-  distinct(Herb.Name.Pinyin, CID) %>%
+  distinct(Herb.Name.Pinyin, CID,.keep_all = TRUE) %>%
   group_by(CID) %>%
   summarise(
     Herb_Count = n(),
     Herbs = paste(unique(Herb.Name.Pinyin), collapse = ", ")
   ) %>%
   filter(Herb_Count >= 2) %>%
-  arrange(desc(Herb_Count))
+  arrange(desc(Herb_Count))  %>%
+  left_join(compounds_final[,c("CID","Compound.Name")],by="CID") %>%
+  distinct(CID,.keep_all = TRUE)
 
 # Save all final results
 save(
@@ -232,7 +247,7 @@ results <- download_all_sdf(unique_cids, sdf_files)
 
 we predicted potential targets of the blood-absorbed compounds using seven authoritative online platforms, including three classic mainstream databases and four additional professional target fishing servers: **BATMAN-TCM 2.0** @kong2023batman, **SuperPred 3.0** @gallo2022superpred, **SwissTargetPrediction** @daina2019swiss, **PharmMapper** @liu2010pharm,@Wang2017pharm,  **TargetNet** @yao2016targetnet, **PPB3** @Darsaraee2026ppb3, and **SEA** @keiser2007sea. 
 
-Subsequently, we retained high‑confidence target candidates using the following thresholds: score ≥0.84 for BATMAN‑TCM 2.0; probability ≥70% and accuracy ≥90% for SuperPred; probability ≥0.1 for SwissTargetPrediction; z‑score >0 and Norm Fit >0.9 for PharmMapper; probability ≥0.5 for TargetNet; single human protein for PPB3; and P Value < 1e<sup>-10</sup>, Z.Score > 5 and  Max.Tc >0.5 for SEA, all predicted targets restricted to human origin only.
+Subsequently, we retained high‑confidence target candidates using the following thresholds: score ≥0.84 for BATMAN‑TCM 2.0; probability ≥70% and accuracy ≥90% for SuperPred; probability >0 for SwissTargetPrediction; z‑score >0 and Norm Fit >0.9 for PharmMapper; probability ≥0.5 for TargetNet; single human protein for PPB3; and P Value < 1e<sup>-10</sup>, Z.Score > 5 and  Max.Tc >0.5 for SEA, all predicted targets restricted to human origin only.
 
 To ensure analytical uniformity and interoperability, we then mapped and standardized all retained candidates to official human gene symbols using the UniProt knowledgebase (https://www.uniprot.org/). We confirmed non‑standard names or aliases, excluded targets that could not be standardized, and removed redundant entries.
 
@@ -260,7 +275,7 @@ load("../data/raw/tcm/batman/batman_target_pred.RData")
 # Known Targets
 compound_target_known_batman <- compounds_final %>%
   left_join(batman_target_known, by = "CID", relationship = "many-to-many") %>%
-  select(-ends_with(".x")) %>%
+  dplyr::select(-ends_with(".x")) %>%
   rename_with(~ str_replace(., "\\.y$", ""), ends_with(".y")) %>%
   distinct(Herb.Name.Pinyin, CID, Uniprot.ID, .keep_all = TRUE) %>%
   filter(!is.na(Symbol))
@@ -268,7 +283,7 @@ compound_target_known_batman <- compounds_final %>%
 # Predicted Targets (Score ≥ 0.84)
 compound_target_pred_batman <- compounds_final %>%
   left_join(batman_target_pred, by = "CID", relationship = "many-to-many") %>%
-  select(-ends_with(".x")) %>%
+  dplyr::select(-ends_with(".x")) %>%
   rename_with(~ str_replace(., "\\.y$", ""), ends_with(".y")) %>%
   distinct(Herb.Name.Pinyin, CID, Uniprot.ID, .keep_all = TRUE) %>%
   filter(!is.na(Symbol), Score >= 0.84)
@@ -291,12 +306,12 @@ load("../data/raw/uniprot/uniprot_human_reviewed.RData")
 
 # Known targets
 known <- read_compound_target("../data/raw/tcm/super/known") %>%
-  select(CID, Protein.name = `Target Name`, Uniprot.ID = `UniProt ID`)
+  dplyr::select(CID, Protein.name = `Target Name`, Uniprot.ID = `UniProt ID`)
 
 # Predicted targets (Prob > 70, Model Accuracy > 90)
 pred <- read_compound_target("../data/raw/tcm/super") %>%
   filter(Probability >= 70, `Model accuracy` >= 90) %>%
-  select(CID, Protein.name = `Target Name`, Uniprot.ID = `UniProt ID`)
+  dplyr::select(CID, Protein.name = `Target Name`, Uniprot.ID = `UniProt ID`)
 
 # Merge & Annotate
 process_super <- function(df) {
@@ -339,14 +354,14 @@ load("../data/processed/tcm/06_compounds_final.RData")
 load("../data/raw/uniprot/uniprot_human_reviewed.RData")
 
 result <- read_compound_target("../data/raw/tcm/swiss") %>%
-  filter(`Probability*` > 0.10) %>%
+  filter(`Probability*` > 0) %>%
   separate_rows(`Common name`, `Uniprot ID`, sep = " ") %>%
   mutate(
     CID = clean_cids(CID),
     Uniprot.ID = gsub("[[:space:]]", "", `Uniprot ID`),
     Symbol = gsub("[[:space:]]", "", `Common name`)
   ) %>%
-  select(CID, Uniprot.ID) %>%
+  dplyr::select(CID, Uniprot.ID) %>%
   distinct(CID, Uniprot.ID, .keep_all = TRUE) %>%
   left_join(uniprot_human_reviewed, by = c("Uniprot.ID" = "Entry")) %>%
   filter(!is.na(Gene.Names.primary))
@@ -548,10 +563,10 @@ rm(list = ls())
 
 # Common Columns
 cnames <- c(
-  # "Herb.Name.Chinese", 
+  "Herb.Name.Chinese",
   "Herb.Name.Pinyin", 
-  # "Herb.Name.English", 
-  # "Herb.Name.Latin",
+  "Herb.Name.English",
+  "Herb.Name.Latin",
   "Compound.Name", "IUPACName", "Compound.Category",
   "MolecularFormula", "MolecularWeight", "CID",
   "SMILES", "Symbol", "Uniprot.ID"
@@ -614,8 +629,8 @@ compound_target_pred_count <- compound_target_pred_all %>%
   group_by(Herb.Name.Pinyin, CID, Symbol) %>%
   summarise(
     database_count = n_distinct(database),
-    Uniprot.ID = first(Uniprot.ID),
-    across(-c(database, Uniprot.ID), first),
+    Uniprot.ID = dplyr::first(Uniprot.ID),
+    dplyr::across(-c(database, Uniprot.ID), dplyr::first),
     .groups = "drop"
   )
 
@@ -727,7 +742,7 @@ add_platform <- function(df, platform_name) {
       Target_gene_name = as.character(!!sym("Symbol")), 
       UniProt_ID = as.character(!!sym("Uniprot.ID"))      
     ) %>%
-    select(Target_gene_name, UniProt_ID, Prediction_platform)
+    dplyr::select(Target_gene_name, UniProt_ID, Prediction_platform)
 }
 
 platform_list <- list(
@@ -764,7 +779,7 @@ table_S2_grouped <- all_platforms %>%
 table_S2 <- table_S2_grouped %>%
   left_join(final_intersection, by = c( "Target_gene_name" ="Symbol" , "UniProt_ID" = "Uniprot.ID" )) %>%
   mutate(`Included in intersection` = ifelse(is.na(In_intersection), "No", "Yes")) %>%
-  select(-In_intersection)
+  dplyr::select(-In_intersection)
 
 write.xlsx(
   list(`Table S2` = table_S2),
@@ -803,6 +818,9 @@ library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
 ## Step 1: RNA‑seq Datasets
 ### GSE141910: Main training set
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE141910
+
 ```{r,warning=FALSE}
 rm(list=ls())
 
@@ -839,6 +857,14 @@ save(
 ```
 
 ### GSE116250: External validation set
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE116250
+
+
+14 non-failing donors, 
+37 dilated cardiomyopathy, 
+and 13 ischemic cardiomyopathy
+
 ```{r,warning=FALSE}
 rm(list=ls())
 
@@ -870,6 +896,14 @@ save(
 ```
 
 ### GSE161472: External validation set
+
+(不合适)
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE161472
+
+10 non-failing (NF) donors 
+and 12 heart failure with reduced ejection fraction (HFrEF)
+
 ```{r,warning=FALSE}
 rm(list=ls())
 
@@ -901,6 +935,13 @@ save(
 ```
 
 ### GSE135055: External validation set
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135055
+
+21 HF patients and 9 healthy donors
+
+有DCM和MCD等亚型
+
 ```{r,warning=FALSE}
 rm(list=ls())
 
@@ -932,7 +973,12 @@ save(
 ```
 
 ## Step 2: Microarray Datasets
-### GSE120895: External validation set 
+### GSE120895: External validation set
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE120895
+
+47名纽约心脏协会（NYHA）功能等级II和III的左心室收缩功能障碍（LVEF<45%）及心衰竭症状的DCM患者。其中对照8名
+
 ```{r,warning=FALSE}
 rm(list=ls())
 
@@ -954,6 +1000,11 @@ save(
 ```
 
 ### GSE19303: External validation set 
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE19303
+
+33对治疗前后的DCM-HFrEF
+
 ```{r,warning=FALSE}
 rm(list=ls())
 
@@ -975,6 +1026,9 @@ save(
 ```
 
 ## Step 3: Single‑cell RNA‑seq Dataset
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183852
+
 
 ```{r}
 rm(list=ls())
