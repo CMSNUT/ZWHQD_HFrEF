@@ -1,0 +1,142 @@
+---
+title: "12. Single-gene GSEA"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+  
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+# Loading Packages
+```{r}
+library(GSVA)
+# BiocManager::install("fgsea")
+library(fgsea)
+library(data.table)
+```
+
+# ssGSEA
+```{r}
+hub6 <- c("STAT3", "HIF1A", "SERPINE1", "BCL2L1", "CDKN1A", "CASP1")
+gene_sets <- lapply(hub6, function(g) g)
+names(gene_sets) <- hub6
+
+load("../data/processed/geo/gse57338.RData")
+mat <- as.matrix(expr_filt)
+
+par <- gsvaParam(
+  exprData = mat,
+  geneSets = gene_sets,
+  kcdf = "Gaussian", 
+  maxDiff = TRUE       
+)
+
+gsvaranks <- gsvaRanks(par)
+
+```
+
+# Save
+```{r}
+save(gsvaranks,file = "../data/processed/functional/gsvaranks.RData")
+```
+
+# Figure 
+```{r}
+library(patchwork) 
+
+# 存储每个图
+p_list <- list()
+
+for (i in seq_along(hub6)) {
+  g <- hub6[i]
+  p <- gsvaEnrichment(
+    param = gsvaranks,
+    column = 1,        # 样本1
+    geneSet = i,       # 第i个基因集（只能传单个！）
+    main = g,
+    plot = "ggplot"
+  )
+  # 提取数据，自己加颜色/分组
+  df <- p$data
+  df$gene <- g
+  df$color <- scales::hue_pal()(6)[i]
+  p_list[[i]] <- df
+}
+
+# 合并所有数据，自己画 ggplot（6条线同图）
+df_all <- do.call(rbind, p_list)
+
+ggplot(df_all, aes(x = rank, y = value, color = gene)) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = scales::hue_pal()(6)) +
+  labs(
+    x = "Gene Rank",
+    y = "Running Enrichment Score",
+    title = "Single-Gene GSVA Curves (Hub6)"
+  ) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../figures/Figure_SingleGene_GSVA_6curves.pdf", width = 10, height = 6)
+
+```
+
+
+```{r}
+library(fgsea)
+library(ggplot2)
+library(patchwork)
+
+
+mat <- as.matrix(expr_filt)
+hub6 <- c("STAT3", "HIF1A", "SERPINE1", "BCL2L1", "CDKN1A", "CASP1")
+
+group <- pheno$group 
+idx_dcm <- group == "HF"
+mean_dcm <- rowMeans(mat[, idx_dcm, drop=F])
+mean_ctrl <- rowMeans(mat[, !idx_dcm, drop=F])
+ranks <- mean_dcm - mean_ctrl
+ranks <- sort(ranks, decreasing = TRUE)
+
+gene_sets <- lapply(hub6, function(g) g)
+names(gene_sets) <- hub6
+
+# ===================== 批量画图（6张图） =====================
+plot_list <- list()
+
+for(g in hub6){
+  p <- plotEnrichment(gene_sets[[g]], ranks) +
+    ggtitle(g) +
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  plot_list[[g]] <- p
+}
+
+# ===================== 拼图：2行3列 =====================
+final_plot <- wrap_plots(plot_list, ncol = 3)
+
+# 保存高清图
+ggsave("6_SingleGene_GSEA_Plots.pdf", final_plot, 
+       width = 16, height = 10, dpi = 300)
+
+# 出图
+print(final_plot)
+```

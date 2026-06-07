@@ -1,5 +1,5 @@
 ---
-title: "Weighted Gene Co-expression Network Analysis (WGCNA)"
+title: "05. Weighted Gene Co-expression Network Analysis (WGCNA)"
 format: 
   html:
     toc: true
@@ -26,9 +26,7 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 
 ---
 
-# WGCNA
-
-## Load packages
+# Load packages
 ```{r}
 library(WGCNA)
 library(tidyverse)
@@ -41,7 +39,7 @@ library(dynamicTreeCut)
 
 ---
 
-## Step 1: Loading Data
+# Step 1: Loading Data
 ```{r}
 rm(list = ls())
 
@@ -78,7 +76,11 @@ datTraits$Disease <- ifelse(pheno$group == "HF", 1, 0)
 ```
 
 
-## Step 2: Sample clustering (checking for outlier samples, quality control) 
+# Step 2: Sample clustering (checking for outlier samples, quality control) 
+
+- Figure S2A. 
+
+- 
 ```{r}
 # goodSamplesGenes
 # Quality control: Remove bad genes/samples
@@ -110,8 +112,10 @@ pdf("../figures/supplementary/nFigure_S2A.pdf", width=10, height=5)
 plotDendroAndColors(sampleTree, color_mat, 
                     dendroLabels = FALSE, 
                     addGuide = TRUE,       
-                    guideCol = "grey",   
-                    main = "Sample clustering")
+                    guideCol = "grey"
+                    # ,   
+                    # main = "Sample clustering"
+                    )
 dev.off()
 
 
@@ -120,7 +124,9 @@ save(datTraits,datExpr,pheno,file = "../data/processed/geo/gse57338_datExpr.RDat
 
 ---
 
-## Step 3: Select soft threshold
+# Step 3: Select soft threshold
+
+- Figure S2B. 
 
 ```{r}
 # load("../data/processed/geo/gse57338_datExpr.RData")
@@ -164,7 +170,7 @@ save(sft,file="../data/processed/geo/gse57338_sft.RData")
 
 ```
 
-## Step 4: Construct a co-expression network
+# Step 4: Construct a co-expression network
 
 ---
 
@@ -188,9 +194,11 @@ save(net,file = "../data/processed/geo/gse57338_net.RData")
 
 ```
 
-## Step 5: Clustering
+# Step 5: Clustering
 
 ---
+
+- Figure_2C
 
 ```{r}
 load("../data/processed/geo/gse57338_net.RData")
@@ -213,9 +221,11 @@ plotDendroAndColors(
 dev.off()
 ```
 
-## Step 6: Module correlation with diseases
+# Step 6: Module correlation with diseases
 
 ---
+
+- Figure_2D.
 
 ```{r}
 load("../data/processed/geo/gse57338_datExpr.RData")
@@ -254,9 +264,13 @@ dev.off()
 ```
 
 
-## Step 7: Extract DCM_HFrEF‑related modules and candidate hub genes
+# Step 7: Extract DCM_HFrEF‑related modules and candidate hub genes
 
 ---
+
+- Figure_2E.
+
+- Figure_2F.
 
 ```{r}
 key_modules <- names(MEs)[abs(moduleTraitCor) > 0.5 & moduleTraitPvalue < 0.05]
@@ -371,7 +385,9 @@ hub_genes_wgcna <- hubGenes[,"Gene"]
 save(hub_genes_wgcna, file =  "../data/processed/geo/gse57338_hub_genes_wgcna.RData")
 ```
 
-## Step 8: Disease_genes: intersecting DEGs and WGCNA
+# Step 8: Disease_genes: intersecting DEGs and WGCNA
+
+- Figure 2G.
 
 ```{r}
 rm(list = ls())
@@ -421,8 +437,7 @@ save(deg_genes_df, wgcna_genes_df,disease_genes_df, file = "../data/processed/ge
 write.xlsx(
   list(
     DEGs = deg_genes_df,
-    WGCNAGenes = wgcna_genes_df,
-    DiseaseGenes = disease_genes_df
+    WGCNAGenes = wgcna_genes_df
   ),
   "../tables/Table_S3.xlsx"
 )

@@ -1,0 +1,149 @@
+---
+title: "10. MR + coloc"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+  
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+# Loading Packages
+```{r}
+library(data.table)
+library(dplyr)
+library(TwoSampleMR)
+library(MRPRESSO)
+library(coloc)
+library(ggplot2)
+library(patchwork)
+library(ieugwasr)
+```
+
+# MR
+
+## Step 1: Files and folder
+```{r}
+rm(list = ls())
+gc()
+
+# outcome file
+outcome_file <- "../data/raw/opengwas/HERMES2_GWAS_DCM_EUR/FORMAT-METAL_Pheno5-DCM_EUR.tsv.gz"
+
+# GTEx v8 heart left ventricle data
+eqtl_signif_file <- "../data/raw/opengwas/GTEx_Analysis_v8_eQTL/Heart_Left_Ventricle.v8.signif_variant_gene_pairs.txt.gz"
+eqtl_egene_file  <- "../data/raw/opengwas/GTEx_Analysis_v8_eQTL/Heart_Left_Ventricle.v8.egenes.txt.gz"
+
+# Hub genes
+hub6 <- c("STAT3", "HIF1A", "SERPINE1", "BCL2L1", "CDKN1A", "CASP1")
+
+# output folder
+out_dir <- "../data/processed/opengwas"
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+```
+
+## Step 2: Loading GTEx genes data and matching the gene_id for Hub gene
+```{r}
+egenes <- fread(eqtl_egene_file, header = TRUE, data.table = FALSE)
+
+gene_map <- egenes %>% 
+  dplyr::select(gene_id, gene_name) %>%
+  distinct(gene_id, .keep_all = TRUE)
+
+hub_genes <- gene_map %>% filter(gene_name %in% hub6)
+if(nrow(hub_genes) == 0) stop("Gene_id corresponding to Hub gene not found, please check for gene name matching")
+
+cat("Find the following Hub genes and their gene_id:\n")
+print(hub_genes)
+```
+
+## Step 3: Loading significant eQTL data, retaining only the association of Hub genes
+```{r}
+signif <- fread(eqtl_signif_file, 
+                select = c("variant_id", "gene_id", "pvalue", "slope", "slope_se", 
+                           "maf", "ma_samples", "ma_count"),
+                data.table = FALSE)
+
+# Selecting of eQTL for Hub genes
+signif_hub <- signif %>% filter(gene_id %in% hub_genes$gene_id)
+rm(signif); gc()
+
+cat("Number of eQTL rows after screening:", nrow(signif_hub), "\n")
+```
+
+## Step 4: function: Extract IVs (p<5e-8, club) for each gene
+```{r}
+get_ivs_for_gene <- function(gene_id, pval_thresh = 5e-8, r2 = 0.001, kb = 10000) {
+  sub <- signif_hub %>% filter(gene_id == !!gene_id)
+  if(nrow(sub) == 0) return(NULL)
+  
+  sub <- sub %>% filter(pvalue < pval_thresh)
+  if(nrow(sub) == 0) return(NULL)
+  
+  sub <- sub %>%
+    mutate(
+      chr_pos = gsub("_b38$", "", variant_id),
+      chr = as.numeric(gsub("_.*", "", chr_pos)),
+      pos = as.numeric(gsub(".*_", "", gsub("_.*_.*", "", chr_pos)))
+    ) %>%
+    filter(!is.na(chr), !is.na(pos))
+  
+  if(nrow(sub) == 0) return(NULL)
+  
+  # LD clumping  IEU OpenGWAS API
+  clumped <- tryCatch({
+    ieugwasr::ld_clump(
+      dat = data.frame(
+        SNP = sub$variant_id,
+        CHR = sub$chr,
+        POS = sub$pos,
+        P = sub$pvalue
+      ),
+      clump_r2 = r2,
+      clump_kb = kb,
+      plink_bin = NULL,   
+      pop = "EUR"
+    )
+  }, error = function(e) NULL)
+  
+  if(is.null(clumped) || nrow(clumped) == 0) return(NULL)
+  
+  ivs <- sub %>% filter(variant_id %in% clumped$SNP)
+  return(ivs)
+}
+```
+
+## Step 5: Loading outcome GWAS data
+```{r}
+outcome_gwas <- fread(outcome_file, header = TRUE, data.table = FALSE)
+
+outcome_gwas <- outcome_gwas %>%
+  rename(
+    SNP = SNP,
+    chr_name = CHR,
+    pos = POS,
+    effect_allele = EA,
+    other_allele = OA,
+    beta = BETA,
+    se = SE,
+    pval = P,
+    eaf = EAF
+  )
+cat("结局GWAS行数:", nrow(outcome_gwas), "\n")
+```

@@ -1,5 +1,5 @@
 ---
-title: "new_geo"
+title: "03. Acquisition of GEO datasets for DCM‑HF"
 format: 
   html:
     toc: true
@@ -24,29 +24,15 @@ options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
 options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 ```
 
-# GEO datasets
-
-## Load Packages
+# Load Packages
 ```{r}
 library(tidyverse)
 library(data.table)
 library(openxlsx)
-library(patchwork)
-library(ggrepel)
-library(vegan)
 library(GEOquery)
-library(limma)
-library(DESeq2)
-library(edgeR)
-library(sva)
-library(org.Hs.eg.db)
-if (!require("TxDb.Hsapiens.UCSC.hg38.knownGene")) {
-  BiocManager::install("TxDb.Hsapiens.UCSC.hg38.knownGene")
-}
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 ```
 
-## GSE57338
+# GSE57338
 ```{r,warning=FALSE}
 rm(list=ls())
 
@@ -69,7 +55,7 @@ save(
 )
 ```
 
-## GSE5406
+# GSE5406
 ```{r,warning=FALSE}
 rm(list=ls())
 
@@ -90,4 +76,49 @@ save(
   gse5406_gpl,
   file = "../data/raw/geo/gse5406_raw.RData"
 )
+```
+
+# GSE183852: scRNA-Seq
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183852
+
+
+```{r}
+rm(list=ls())
+
+raw_dir <- "../data/raw/geo/GSE183852"
+if (!dir.exists(raw_dir)) dir.create(raw_dir, recursive = TRUE)
+
+Sys.setlocale("LC_ALL", "C")
+gse183852  <- getGEO("GSE183852",  destdir = raw_dir, getGPL = TRUE, AnnotGPL = F)
+Sys.setlocale("LC_ALL", "")
+
+gse183852_pheno_raw <- pData(gse183852[[1]])
+gse183852_gpl <- gse183852[[1]]@annotation
+
+save(
+  gse183852_gpl,
+  gse183852_pheno_raw,
+  file = "../data/raw/geo/gse183852_raw.RData"
+)
+```
+
+**NOTE**: **Proceed with caution!** GSE183852_DCM_Integrated.Robj.gz is 11.7GB. Long download time.
+Alternative: download directly via browser from https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183852
+
+```{r}
+library(curl)
+
+url <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE183852&format=file&file=GSE183852%5FIntegrated%5FCounts%2Ecsv%2Egz"
+h <- new_handle()
+curl_fetch_disk(url, path = "../data/raw/geo/GSE183852/GSE183852_Integrated_Counts.csv.gz",handle = h)
+
+# 11.7 GB
+url <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE183852&format=file&file=GSE183852%5FDCM%5FIntegrated%2ERobj%2Egz" 
+
+h <- new_handle()
+curl_fetch_disk(url, path = "../data/raw/geo/GSE183852/GSE183852_DCM_Integrated.Robj.gz",handle = h)
+
+rm(list=ls())
+gc()
 ```

@@ -1,0 +1,534 @@
+---
+title: "02. Prediction and identification of potential targets of ZWHQD"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+---
+
+# Step 1: BATMAN-TCM Targets
+```{r}
+rm(list = ls())
+
+source("utils.R")
+
+load("../data/processed/tcm/06_compounds_final.RData")
+load("../data/raw/tcm/batman/batman_target_known.RData")
+load("../data/raw/tcm/batman/batman_target_pred.RData")
+
+# Known Targets
+compound_target_known_batman <- compounds_final %>%
+  left_join(batman_target_known, by = "CID", relationship = "many-to-many") %>%
+  dplyr::select(-ends_with(".x")) %>%
+  rename_with(~ str_replace(., "\\.y$", ""), ends_with(".y")) %>%
+  distinct(Herb.Name.Pinyin, CID, Uniprot.ID, .keep_all = TRUE) %>%
+  filter(!is.na(Symbol))
+
+# Predicted Targets (Score ≥ 0.84)
+compound_target_pred_batman <- compounds_final %>%
+  left_join(batman_target_pred, by = "CID", relationship = "many-to-many") %>%
+  dplyr::select(-ends_with(".x")) %>%
+  rename_with(~ str_replace(., "\\.y$", ""), ends_with(".y")) %>%
+  distinct(Herb.Name.Pinyin, CID, Uniprot.ID, .keep_all = TRUE) %>%
+  filter(!is.na(Symbol), Score >= 0.84)
+
+save(
+  compound_target_known_batman,
+  compound_target_pred_batman,
+  file = "../data/processed/tcm/07_batman_targets.RData"
+)
+```
+
+# Step 2: Super-Pred Targets
+```{r}
+rm(list = ls())
+
+source("utils.R")
+
+load("../data/processed/tcm/06_compounds_final.RData")
+load("../data/raw/uniprot/uniprot_human_reviewed.RData")
+
+# Known targets
+known <- read_compound_target("../data/raw/tcm/super/known") %>%
+  dplyr::select(CID, Protein.name = `Target Name`, Uniprot.ID = `UniProt ID`)
+
+# Predicted targets (Prob > 70, Model Accuracy > 90)
+pred <- read_compound_target("../data/raw/tcm/super") %>%
+  filter(Probability >= 70, `Model accuracy` >= 90) %>%
+  dplyr::select(CID, Protein.name = `Target Name`, Uniprot.ID = `UniProt ID`)
+
+# Merge & Annotate
+process_super <- function(df) {
+  df %>%
+    left_join(uniprot_human_reviewed, by = c("Uniprot.ID" = "Entry")) %>%
+    filter(!is.na(Gene.Names.primary)) %>%
+    mutate(Symbol = Gene.Names.primary) %>%
+    distinct(CID, Uniprot.ID, .keep_all = TRUE)
+}
+
+known_clean <- process_super(known)
+pred_clean <- process_super(pred)
+
+# Merge with compounds
+compound_target_known_super <- compounds_final %>%
+  left_join(known_clean, by = "CID", relationship = "many-to-many") %>%
+  distinct(Herb.Name.Pinyin, CID, Uniprot.ID, .keep_all = TRUE) %>%
+  filter(!is.na(Symbol))
+
+compound_target_pred_super <- compounds_final %>%
+  left_join(pred_clean, by = "CID", relationship = "many-to-many") %>%
+  distinct(Herb.Name.Pinyin, CID, Uniprot.ID, .keep_all = TRUE) %>%
+  filter(!is.na(Symbol))
+
+# Save
+save(
+  compound_target_known_super,
+  compound_target_pred_super,
+  file = "../data/processed/tcm/08_super_targets.RData"
+)
+```
+
+# Step 3: SwissTargetPrediction Targets
+```{r}
+rm(list = ls())
+
+source("utils.R")
+
+load("../data/processed/tcm/06_compounds_final.RData")
+load("../data/raw/uniprot/uniprot_human_reviewed.RData")
+
+result <- read_compound_target("../data/raw/tcm/swiss") %>%
+  filter(`Probability*` > 0) %>%
+  separate_rows(`Common name`, `Uniprot ID`, sep = " ") %>%
+  mutate(
+    CID = clean_cids(CID),
+    Uniprot.ID = gsub("[[:space:]]", "", `Uniprot ID`),
+    Symbol = gsub("[[:space:]]", "", `Common name`)
+  ) %>%
+  dplyr::select(CID, Uniprot.ID) %>%
+  distinct(CID, Uniprot.ID, .keep_all = TRUE) %>%
+  left_join(uniprot_human_reviewed, by = c("Uniprot.ID" = "Entry")) %>%
+  filter(!is.na(Gene.Names.primary))
+
+compound_target_pred_swiss <- compounds_final %>%
+  left_join(result, by = "CID", relationship = "many-to-many") %>%
+  filter(!is.na(Gene.Names.primary)) %>%
+  dplyr::rename(Symbol = Gene.Names.primary) %>%
+  distinct(Herb.Name.Pinyin, CID, Symbol, .keep_all = TRUE)
+
+# Save
+save(
+  compound_target_pred_swiss,
+  file = "../data/processed/tcm/09_swiss_targets.RData"
+)
+```
+
+---
+
+# Step 4: PharmMapper Targets
+```{r}
+rm(list = ls())
+
+source("utils.R")
+
+load("../data/processed/tcm/06_compounds_final.RData")
+load("../data/raw/uniprot/uniprot_human_reviewed.RData")
+
+result <- read_compound_target2("../data/raw/tcm/pharm",skip_row = 1) 
+
+result <- result %>%
+  dplyr::filter(grepl("_HUMAN", Uniplot),zscore>0, `Norm Fit`>0.9) %>%
+  dplyr::select(CID, Uniplot) %>%
+  distinct(CID, Uniplot, .keep_all = TRUE) %>%
+  left_join(uniprot_human_reviewed, by = c("Uniplot" = "Entry.Name")) %>%
+  filter(!is.na(Gene.Names.primary))
+
+compound_target_pred_pharm <- compounds_final %>%
+  left_join(result, by = "CID", relationship = "many-to-many") %>%
+  filter(!is.na(Gene.Names.primary)) %>%
+  dplyr::rename(Symbol = Gene.Names.primary) %>%
+  distinct(Herb.Name.Pinyin, CID, Symbol, .keep_all = TRUE) %>%
+  dplyr::rename(Uniprot.ID = Entry)
+
+# save
+save(
+  compound_target_pred_pharm,
+  file = "../data/processed/tcm/10_pharm_targets.RData"
+)
+```
+
+---
+
+# Step 5: TtargetNet Targets
+```{r}
+rm(list = ls())
+
+source("utils.R")
+
+load("../data/processed/tcm/06_compounds_final.RData")
+load("../data/raw/uniprot/uniprot_human_reviewed.RData")
+
+
+query <- read.xlsx("../data/raw/tcm/targetnet/query.xlsx")
+
+cids<- query$CID
+col_names <- c("Uniprot.ID","Protein",cids)
+
+result <- read.xlsx("../data/raw/tcm/targetnet/results.xlsx") 
+result <- result %>%
+  dplyr::select(-Details) %>%
+  setNames(col_names) %>%
+  pivot_longer(
+    cols = -c(Uniprot.ID, Protein),   
+    names_to = "CID",                 
+    values_to = "Probability"     
+  ) %>%
+  dplyr::filter(!is.na(Probability), Probability > 0.5) %>%
+  mutate(CID = as.numeric(CID)) %>%
+  arrange(CID,Probability) %>% 
+  mutate(CID = as.character(CID)) %>%
+  dplyr::select(CID,Uniprot.ID,Probability) %>% 
+  distinct(CID, Uniprot.ID, .keep_all = TRUE) %>%
+  left_join(uniprot_human_reviewed, by = c("Uniprot.ID" = "Entry")) %>%
+  filter(!is.na(Gene.Names.primary))
+
+compound_target_pred_targetnet <- compounds_final %>%
+  left_join(result, by = "CID", relationship = "many-to-many") %>%
+  filter(!is.na(Gene.Names.primary)) %>%
+  dplyr::rename(Symbol = Gene.Names.primary) %>%
+  distinct(Herb.Name.Pinyin, CID, Symbol, .keep_all = TRUE)
+
+# Save
+save(
+  compound_target_pred_targetnet,
+  file = "../data/processed/tcm/11_targetnet_targets.RData"
+)
+```
+
+---
+
+# Step 6: PPB3 Targets
+```{r}
+rm(list = ls())
+
+source("utils.R")
+
+load("../data/processed/tcm/06_compounds_final.RData")
+load("../data/raw/uniprot/uniprot_human_reviewed.RData")
+
+result <- read_compound_target("../data/raw/tcm/ppb3") 
+
+result <- result %>%
+  dplyr::filter( `Target Type` == 'SINGLE PROTEIN', `Target Organism` == "Homo sapiens")
+
+
+library(httr)
+library(jsonlite)
+
+chembl_ids <- unique(result$`Target ID`)
+
+uniprot_list <- sapply(chembl_ids, chembl_to_uniprot)
+
+save(uniprot_list,file = "../data/raw/tcm/ppb3/uniprot_list.RData")
+
+# load("../data/raw/tcm/ppb3/uniprot_list.RData")
+
+df <- data.frame(
+  Chembl.ID = names(uniprot_list),
+  Uniprot.ID = sapply(uniprot_list, `[`, 1),  
+  row.names = NULL
+)
+
+result <- result %>%
+  left_join(df, by=c("Target ID" = "Chembl.ID")) %>% 
+  distinct(CID, Uniprot.ID, .keep_all = TRUE) %>%
+  left_join(uniprot_human_reviewed, by = c("Uniprot.ID" = "Entry")) %>%
+  filter(!is.na(Gene.Names.primary)) 
+
+compound_target_pred_ppb3 <- compounds_final %>%
+  left_join(result, by = "CID", relationship = "many-to-many") %>%
+  filter(!is.na(Gene.Names.primary)) %>%
+  dplyr::rename(Symbol = Gene.Names.primary) %>%
+  distinct(Herb.Name.Pinyin, CID, Symbol, .keep_all = TRUE) %>%
+  dplyr::select(-c(Rank,`Nearest Neighbors`))
+
+# Save
+save(
+  compound_target_pred_ppb3,
+  file = "../data/processed/tcm/12_ppb3_targets.RData"
+)
+```
+
+---
+
+# Step 7: SEA Targets
+```{r}
+rm(list = ls())
+
+source("utils.R")
+
+load("../data/processed/tcm/06_compounds_final.RData")
+load("../data/raw/uniprot/uniprot_human_reviewed.RData")
+
+result <- read.csv("../data/raw/tcm/sea/sea-results.xls") %>%
+  mutate(CID = as.numeric(gsub("compound","",Query.ID)), .before = 1) %>%
+  arrange(CID) %>%
+  mutate(CID = as.character(CID)) %>%
+  dplyr::select(-Query.ID) %>%
+  dplyr::filter(
+    grepl("_HUMAN", Target.ID), 
+    P.Value < 1e-10, 
+    Max.Tc > 0.5, 
+    Z.Score > 5
+  ) %>%
+  distinct(CID, Target.ID, .keep_all = TRUE) %>%
+  left_join(uniprot_human_reviewed, by = c("Target.ID" = "Entry.Name")) %>%
+  filter(!is.na(Gene.Names.primary))
+
+compound_target_pred_sea <- compounds_final %>%
+  left_join(result, by = "CID", relationship = "many-to-many") %>%
+  filter(!is.na(Gene.Names.primary)) %>%
+  dplyr::rename(Symbol = Gene.Names.primary) %>%
+  distinct(Herb.Name.Pinyin, CID, Symbol, .keep_all = TRUE) %>% 
+  dplyr::rename(Uniprot.ID = Entry)
+
+# save
+save(
+  compound_target_pred_sea,
+  file = "../data/processed/tcm/13_sea_targets.RData"
+)
+```
+
+---
+
+# Step 8: Merge All Targets & Deduplicate
+```{r}
+rm(list = ls())
+
+# Common Columns
+cnames <- c(
+  "Herb.Name.Chinese",
+  "Herb.Name.Pinyin", 
+  "Herb.Name.English",
+  "Herb.Name.Latin",
+  "Compound.Name", "IUPACName", "Compound.Category",
+  "MolecularFormula", "MolecularWeight", "CID",
+  "SMILES", "Symbol", "Uniprot.ID"
+)
+
+
+load("../data/processed/tcm/07_batman_targets.RData")
+
+load("../data/processed/tcm/08_super_targets.RData")
+
+load("../data/processed/tcm/09_swiss_targets.RData")
+
+load("../data/processed/tcm/10_pharm_targets.RData")
+
+load("../data/processed/tcm/11_targetnet_targets.RData")
+
+load("../data/processed/tcm/12_ppb3_targets.RData")
+
+load("../data/processed/tcm/13_sea_targets.RData")
+
+# Known Targets
+compound_target_known <- rbind(
+  compound_target_known_batman[, cnames],
+  compound_target_known_super[, cnames]
+) %>%
+  distinct(Herb.Name.Pinyin, CID, Symbol, .keep_all = TRUE) %>%
+  filter(!is.na(Symbol))
+
+# Predicted Targets
+pred_batman <- compound_target_pred_batman[, cnames] %>% mutate(database = "BATMAN")
+
+pred_super <- compound_target_pred_super[, cnames] %>% mutate(database = "SuperPred")
+
+pred_swiss <- compound_target_pred_swiss[, cnames] %>% mutate(database = "Swiss")
+
+pred_pharm <- compound_target_pred_pharm[, cnames] %>% mutate(database = "PharmMapper")
+
+pred_targetnet <- compound_target_pred_targetnet[, cnames] %>% mutate(database = "TargetNet")
+
+pred_ppb3 <- compound_target_pred_ppb3[, cnames] %>% mutate(database = "PPB3")
+
+pred_sea <- compound_target_pred_swiss[, cnames] %>% mutate(database = "SEA")
+
+
+# all targets
+compound_target_pred_all <- rbind(
+  pred_batman, 
+  pred_super, 
+  pred_swiss,
+  pred_pharm,
+  pred_targetnet,
+  pred_ppb3,
+  pred_sea
+) %>%
+  distinct(Herb.Name.Pinyin, CID, Symbol, database, .keep_all = TRUE) %>%
+  filter(!is.na(Symbol))
+
+# counts
+compound_target_pred_count <- compound_target_pred_all %>%
+  group_by(Herb.Name.Pinyin, CID, Symbol) %>%
+  summarise(
+    database_count = n_distinct(database),
+    Uniprot.ID = dplyr::first(Uniprot.ID),
+    dplyr::across(-c(database, Uniprot.ID), dplyr::first),
+    .groups = "drop"
+  )
+
+# retain targets predicted by ≥2 databases
+compound_target_pred_filtered <- compound_target_pred_count %>%
+  dplyr::filter(database_count >= 2) %>%
+  dplyr::select(all_of(cnames)) %>%
+  distinct()
+
+# Final predicted target
+compound_target_pred <- compound_target_pred_filtered
+
+load("../data/raw/uniprot/uniprot_human_reviewed.RData")
+
+# All Targets
+compound_target_final <- rbind(compound_target_known, compound_target_pred) %>%
+  distinct(Herb.Name.Pinyin, CID, Symbol, .keep_all = TRUE) %>%
+  left_join(uniprot_human_reviewed, by = c("Uniprot.ID" = "Entry")) %>%
+  dplyr::select(-Reviewed, -Entry.Name)
+
+save(
+  compound_target_final,
+  file = "../data/processed/tcm/14_compound_target_final.RData"
+)
+
+## Export Final Supplementary Table
+compound_target_export <- compound_target_final %>%
+  dplyr::select(-Sequence)
+```
+
+---
+
+# Summary: Predicted targets and known targets from each target prediction platform.
+```{r}
+# Create summary table with statistics for each database and final results
+summary_table <- tibble(
+  # Database name (Known / Predicted)
+  Database = c(
+    "BATMAN-TCM (Known)",
+    "SuperPred (Known)",
+    "BATMAN-TCM (Predicted)",
+    "SuperPred (Predicted)",
+    "SwissTargetPrediction",
+    "PharmMapper",
+    "TargetNet",
+    "PPB3",
+    "SEA",
+    "Final Integrated Results"
+  ),
+  
+  # Number of unique compounds with targets (CID)
+  'Number of compounds with targets' = c(
+    n_distinct(compound_target_known_batman$CID),
+    n_distinct(compound_target_known_super$CID),
+    n_distinct(compound_target_pred_batman$CID),
+    n_distinct(compound_target_pred_super$CID),
+    n_distinct(compound_target_pred_swiss$CID),
+    n_distinct(compound_target_pred_pharm$CID),
+    n_distinct(compound_target_pred_targetnet$CID),
+    n_distinct(compound_target_pred_ppb3$CID),
+    n_distinct(compound_target_pred_sea$CID),
+    n_distinct(compound_target_final$CID)
+  ),
+  
+  # Number of unique targets based on UniProt ID
+  `Targets Count` = c(
+    n_distinct(compound_target_known_batman$Uniprot.ID),
+    n_distinct(compound_target_known_super$Uniprot.ID),
+    n_distinct(compound_target_pred_batman$Uniprot.ID),
+    n_distinct(compound_target_pred_super$Uniprot.ID),
+    n_distinct(compound_target_pred_swiss$Uniprot.ID),
+    n_distinct(compound_target_pred_pharm$Uniprot.ID),
+    n_distinct(compound_target_pred_targetnet$Uniprot.ID),
+    n_distinct(compound_target_pred_ppb3$Uniprot.ID),
+    n_distinct(compound_target_pred_sea$Uniprot.ID),
+    n_distinct(compound_target_final$Uniprot.ID)
+  )
+)
+
+# Export table to Excel for manuscript supplementary materials
+
+save(summary_table, file =  "../data/processed/tcm/15_target_statistics.RData")
+```
+
+# Table S2: Potential targets of ZWHQD.
+```{r}
+add_platform <- function(df, platform_name) {
+  df %>%
+    mutate(
+      Prediction_platform = platform_name,
+      Target_gene_name = as.character(!!sym("Symbol")), 
+      UniProt_ID = as.character(!!sym("Uniprot.ID"))      
+    ) %>%
+    dplyr::select(Target_gene_name, UniProt_ID, Prediction_platform)
+}
+
+platform_list <- list(
+  BATMAN_Known_Tagets = compound_target_known_batman,
+  BATMAN_Pred_Tagets  = compound_target_pred_batman,
+  Super_Known_Tagets  = compound_target_known_super,
+  Super_Pred_Tagets   = compound_target_pred_super,
+  Swiss_Pred_Tagets   = compound_target_pred_swiss,
+  Pharm_Pred_Tagets   = compound_target_pred_pharm,
+  TargetNet_Pred_Tagets = compound_target_pred_targetnet,
+  PPB3_Pred_Tagets    = compound_target_pred_ppb3,
+  SEA_Pred_Tagets     = compound_target_pred_sea
+)
+
+all_platforms <- bind_rows(
+  lapply(names(platform_list), function(name) {
+    df <- platform_list[[name]]
+    if(is.null(df) || nrow(df) == 0) return(NULL)
+    add_platform(df, name)   
+  })
+)
+
+final_intersection <- compound_target_known %>% 
+  distinct(Symbol, Uniprot.ID) %>%
+  mutate(In_intersection = "Yes")
+
+table_S2_grouped <- all_platforms %>%
+  group_by(Target_gene_name, UniProt_ID) %>%
+  summarise(
+    Prediction_platform = paste(unique(Prediction_platform), collapse = "; "),
+    .groups = "drop"
+  )
+
+table_S2 <- table_S2_grouped %>%
+  left_join(final_intersection, by = c( "Target_gene_name" ="Symbol" , "UniProt_ID" = "Uniprot.ID" )) %>%
+  mutate(`Included in intersection` = ifelse(is.na(In_intersection), "No", "Yes")) %>%
+  dplyr::select(-In_intersection)
+
+write.xlsx(
+  list(`Targets_ZWHQD` = table_S2),
+  "../tables/Table_S2.xlsx"
+)
+```

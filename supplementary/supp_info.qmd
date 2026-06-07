@@ -4,8 +4,10 @@ title: "Supplementary Information"
 
 # **Supplementary Figure Legends**
 
-- **Figure S1: PCA plots before and after batch effect correction.**
-(A) Before batch correction; (B) After batch correction. The proportion of variance explained by PC1 and PC2 is indicated on the axes.
+- **Figure S1. Quality assessment of sample expression profiles.**
+(A) Distribution of expression density across samples.
+(B) Boxplot of gene expression levels across samples.
+(C) Principal component analysis (PCA) of sample expression profiles.
 
 - **Figure S2: Soft‑thresholding power determination and module identification in WGCNA.**
 (Left) Scale‑free fit index as a function of soft‑thresholding power; (Right) Mean connectivity as a function of soft‑thresholding power.

@@ -1,5 +1,5 @@
 ---
-title: "Part 4: Mechanism validation via bioinformatics and docking"
+title: "MR + coloc"
 format: 
   html:
     toc: true
@@ -58,18 +58,7 @@ gene2ensg <- eGenes %>%
 eQTL <- eQTL %>%
   mutate(gene_id = sub("\\..*", "",gene_id))
 
-# gene2ensg <- data.frame(
-#   gene = hub_genes,
-#   ensg = c("ENSG00000168610", "ENSG00000100644", "ENSG00000128052", 
-#            "ENSG00000087245", "ENSG00000106366", "ENSG00000171552", 
-#            "ENSG00000159640", "ENSG00000144891", "ENSG00000117394", 
-#            "ENSG00000157404", "ENSG00000124762", "ENSG00000162434", 
-#            "ENSG00000118777", "ENSG00000118971", "ENSG00000137752", 
-#            "ENSG00000113578", "ENSG00000166825", "ENSG00000136160"),
-#   stringsAsFactors = FALSE
-# )
-
-for (i in c(1:18)) {
+for (i in nrow(hub_genes_tbl)) {
     print(gene2ensg$gene_name[i])
     eqtl_sub <- eQTL %>% filter(gene_id == gene2ensg$gene_id[i])
     print(nrow(eqtl_sub))

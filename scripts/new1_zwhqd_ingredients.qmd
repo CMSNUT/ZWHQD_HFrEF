@@ -1,0 +1,249 @@
+---
+title: "01. Collection and characterization of bioactive ingredients in ZWHQD"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+---
+# Loading Packages
+```{r}
+library(tidyverse)
+library(data.table)
+library(openxlsx)
+```
+
+# Step 1: Loading Raw Data from DCABM-TCM
+```{r dcabm}
+rm(list = ls())
+
+compounds_raw <- read.xlsx("../data/raw/tcm/zwhqd_compound_dcabm.xlsx")
+
+save(
+  compounds_raw,
+  file = "../data/processed/tcm/01_compounds_raw.RData"
+)
+```
+
+---
+
+# Step 2: Raw Data Preprocessing
+Parse compound names, CIDs, formulas, and clean formatting.
+
+```{r}
+source("utils.R")
+
+compounds_clean <- compounds_raw %>%
+  mutate(across(where(is.character), trimws)) %>%
+  separate_rows(Compounds, sep = "\\|") %>%
+  mutate(
+    CID = str_extract(Compounds, "(?<=Pubchem CID:)[^)]+") %>% str_trim(),
+    DCABM.ID = str_extract(Compounds, "(?<=DCABM ID:)[^)]+") %>% str_trim(),
+    temp = str_remove(Compounds, "\\s+\\(Pubchem CID:[^)]+\\)")
+  ) %>%
+  mutate(
+    temp2 = str_remove(temp, "\\([^)]+\\)$") %>% str_trim(),
+    Compound = str_remove(temp2, "\\([^)]+\\)$") %>% str_trim(),
+    Formula = str_match(temp2, "\\(([^)]+)\\)$")[, 2] %>% str_trim()
+  ) %>%
+  dplyr::select(-Compounds, -temp, -temp2, -DCABM.ID) %>%
+  mutate(across(where(is.character), trimws))
+
+# Save processed data
+save(
+  compounds_clean,
+  file = "../data/processed/tcm/02_compounds_clean.RData"
+)
+```
+
+---
+
+# Step 3: Manually Add Cycloastragenol
+```{r}
+compounds_add <- compounds_clean %>%
+  add_row(
+    Herb.Name.Chinese = "黄芪",
+    Herb.Name.Pinyin = "HUANG QI",
+    Herb.Name.English = "Astragali Radix",
+    Herb.Name.Latin = "Astragalus membranaceus",
+    Type = "Metabolite",
+    CID = "13943286",
+    Compound = "cycloastragenol",
+    Formula = "C30H50O5"
+  ) %>%
+  arrange(Herb.Name.Pinyin, CID)
+
+save(
+  compounds_add,
+  file = "../data/processed/tcm/03_compounds_add_cycloastragenol.RData"
+)
+```
+
+---
+
+# Step 4: Filter Invalid & Duplicate Compounds
+```{r}
+compounds_filtered <- compounds_add %>%
+  filter(CID != "-", !is.na(CID), CID != "") %>%
+  mutate(CID = clean_cids(CID)) %>%
+  distinct(Herb.Name.Chinese, CID, .keep_all = TRUE) %>%
+  distinct(Herb.Name.Chinese, Compound, .keep_all = TRUE)
+
+save(
+  compounds_filtered,
+  file = "../data/processed/tcm/04_compounds_filtered.RData"
+)
+```
+
+---
+
+# Step 5: Load Manually Curated Properties & Final Filter
+
+**Input**: Manual annotated compounds file `compounds_properties_manual.xlsx`
+
+```{r}
+compounds_manual <- read.xlsx("../data/raw/tcm/compounds_properties_manual.xlsx")
+herbs <- compounds_filtered %>%
+  dplyr::select(Herb.Name.Chinese,Herb.Name.Pinyin,Herb.Name.Latin,Herb.Name.English) %>%
+  distinct(Herb.Name.Pinyin, .keep_all = TRUE)
+
+compounds_final_filtered <- compounds_manual %>%
+  dplyr::filter(Drop == "No") %>%
+  dplyr::select(
+    -c(Note, Compound.Toxic, Drop)
+  ) %>% 
+  left_join(herbs, by = c("Herb.Name.Pinyin")) %>%
+  distinct(Herb.Name.Pinyin, CID, .keep_all = TRUE) %>%
+  dplyr::select(Herb.Name.Chinese,Herb.Name.Pinyin,Herb.Name.Latin,Herb.Name.English,CID, Compound.Name, Compound.Category)
+
+save(
+  compounds_final_filtered,
+  file = "../data/processed/tcm/05_compounds_final_filtered.RData"
+)
+```
+
+---
+
+# Step 6: Batch Retrieve PubChem Annotations
+```{r}
+library(future)
+library(furrr)
+library(progressr)
+
+# load("../data/processed/tcm/05_compounds_final_filtered.RData")
+
+compounds_pubchem <- compounds_final_filtered %>%
+  mutate(`CID` = clean_cids(CID)) %>%
+  filter(!is.na(CID)) %>%
+  distinct(CID, .keep_all = TRUE)
+
+properties <- c("IUPACName", "MolecularFormula", "MolecularWeight",
+                "SMILES")
+
+unique_cids <- unique(compounds_pubchem$CID)
+cid_batches <- split(unique_cids, ceiling(seq_along(unique_cids)/20))
+
+plan(multisession, workers = availableCores() - 2)
+with_progress({
+  p <- progressor(steps = length(cid_batches))
+  chem_info <- future_map_dfr(cid_batches, function(b) {
+    p()
+    fetch_batch(properties, b)
+  })
+})
+plan(sequential)
+
+
+# Merge & Finalize
+compounds_final <- compounds_final_filtered %>%
+  left_join(chem_info, by = "CID") %>%
+  dplyr::select(
+    Herb.Name.Chinese,
+    Herb.Name.Pinyin, 
+    Herb.Name.Latin,
+    Herb.Name.English,
+    Compound.Name, 
+    IUPACName, 
+    Compound.Category,
+    MolecularFormula, 
+    MolecularWeight, 
+    CID, 
+    SMILES
+  ) %>%
+  mutate(across(where(is.character), trimws))
+```
+
+---
+
+# Step 7: Compound Sharing Statistics (Across Herbs)
+```{r}
+compound_sharing <- compounds_final %>%
+  distinct(Herb.Name.Pinyin, CID,.keep_all = TRUE) %>%
+  group_by(CID) %>%
+  summarise(
+    Herb_Count = n(),
+    Herbs = paste(unique(Herb.Name.Pinyin), collapse = ", ")
+  ) %>%
+  filter(Herb_Count >= 2) %>%
+  arrange(desc(Herb_Count))  %>%
+  left_join(compounds_final[,c("CID","Compound.Name")],by="CID") %>%
+  distinct(CID,.keep_all = TRUE)
+
+# Save all final results
+save(
+  compounds_final, compound_sharing,
+  file = "../data/processed/tcm/06_compounds_final.RData"
+)
+```
+
+---
+
+# Step 8: Download SDF files
+```{r}
+library(httr)
+
+unique_cids <- unique(compounds_pubchem$CID)
+sdf_files <- "../data/raw/tcm/sdf/"
+
+results <- download_all_sdf(unique_cids, sdf_files)
+```
+
+# Table S1. Bioactivate ingredients of ZWHQD.
+```{r}
+load("../data/processed/tcm/06_compounds_final.RData")
+
+compounds_final <- compounds_final %>%
+  dplyr::rename(
+   ` Herb(Chinese)` = Herb.Name.Chinese,
+    `Herb(Pinyin)` = Herb.Name.Pinyin,
+    `Herb(Latin)` = Herb.Name.Latin,
+   `Herb(English)` = Herb.Name.English,
+   `Ingredient` = Compound.Name,
+   `Ingredient(IUPAC)` = IUPACName,
+   `Category` = Compound.Category,
+   `Molecular Formula (g/mol)` = MolecularFormula,
+   `Pubchme CID` = CID,
+   `SMILES` = SMILES
+  )
+
+write.xlsx(list(Ingredients_ZWHQD = compounds_final), "../tables/Table_S1.xls")
+```

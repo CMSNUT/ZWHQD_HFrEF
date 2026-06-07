@@ -93,7 +93,7 @@ To evaluate the model fit (discrimination) and predicted probability (calibratio
 
 ##  Identification of causally associated ZWHQD-HFrEF core genes via Mendelian Randomization
 
-MR analysis was conducted to investigate the potential causal relationship between the ZWHQD-HFrEF genes and RA. As “exposure” factors for HFrEF “outcome”, we batch matched the expression quantitative trait loci (eQTL) that regulate the appropriate ZWHQD-HFrEF hub gene. The TwoSampleMR package (https://github.com/MRCIEU/TwoSampleMR) was utilized for the purpose of performing MR analysis. Single nucleotide polymorphisms (SNPs) that were significantly associated with eQTLs regulating ZWHQD-HFrEF hub genes were extracted as instrumental variables (IVs) at the traditional genome-wide level (correlation hypothesis, threshold chosen as p < 5 × 10^-8). Meanwhile, IVs in strong linkage disequilibrium were excluded (independence hypothesis, r2 < 0.001, kb = 10,000). The IEU open genome-wide association study (GWAS) project (https://gwas.mrcieu.ac.uk/) was then queried, and the GWAS dataset with ID ebi-a-GCST90018910 was selected as the source of HFrEF “outcome”. The harmonise\_data() function was used to align the effect alleles and effect sizes between the eQTL “exposure” data of ZWHQD genes and the “outcome” GWAS data of HFrEF for MR analysis. To ensure that the SNPs can be used as proxies for “exposure” to reflect their association with “outcome”, and to avoid the effects of weak instrument bias, the F statistic was used to circumvent the strength of the genetic variant IVs. The explanatory effect of each IV on the “exposure” variance is also independent, as each selected IV is independent of the others. Therefore, the phenotypic variance explained (PVE) is calculated as the sum of the proportions of the exposure variance explained by each IV.  
+MR analysis was conducted to investigate the potential causal relationship between the ZWHQD-HFrEF genes and DCM-HF. As “exposure” factors for HFrEF “outcome”, we batch matched the expression quantitative trait loci (eQTL) that regulate the appropriate ZWHQD-HFrEF hub gene. The TwoSampleMR package (https://github.com/MRCIEU/TwoSampleMR) was utilized for the purpose of performing MR analysis. Single nucleotide polymorphisms (SNPs) that were significantly associated with eQTLs regulating ZWHQD-HFrEF hub genes were extracted as instrumental variables (IVs) at the traditional genome-wide level (correlation hypothesis, threshold chosen as p < 5 × 10^-8). Meanwhile, IVs in strong linkage disequilibrium were excluded (independence hypothesis, r2 < 0.001, kb = 10,000). The IEU open genome-wide association study (GWAS) project (https://gwas.mrcieu.ac.uk/) was then queried, and the GWAS dataset with ID ebi-a-GCST90018910 was selected as the source of HFrEF “outcome”. The harmonise\_data() function was used to align the effect alleles and effect sizes between the eQTL “exposure” data of ZWHQD genes and the “outcome” GWAS data of HFrEF for MR analysis. To ensure that the SNPs can be used as proxies for “exposure” to reflect their association with “outcome”, and to avoid the effects of weak instrument bias, the F statistic was used to circumvent the strength of the genetic variant IVs. The explanatory effect of each IV on the “exposure” variance is also independent, as each selected IV is independent of the others. Therefore, the phenotypic variance explained (PVE) is calculated as the sum of the proportions of the exposure variance explained by each IV.  
 
 For the primary MR analysis, the inverse variance weighted (IVW) method was selected if the number of SNPs in the “exposure” gene eQTL that could be used as valid IVs was greater than or equal to two. In the absence of a clear preference, the results were analyzed using the Wald ratio method. (p < 0.05). The odds ratio (OR) is a statistically analyzed effect size whose value is greater than or <1. This indicates that “exposure” to the eQTL regulating the hub gene acts as a risk or protective factor and has a causal effect on the “outcome” of RA. In addition, MR-Egger, Weighted Median, MR pleiotropy residual sum and outlier (MR-PERSSO), and Leave-One-Out analysis. These were employed to complement the primary analysis and to further identify possible horizontal pleiotropy in the analytical process, as well as to assess the robustness of the results.  
 
@@ -255,15 +255,16 @@ The undersigned authors certify that they do not have any financial or personal 
 
 # Figure legends {-}
 
-**Figure 1. Scheme of technical approach.**
+**Figure 1. Schematic overview of this study.**
 
 **Figure 2. Identification of disease‑associated candidate targets.**
 (A) Volcano plot of DEGs, red dots represent significantly upregulated genes, blue dots represent significantly downregulated genes, and gray dots represent non-significant genes.
 (B) Heatmap of top 50 upregulated and top 50 downregulated DEGs. 
 (C) WGCNA sample clustering dendrogram with soft‑thresholding power.
 (D) Module–trait association heatmap (r and p‑values).
-(E) Scatter plot of gene significance (GS) vs. module membership (MM) for key modules.
-(F) Venn diagram showing the intersection of DEGs and WGCNA key module genes.
+(E) Module-Module corraletion.
+(F) Scatter plot of gene significance (GS) vs. module membership (MM) for key modules.
+(G) Venn diagram showing the intersection of DEGs and WGCNA key module genes.
 
 **Figure 3. Compound–disease target identification and enrichment.**
 (A) Venn diagram of drug targets and disease candidate targets.
