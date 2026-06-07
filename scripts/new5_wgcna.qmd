@@ -165,7 +165,6 @@ plot(sft$fitIndices[,1], sft$fitIndices[,5],
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, col="red")
 dev.off()
 
-
 save(sft,file="../data/processed/geo/gse57338_sft.RData")
 
 ```
@@ -312,7 +311,7 @@ geneInfo <- data.frame(
 )
 geneInfo <- cbind(geneInfo, kME)
 
-# Screening Hub genes (Key Modules + |kME| > 0.6 + |GS| > 0.1)
+# Screening Hub genes (Key Modules + |kME| > 0.7 + |GS| > 0.2)
 
 mm_cut <- 0.7
 gs_cut <- 0.2

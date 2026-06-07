@@ -39,7 +39,10 @@ author:
         
   - id: b
     number: 2
-    name: Supervisor's name
+    name: 
+      given: Xili
+      family: Wu
+      literal: Xili Wu
     orcid: 0000-xxxx-xxxx-xxxx
     email: xxx@163.com
     attributes:
@@ -49,7 +52,7 @@ author:
       - funding
     affiliations:
       - ref: xju
-      - name: The First Affiliated Hospital of Xi’an Jiaotong University
+      - name: The Second Affiliated Hospital of Xi’an Jiaotong University
         department: department
         address: address
         city: Xi'an
