@@ -44,7 +44,7 @@ rm(list = ls())
 gc()
 
 # outcome file
-outcome_file <- "../data/raw/opengwas/HERMES2_GWAS_DCM_EUR/FORMAT-METAL_Pheno5-DCM_EUR.tsv.gz"
+outcome_file <- "../data/raw/opengwas/Jurgens_DCM_GWAS/DCM_GWAS/Jurgens_DCM_GWAS_META.tsv.gz"
 
 # GTEx v8 heart left ventricle data
 eqtl_signif_file <- "../data/raw/opengwas/GTEx_Analysis_v8_eQTL/Heart_Left_Ventricle.v8.signif_variant_gene_pairs.txt.gz"
@@ -76,56 +76,55 @@ print(hub_genes)
 ## Step 3: Loading significant eQTL data, retaining only the association of Hub genes
 ```{r}
 signif <- fread(eqtl_signif_file, 
-                select = c("variant_id", "gene_id", "pvalue", "slope", "slope_se", 
+                select = c("variant_id", "gene_id", "pval_nominal", "slope", "slope_se", 
                            "maf", "ma_samples", "ma_count"),
                 data.table = FALSE)
 
-# Selecting of eQTL for Hub genes
+names(signif)[names(signif) == "pval_nominal"] <- "pvalue"
+
 signif_hub <- signif %>% filter(gene_id %in% hub_genes$gene_id)
+
 rm(signif); gc()
 
 cat("Number of eQTL rows after screening:", nrow(signif_hub), "\n")
 ```
 
-## Step 4: function: Extract IVs (p<5e-8, club) for each gene
+## Step 4: function: GTEx variant_id 转 GWAS ID_B38 格式
 ```{r}
-get_ivs_for_gene <- function(gene_id, pval_thresh = 5e-8, r2 = 0.001, kb = 10000) {
-  sub <- signif_hub %>% filter(gene_id == !!gene_id)
-  if(nrow(sub) == 0) return(NULL)
-  
-  sub <- sub %>% filter(pvalue < pval_thresh)
-  if(nrow(sub) == 0) return(NULL)
-  
-  sub <- sub %>%
-    mutate(
-      chr_pos = gsub("_b38$", "", variant_id),
-      chr = as.numeric(gsub("_.*", "", chr_pos)),
-      pos = as.numeric(gsub(".*_", "", gsub("_.*_.*", "", chr_pos)))
-    ) %>%
-    filter(!is.na(chr), !is.na(pos))
-  
-  if(nrow(sub) == 0) return(NULL)
-  
-  # LD clumping  IEU OpenGWAS API
-  clumped <- tryCatch({
-    ieugwasr::ld_clump(
-      dat = data.frame(
-        SNP = sub$variant_id,
-        CHR = sub$chr,
-        POS = sub$pos,
-        P = sub$pvalue
-      ),
-      clump_r2 = r2,
-      clump_kb = kb,
-      plink_bin = NULL,   
-      pop = "EUR"
-    )
-  }, error = function(e) NULL)
-  
-  if(is.null(clumped) || nrow(clumped) == 0) return(NULL)
-  
-  ivs <- sub %>% filter(variant_id %in% clumped$SNP)
-  return(ivs)
+gtex_to_gwas_id <- function(variant_id) {
+  # 去掉 chr 前缀和 _b38 后缀
+  x <- gsub("^chr", "", variant_id)
+  x <- gsub("_b38$", "", x)
+  # 分割为 chr_pos_ref_alt
+  parts <- strsplit(x, "_")[[1]]
+  if(length(parts) >= 4) {
+    # 将 ref 和 alt 转为大写
+    parts[3] <- toupper(parts[3])
+    parts[4] <- toupper(parts[4])
+    result <- paste(parts[1], parts[2], parts[3], parts[4], sep=":")
+  } else {
+    # 降级方案：直接替换下划线为冒号并转大写
+    result <- gsub("_", ":", x)
+    result <- toupper(result)
+  }
+  return(result)
+}
+
+# 反向转换: GWAS ID_B38 -> GTEx variant_id（将等位基因转为小写以匹配GTEx原始格式）
+gwas_to_gtex_id <- function(id_b38) {
+  # 输入: "6:36307545:G:A" 或 "1:54712:TTTTC:T"
+  # 输出: "chr6_36307545_g_a_b38" (小写等位基因)
+  parts <- strsplit(id_b38, ":")[[1]]
+  if(length(parts) >= 4) {
+    parts[3] <- tolower(parts[3])
+    parts[4] <- tolower(parts[4])
+    result <- paste(parts[1], parts[2], parts[3], parts[4], sep="_")
+  } else {
+    result <- gsub(":", "_", id_b38)
+    result <- tolower(result)
+  }
+  result <- paste0("chr", result, "_b38")
+  return(result)
 }
 ```
 
@@ -133,17 +132,287 @@ get_ivs_for_gene <- function(gene_id, pval_thresh = 5e-8, r2 = 0.001, kb = 10000
 ```{r}
 outcome_gwas <- fread(outcome_file, header = TRUE, data.table = FALSE)
 
-outcome_gwas <- outcome_gwas %>%
-  rename(
-    SNP = SNP,
-    chr_name = CHR,
-    pos = POS,
+required_cols <- c("ID_B38", "EA", "NEA", "BETA", "SE", "P", "EAFREQ", "N_cases", "N_controls", "rsID")
+if(!all(required_cols %in% names(outcome_gwas))) {
+  stop("GWAS文件缺少必需列，请检查列名。现有列: ", paste(names(outcome_gwas), collapse=", "))
+}
+
+# 创建GTEx风格的SNP 
+gwas <- outcome_gwas %>%
+  transmute(
+    ID_B38 = ID_B38,               # 格式 "chr:pos:ref:alt"
     effect_allele = EA,
-    other_allele = OA,
+    other_allele = NEA,
     beta = BETA,
     se = SE,
     pval = P,
-    eaf = EAF
+    eaf = EAFREQ,
+    N_cases = N_cases,
+    N_controls = N_controls,
+    N_total = N_cases + N_controls
+  ) %>%
+  filter(!is.na(beta), !is.na(se), !is.na(pval), !is.na(effect_allele), !is.na(other_allele))
+cat("GWAS清洗后行数:", nrow(gwas), "\n")
+```
+
+## Step 6: MR and colon for each Hub gene
+```{r}
+PVAL_THRESH <- 1e-4
+all_mr_results <- list()
+all_coloc_results <- list()
+
+for(i in 1:nrow(hub_genes)) {
+  gene_name <- hub_genes$gene_name[i]
+  gene_id   <- hub_genes$gene_id[i]
+  cat("\n==== 处理基因:", gene_name, "======\n")
+  
+  # (1) 提取该基因的eQTL并筛选显著IVs
+  eqtl_df <- signif_hub %>% filter(gene_id == !!gene_id)
+  if(nrow(eqtl_df) == 0) {
+    cat("跳过: 无eQTL数据\n")
+    next
+  }
+
+    sig_eqtl <- eqtl_df %>% filter(pvalue < PVAL_THRESH)
+  if(nrow(sig_eqtl) == 0) {
+    cat("跳过: 无显著eQTL (p <", PVAL_THRESH, ")\n")
+    next
+  }
+  cat("显著eQTL数量 (p<", PVAL_THRESH, "):", nrow(sig_eqtl), "\n")
+  
+  # 构建暴露数据（TwoSampleMR格式）
+  tmp <- strsplit(sig_eqtl$variant_id, "_")
+  exposure_raw <- data.frame(
+    SNP = sig_eqtl$variant_id,
+    effect_allele = sapply(tmp, function(x) x[length(x)-1]),  # alt
+    other_allele = sapply(tmp, function(x) x[length(x)-2]),  # ref
+    beta = sig_eqtl$slope,
+    se = sig_eqtl$slope_se,
+    pval = sig_eqtl$pvalue,
+    eaf = sig_eqtl$maf,
+    samplesize = 462,
+    stringsAsFactors = FALSE
   )
-cat("结局GWAS行数:", nrow(outcome_gwas), "\n")
+  exposure_dat <- TwoSampleMR::format_data(
+    exposure_raw, type = "exposure",
+    snp_col = "SNP", beta_col = "beta", se_col = "se",
+    effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+    eaf_col = "eaf", pval_col = "pval", samplesize_col = "samplesize"
+  )
+  exposure_dat$exposure <- gene_name
+  
+  # (3) 构建暴露数据
+  tmp <- strsplit(sig_eqtl$variant_id, "_")
+  exposure_raw <- data.frame(
+    SNP = sig_eqtl$variant_id,
+    effect_allele = sapply(tmp, function(x) tolower(x[length(x)-1])),  # 小写保持一致
+    other_allele = sapply(tmp, function(x) tolower(x[length(x)-2])),
+    beta = sig_eqtl$slope,
+    se = sig_eqtl$slope_se,
+    pval = sig_eqtl$pvalue,
+    eaf = sig_eqtl$maf,
+    samplesize = 462,
+    stringsAsFactors = FALSE
+  )
+  exposure_dat <- TwoSampleMR::format_data(
+    exposure_raw, type = "exposure",
+    snp_col = "SNP", beta_col = "beta", se_col = "se",
+    effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+    eaf_col = "eaf", pval_col = "pval", samplesize_col = "samplesize"
+  )
+  exposure_dat$exposure <- gene_name
+  
+  # (4) 匹配结局（统一转为大写比较）
+  gwas_ids_upper <- sapply(exposure_dat$SNP, function(snp) toupper(gtex_to_gwas_id(snp)))
+  gwas_sub <- gwas %>% filter(toupper(ID_B38) %in% gwas_ids_upper)
+  if(nrow(gwas_sub) == 0) {
+    cat("跳过: GWAS中无匹配SNP\n"); next
+  }
+  cat("GWAS匹配到的SNP数量:", nrow(gwas_sub), "\n")
+  
+  # (5) 将GWAS子集的ID_B38转回原始GTEx ID（小写形式）
+  gwas_sub$SNP_original <- exposure_dat$SNP[match(toupper(gwas_sub$ID_B38), gwas_ids_upper)]
+  outcome_raw <- gwas_sub %>%
+    transmute(
+      SNP = SNP_original,
+      effect_allele = effect_allele,
+      other_allele = other_allele,
+      beta = beta, se = se, pval = pval, eaf = eaf
+    )
+  outcome_dat <- TwoSampleMR::format_data(
+    outcome_raw, type = "outcome",
+    snp_col = "SNP", beta_col = "beta", se_col = "se",
+    effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+    eaf_col = "eaf", pval_col = "pval"
+  )
+  outcome_dat$outcome <- "DCM"
+  
+  # (6)谐调
+  harmonised <- harmonise_data(exposure_dat, outcome_dat, action = 2)
+  if(nrow(harmonised) == 0) {
+    cat("谐调后无有效SNP\n"); next
+  }
+  cat("谐调后有效IV数量:", nrow(harmonised), "\n")
+  
+  # (7)F统计量
+  harmonised <- harmonised %>% mutate(F_statistic = (beta.exposure / se.exposure)^2)
+  f_median <- median(harmonised$F_statistic, na.rm = TRUE)
+  cat("F统计量中位数:", round(f_median, 2), "\n")
+  
+  # (8)MR主分析
+  if(nrow(harmonised) >= 2) {
+    mr_res <- mr(harmonised, method_list = c("mr_ivw", "mr_egger_regression", "mr_weighted_median"))
+  } else {
+    mr_res <- mr(harmonised, method_list = "mr_wald_ratio")
+  }
+  
+  mr_res <- generate_odds_ratios(mr_res)
+  all_mr_results[[gene_name]] <- mr_res
+  print(mr_res)
+  
+  # (9)敏感性分析（IV≥3）
+  if(nrow(harmonised) >= 3) {
+    pleio <- mr_pleiotropy_test(harmonised)
+    cat("MR-Egger截距p =", pleio$pval, "\n")
+    presso <- tryCatch(
+      mr_presso(BetaOutcome = "beta_outcome", BetaExposure = "beta_exposure",
+                SdOutcome = "se_outcome", SdExposure = "se_exposure",
+                data = harmonised, OUTLIERtest = TRUE, DISTORTIONtest = TRUE),
+      error = function(e) NULL
+    )
+    if(!is.null(presso)) cat("MR-PRESSO全局p =", presso$`MR-PRESSO results`$`Global Test`$Pvalue, "\n")
+  }
+  
+  # 绘图
+  p_scatter <- mr_scatter_plot(mr_res, harmonised)[[1]] + ggtitle(paste(gene_name, "- DCM"))
+  
+  ggsave(paste0("../figures/main/0",i,"_scatter.pdf"), p_scatter, width=7, height=5)
+  
+  if(nrow(harmonised) >= 2) {
+    p_forest <- mr_forest_plot(mr_singlesnp(harmonised))[[1]] + ggtitle(gene_name)
+    ggsave(paste0("../figures/main/0",i,"_forest.pdf"), p_forest, width=7, height=5)
+  }
+  
+  p_funnel <- mr_funnel_plot(mr_singlesnp(harmonised))[[1]] + ggtitle(gene_name)
+  ggsave(paste0("../figures/main/0",i,"_funnel.pdf"), p_funnel, width=7, height=5)
+  p_loo <- mr_leaveoneout_plot(mr_leaveoneout(harmonised))[[1]] + ggtitle(gene_name)
+  ggsave(paste0("../figures/main/0",i,"_leaveoneout.pdf"), p_loo, width=7, height=5)
+  
+  # Steiger检验
+  steiger <- tryCatch(directionality_test(harmonised), error = function(e) NULL)
+  if(!is.null(steiger)) cat("Steiger检验 p =", steiger$steiger_pval, "\n")
+  
+  # Coloc共定位（使用全部eQTL，不限P值）
+  all_eqtl <- eqtl_df %>%
+    select(SNP = variant_id, beta = slope, se = slope_se, MAF = maf) %>%
+    mutate(varbeta = se^2) %>%
+    filter(!is.na(beta), !is.na(MAF), MAF > 0, MAF < 1)
+  all_eqtl$ID_B38_upper <- sapply(all_eqtl$SNP, function(snp) toupper(gtex_to_gwas_id(snp)))
+  coloc_merge <- gwas %>%
+    mutate(ID_B38_upper = toupper(ID_B38)) %>%
+    filter(ID_B38_upper %in% all_eqtl$ID_B38_upper) %>%
+    select(ID_B38_upper, beta, se, eaf, pval) %>%
+    rename(varbeta = se, MAF = eaf) %>%
+    mutate(varbeta = varbeta^2) %>%
+    inner_join(all_eqtl, by = c("ID_B38_upper" = "ID_B38_upper"), suffix = c(".outcome", ".exposure"))
+  
+  if(nrow(coloc_merge) >= 50) {
+    N_cases <- unique(gwas$N_cases)[1]
+    N_controls <- unique(gwas$N_controls)[1]
+    if(is.na(N_cases)) { N_cases <- 4000; N_controls <- 16000 }
+    N_total <- N_cases + N_controls
+    coloc_input_exposure <- list(
+      beta = coloc_merge$beta.exposure,
+      varbeta = coloc_merge$varbeta.exposure,
+      type = "quant",
+      snp = coloc_merge$SNP,
+      MAF = coloc_merge$MAF.exposure,
+      N = 462
+    )
+    coloc_input_outcome <- list(
+      beta = coloc_merge$beta.outcome,
+      varbeta = coloc_merge$varbeta.outcome,
+      type = "cc",
+      snp = coloc_merge$SNP,
+      MAF = coloc_merge$MAF.outcome,
+      N = N_total,
+      s = N_cases / N_total
+    )
+    coloc_res <- coloc.abf(coloc_input_exposure, coloc_input_outcome)
+    all_coloc_results[[gene_name]] <- coloc_res
+    cat("Coloc后验概率:\n"); print(coloc_res$summary)
+    
+    
+    # 绘图
+    pp_df <- data.frame(SNP = coloc_merge$SNP, PP.H4 = coloc_res$results$SNP.PP.H4)
+    pp_df <- pp_df[order(-pp_df$PP.H4), ]
+    top_n <- min(100, nrow(pp_df))
+    p_coloc <- ggplot(pp_df[1:top_n, ], aes(x = seq_len(top_n), y = PP.H4)) +
+      geom_point() + theme_bw() +
+      labs(title = paste(gene_name, "- Coloc PP.H4 (top", top_n, "SNPs)"),
+           x = "SNP index", y = "Posterior probability H4")
+    ggsave(paste0("../figures/main/0",i,"_coloc_pph4.pdf"), p_coloc, width=8, height=4)
+  } else {
+    cat("Coloc共同SNP不足50，跳过\n")
+  }
+  
+  # 反向MR
+  cat("反向MR (DCM → 基因表达)...\n")
+  dcm_sig <- gwas %>% filter(pval < 5e-8)
+  if(nrow(dcm_sig) > 0) {
+    dcm_sig$GTEx_ID <- sapply(dcm_sig$ID_B38, gwas_to_gtex_id)
+    rev_exp <- eqtl_df %>% filter(variant_id %in% dcm_sig$GTEx_ID) %>%
+      select(SNP = variant_id, beta = slope, se = slope_se, eaf = maf, pval = pvalue) %>%
+      mutate(samplesize = 462)
+    if(nrow(rev_exp) > 0) {
+      rev_exposure <- dcm_sig %>% filter(GTEx_ID %in% rev_exp$SNP) %>%
+        mutate(SNP = GTEx_ID, samplesize = N_total)
+      rev_exposure_dat <- format_data(
+        rev_exposure, type = "exposure",
+        snp_col = "SNP", beta_col = "beta", se_col = "se",
+        effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+        eaf_col = "eaf", pval_col = "pval", samplesize_col = "samplesize"
+      )
+      rev_exposure_dat$exposure <- "DCM"
+      rev_outcome_dat <- format_data(
+        rev_exp, type = "outcome",
+        snp_col = "SNP", beta_col = "beta", se_col = "se",
+        effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+        eaf_col = "eaf", pval_col = "pval", samplesize_col = "samplesize"
+      )
+      rev_outcome_dat$outcome <- gene_name
+      rev_harm <- harmonise_data(rev_exposure_dat, rev_outcome_dat, action = 2)
+      if(nrow(rev_harm) > 0) {
+        rev_mr <- mr(rev_harm, method_list = "mr_ivw")
+        if(nrow(rev_mr) > 0) {
+          cat("反向MR IVW OR =", exp(rev_mr$b), ", p =", rev_mr$pval, "\n")
+        }
+      }
+    }
+  } else {
+    cat("DCM GWAS无全基因组显著SNP，跳过反向MR\n")
+  }
+  
+  
+}
+```
+
+## Step 7:
+```{r}
+if(length(all_mr_results) > 0) {
+  combined_mr <- bind_rows(all_mr_results, .id = "Gene")
+  write.csv(combined_mr, file.path(out_dir, "all_mr_results.csv"), row.names = FALSE)
+  cat("所有MR结果已保存至:", file.path(out_dir, "all_mr_results.csv"), "\n")
+}
+
+if(length(all_coloc_results) > 0) {
+  coloc_summary <- lapply(names(all_coloc_results), function(g) {
+    res <- all_coloc_results[[g]]$summary
+    data.frame(Gene = g, t(res))
+  }) %>% bind_rows()
+  write.csv(coloc_summary, file.path(out_dir, "all_coloc_summary.csv"), row.names = FALSE)
+  cat("Coloc结果汇总已保存\n")
+}
+
+cat("\n===== 分析完成！所有图表和结果保存在目录:", out_dir, "=====\n")
 ```
