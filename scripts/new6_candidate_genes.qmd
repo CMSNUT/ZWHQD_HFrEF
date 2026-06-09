@@ -72,8 +72,8 @@ candidate_genes_df <- data.frame(Gene = candidate_genes) %>%
 deg_candidate <- deg_all[rownames(deg_all) %in% candidate_genes, ]
  
 deg_candidate$regulation <- ifelse(
-  deg_candidate$log2FoldChange >= lfc, "Up",
-  ifelse(deg_candidate$log2FoldChange <= -lfc, "Down", "NS")
+  deg_candidate$log2FC >= lfc, "Up",
+  ifelse(deg_candidate$log2C <= -lfc, "Down", "NS")
 )
 
 # hit_core <- herb_compound_target %>%
@@ -90,7 +90,7 @@ deg_candidate$regulation <- ifelse(
 gene_list <- list(
   DEGs = deg_genes,
   `Herb targets` = herb_targets,
-  `WGCNA Genes` = wgcna_candidates_genes$Gene
+  `WGCNA Genes` = hub_genes_wgcna$Gene
 )
 
 p <- ggvenn(
@@ -111,7 +111,7 @@ ggsave("../figures/main/nFigure_3A.pdf", p, width=6, height=6, dpi=300)
 
 # Table S3.
 ```{r}
-save(herb_targets_df, deg_genes_df, wgcna_genes_df,disease_genes_df, candidate_genes_df, file = "../data/processed/network/01_herb_disease_genes.RData")
+save(herb_targets_df, deg_genes_df, wgcna_genes_df, candidate_genes_df, file = "../data/processed/network/01_herb_disease_genes.RData")
 
 write.xlsx(
   list(
@@ -143,12 +143,12 @@ library(RCy3)
 rm(list = ls())
 
 load("../data/processed/network/01_herb_disease_genes.RData")
-load("../data/processed/tcm/14_herb_compound_target.RData")
+load("../data/processed/tcm/16_herb_compound_target.RData")
 
-herb_ingredient_target <- candidate_genes_df %>%
-  left_join(herb_compound_target, by = c("Gene" = "Symbol"),relationship = "many-to-many") %>%
-  dplyr::select(Herb.Name.Pinyin, Compound.Name, Gene) %>%
-  dplyr:: rename(Herb = Herb.Name.Pinyin, Ingredient = Compound.Name, Target = Gene)  %>%
+herb_ingredient_target <- herb_compound_target %>%
+  dplyr::filter( Symbol %in% candidate_genes_df$Gene) %>%
+  dplyr::select(Herb.Name.Pinyin, Compound.Name, Symbol) %>%
+  dplyr:: rename(Herb = Herb.Name.Pinyin, Ingredient = Compound.Name, Target = Symbol)  %>%
   distinct() %>%
   arrange(Herb,Target)
 

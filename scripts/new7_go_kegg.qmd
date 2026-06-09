@@ -34,15 +34,20 @@ library(ggplot2)
 
 # candidate_genes
 ```{r}
-candidate_genes <- c(
-  "MGST1","SNCA","ABCG2","CD14","SOCS3","STAT3","ALOX5","CDKN1A","CTSC","NQO1",
-  "SERPINE1","FOS","BLM","CA14","PDE5A","FGF1","MME","ANPEP","PLA2G2A","ALOX5AP",
-  "CCR1","MAPK10","JAK2","EDNRB","PNP","HTR4","PDE8B","SLC2A1","EPHX2","CD38",
-  "ADAMTS4","NAMPT","HIF1A","MAP2K1","GHR","MT2A","BCL2L1","PTPN1","LDHA","KCNH2",
-  "MET","CCND1","CDK2","CASP1","PIM1","EPHA3","HDAC9","ACVRL1","RIPK2"
-)
+rm(list = ls())
 
-entrez_ids <- bitr(candidate_genes, 
+# candidate_genes <- c(
+#   "MGST1","SNCA","ABCG2","CD14","SOCS3","STAT3","ALOX5","CDKN1A","CTSC","NQO1",
+#   "SERPINE1","FOS","BLM","CA14","PDE5A","FGF1","MME","ANPEP","PLA2G2A","ALOX5AP",
+#   "CCR1","MAPK10","JAK2","EDNRB","PNP","HTR4","PDE8B","SLC2A1","EPHX2","CD38",
+#   "ADAMTS4","NAMPT","HIF1A","MAP2K1","GHR","MT2A","BCL2L1","PTPN1","LDHA","KCNH2",
+#   "MET","CCND1","CDK2","CASP1","PIM1","EPHA3","HDAC9","ACVRL1","RIPK2"
+# )
+
+load("../data/processed/network/01_herb_disease_genes.RData")
+
+
+entrez_ids <- bitr(candidate_genes_df$Gene, 
                    fromType = "SYMBOL",      
                    toType = "ENTREZID",    
                    OrgDb = org.Hs.eg.db)
@@ -51,12 +56,13 @@ entrez_ids <- bitr(candidate_genes,
 # GO (BP+CC+MF） 
 ```{r}
 go <- enrichGO(
-  gene = candidate_genes,
+  gene = candidate_genes_df$Gene,
   OrgDb = org.Hs.eg.db,
   keyType = "SYMBOL",
   ont = "ALL",
   pAdjustMethod = "fdr",
-  qvalueCutoff = 0.05
+  pvalueCutoff = 0.05,
+  qvalueCutoff = 0.20
 )
 ```
 
@@ -66,7 +72,7 @@ kk <- enrichKEGG(
   gene = entrez_ids$ENTREZID,
   organism = "hsa",         
   pvalueCutoff = 0.05,
-  qvalueCutoff = 0.10
+  qvalueCutoff = 0.20
 )
 ```
 
