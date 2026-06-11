@@ -162,7 +162,7 @@ uniprot_human_reviewed <- uniprot_human_reviewed %>%
 
 # Process PharmMapper results (Human only, high-confidence filters) (modify,0.9)
 compound_target_pred_pharm <- read_compound_target2("../data/raw/tcm/pharm",skip_row = 1) %>%
-  dplyr::filter(grepl("_HUMAN", Uniplot),zscore>0, `Norm Fit`>0.8) %>%
+  dplyr::filter(grepl("_HUMAN", Uniplot),zscore>0, `Norm Fit`>0.5) %>%
   dplyr::select(CID, Uniplot) %>%
   distinct(CID, Uniplot, .keep_all = TRUE) %>%
   left_join(uniprot_human_reviewed, by = c("Uniplot" = "Entry.Name")) %>%
@@ -376,7 +376,7 @@ compound_target_final <- compound_target %>%
   filter(
     is_known | platform_count >= 2
   ) %>%
-  select(CID,Symbol,Uniprot.ID,Source)
+  dplyr::select(CID,Symbol,Uniprot.ID,Source)
 
 # Save final target list
 save(
