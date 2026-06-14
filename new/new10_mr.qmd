@@ -1,0 +1,563 @@
+---
+title: "10. MR + coloc"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+  
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+# Load Packages
+```{r}
+library(data.table)    # Fast data reading and manipulation
+library(dplyr)         # Tidyverse data manipulation framework
+library(TwoSampleMR)   # Two-sample Mendelian randomization (MR) analysis
+library(MRPRESSO)      # MR sensitivity analysis (pleiotropy testing)
+library(coloc)         # Colocalization analysis for genetic signals
+library(ggplot2)       # Statistical plotting and visualization
+library(patchwork)     # Combine multiple ggplot2 figures into one layout
+```
+
+# Step 1: Define file paths and directories
+```{r}
+rm(list = ls())
+gc()
+
+# Outcome GWAS file (DCM)
+outcome_file <- "../data/raw/opengwas/Jurgens_DCM_GWAS/DCM_GWAS/Jurgens_DCM_GWAS_META.tsv.gz"
+
+# GTEx v8 eQTL data (Heart Left Ventricle)
+eqtl_signif_file <- "../data/raw/opengwas/GTEx_Analysis_v8_eQTL/Heart_Left_Ventricle.v8.signif_variant_gene_pairs.txt.gz"
+eqtl_egene_file  <- "../data/raw/opengwas/GTEx_Analysis_v8_eQTL/Heart_Left_Ventricle.v8.egenes.txt.gz"
+
+# Hub genes of interest
+hub6 <- c("STAT3", "HIF1A", "SERPINE1", "BCL2L1", "CDKN1A", "CASP1")
+
+# Create output director
+out_dir <- "../data/processed/opengwas"
+if (!dir.exists(out_dir)) dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+```
+
+# Step 2: Load GTEx eGenes data and map gene IDs to hub genes
+```{r}
+egenes <- fread(eqtl_egene_file, header = TRUE, data.table = FALSE)
+
+gene_map <- egenes %>% 
+  dplyr::select(gene_id, gene_name) %>%
+  distinct(gene_id, .keep_all = TRUE)
+
+hub_genes <- gene_map %>% filter(gene_name %in% hub6)
+if(nrow(hub_genes) == 0) stop("Gene_id corresponding to Hub gene not found, please check for gene name matching")
+
+cat("hub genes and their corresponding gene IDs: \n")
+print(hub_genes)
+```
+
+# Step 3: Load significant eQTL data and retain only associations with Hub genes
+```{r}
+# Load significant eQTL results, select key columns for downstream analysis
+signif <- fread(eqtl_signif_file, 
+                select = c("variant_id", "gene_id", "pval_nominal", "slope", "slope_se", 
+                           "maf", "ma_samples", "ma_count"),
+                data.table = FALSE)
+
+# Rename p-value column for consistency in downstream analysis
+names(signif)[names(signif) == "pval_nominal"] <- "pvalue"
+
+# Filter the dataset to keep only eQTLs associated with hub genes
+signif_hub <- signif %>% filter(gene_id %in% hub_genes$gene_id)
+
+rm(signif); gc()
+
+cat("Number of eQTL rows after screening:", nrow(signif_hub), "\n")
+```
+
+# Step 4: Functions 
+```{r}
+# Convert GTEx variant_id to GWAS ID_B38 format
+gtex_to_gwas_id <- function(variant_id) {
+  # Remove "chr" prefix and "_b38" suffix from input ID
+  x <- gsub("^chr", "", variant_id)
+  x <- gsub("_b38$", "", x)
+  
+  # Split the ID by underscore into components: chr_pos_ref_alt
+  parts <- strsplit(x, "_")[[1]]
+  
+  if(length(parts) >= 4) {
+    # Convert reference and alternate alleles to uppercase
+    parts[3] <- toupper(parts[3])
+    parts[4] <- toupper(parts[4])
+    
+    # Reassemble with colon separators for GWAS format
+    result <- paste(parts[1], parts[2], parts[3], parts[4], sep=":")
+  } else {
+    # Fallback: replace underscores with colons and convert to uppercase
+    result <- gsub("_", ":", x)
+    result <- toupper(result)
+  }
+  return(result)
+}
+
+# Reverse conversion: Convert GWAS ID_B38 back to GTEx variant_id format
+# Alleles are converted to lowercase to match the original GTEx format
+gwas_to_gtex_id <- function(id_b38) {
+  # Input example: "6:36307545:G:A" or "1:54712:TTTTC:T"
+  # Output example: "chr6_36307545_g_a_b38" (lowercase alleles)
+  
+  # Split the ID by colon into components
+  parts <- strsplit(id_b38, ":")[[1]]
+  
+  
+  if(length(parts) >= 4) {
+    # Convert reference and alternate alleles to lowercase
+    parts[3] <- tolower(parts[3])
+    parts[4] <- tolower(parts[4])
+    
+    # Reassemble with underscore separators
+    result <- paste(parts[1], parts[2], parts[3], parts[4], sep="_")
+  } else {
+    # Fallback: replace colons with underscores and convert to lowercase
+    result <- gsub(":", "_", id_b38)
+    result <- tolower(result)
+  }
+  
+  # Add "chr" prefix and "_b38" suffix to match GTEx format
+  result <- paste0("chr", result, "_b38")
+  return(result)
+}
+```
+
+# Step 5: Load and preprocess the outcome GWAS dataset
+```{r}
+# Load GWAS summary statistics using fast fread function
+outcome_gwas <- fread(outcome_file, header = TRUE, data.table = FALSE)
+
+# Define mandatory columns that must exist in the GWAS file
+required_columns <- c("ID_B38", "EA", "NEA", "BETA", "SE", "P", "EAFREQ", "N_cases", "N_controls", "rsID")
+
+# Check if all required columns are present
+if (!all(required_columns %in% colnames(outcome_gwas))) {
+  missing_cols <- setdiff(required_columns, colnames(outcome_gwas))
+  stop(
+    "The GWAS file is missing required columns: ", paste(missing_cols, collapse = ", "),
+    "\nAvailable columns: ", paste(colnames(outcome_gwas), collapse = ", ")
+  )
+}
+
+# Format GWAS data into GTEx-style standardized columns
+# ID_B38 format: "chr:position:reference_allele:alternative_allele"
+gwas_clean <- outcome_gwas %>%
+  transmute(
+    ID_B38 = ID_B38,
+    effect_allele = EA,
+    other_allele = NEA,
+    beta = BETA,
+    se = SE,
+    pval = P,
+    eaf = EAFREQ,
+    N_cases = N_cases,
+    N_controls = N_controls,
+    N_total = N_cases + N_controls
+  ) %>%
+  # Remove rows with missing key statistical values and alleles
+  drop_na(beta, se, pval, effect_allele, other_allele)
+
+# Print the number of variants after quality control filtering
+cat("Number of variants after GWAS QC filtering:", nrow(gwas_clean), "\n")
+```
+
+# Step 6: Mendelian Randomization (MR) and Colocalization (Coloc) Analyses for Each Hub Gene
+```{r}
+# ----------------------
+# Configuration Parameters ----
+# ----------------------
+# P-value threshold for selecting significant instrumental variables (IVs)
+PVAL_THRESHOLD <- 1e-4
+# Minimum number of overlapping SNPs required for coloc analysis
+COLOC_MIN_SNPS <- 50
+# Sample size for eQTL dataset (GTEx)
+EQTL_SAMPLE_SIZE <- 462
+# Outcome name (Dilated Cardiomyopathy)
+OUTCOME_NAME <- "DCM"
+
+# ----------------------
+# Initialize Result Storage ----
+# ----------------------
+# Lists to store MR and coloc results for all hub genes
+all_mr_results <- list()
+all_coloc_results <- list()
+
+# ----------------------
+# Main Loop: Analyze Each Hub Gene ----
+# ----------------------
+for (i in seq_len(nrow(hub_genes))) {
+  # Extract current gene information
+  gene_name <- hub_genes$gene_name[i]
+  gene_id <- hub_genes$gene_id[i]
+  
+  # Print analysis progress
+  cat(sprintf("\n==== Processing Hub Gene: %s ======\n", gene_name))
+  
+  # ----------------------
+  # Step 1: Filter eQTL data for the current gene ----
+  # ----------------------
+  eqtl_df <- signif_hub %>% filter(gene_id == !!gene_id)
+  
+  # Skip if no eQTL data exists for this gene
+  if (nrow(eqtl_df) == 0) {
+    cat("Skipped: No eQTL data available\n")
+    next
+  }
+  
+  # Filter significant eQTLs based on p-value threshold
+  sig_eqtl <- eqtl_df %>% filter(pvalue < PVAL_THRESHOLD)
+  
+  # Skip if no significant IVs
+  if (nrow(sig_eqtl) == 0) {
+    cat(sprintf("Skipped: No significant eQTLs (p < %s)\n", PVAL_THRESHOLD))
+    next
+  }
+  cat(sprintf("Number of significant eQTLs (p < %s): %d\n", PVAL_THRESHOLD, nrow(sig_eqtl)))
+  
+  # ----------------------
+  # Step 2: Format Exposure Data (Gene Expression) for TwoSampleMR ----
+  # ----------------------
+  # Parse SNP IDs to extract effect/reference alleles
+  snp_components <- strsplit(sig_eqtl$variant_id, "_")
+  
+  # Create raw exposure data frame
+  exposure_raw <- data.frame(
+    SNP = sig_eqtl$variant_id,
+    effect_allele = sapply(snp_components, function(x) tolower(x[length(x)-1])),
+    other_allele = sapply(snp_components, function(x) tolower(x[length(x)-2])),
+    beta = sig_eqtl$slope,
+    se = sig_eqtl$slope_se,
+    pval = sig_eqtl$pvalue,
+    eaf = sig_eqtl$maf,
+    samplesize = EQTL_SAMPLE_SIZE,
+    stringsAsFactors = FALSE
+  )
+  
+  # Format data to TwoSampleMR standard format
+  exposure_dat <- format_data(
+    dat = exposure_raw,
+    type = "exposure",
+    snp_col = "SNP",
+    beta_col = "beta",
+    se_col = "se",
+    effect_allele_col = "effect_allele",
+    other_allele_col = "other_allele",
+    eaf_col = "eaf",
+    pval_col = "pval",
+    samplesize_col = "samplesize"
+  )
+  exposure_dat$exposure <- gene_name
+  
+  # ----------------------
+  # Step 3: Match and Format Outcome Data (DCM GWAS) ----
+  # ----------------------
+  # Convert SNP IDs to uppercase for consistent matching
+  gwas_ids_upper <- sapply(exposure_dat$SNP, function(snp) toupper(gtex_to_gwas_id(snp)))
+  gwas_subset <- gwas %>% filter(toupper(ID_B38) %in% gwas_ids_upper)
+  
+  # Skip if no matching SNPs in GWAS
+  if (nrow(gwas_subset) == 0) {
+    cat("Skipped: No matching SNPs found in GWAS\n")
+    next
+  }
+  cat(sprintf("Number of matched SNPs in GWAS: %d\n", nrow(gwas_subset)))
+  
+  # Map back to original GTEx SNP IDs and format outcome data
+  gwas_subset$SNP_original <- exposure_dat$SNP[match(toupper(gwas_subset$ID_B38), gwas_ids_upper)]
+  outcome_raw <- gwas_subset %>%
+    transmute(
+      SNP = SNP_original,
+      effect_allele = effect_allele,
+      other_allele = other_allele,
+      beta = beta,
+      se = se,
+      pval = pval,
+      eaf = eaf
+    )
+  
+  # Format outcome data
+  outcome_dat <- format_data(
+    dat = outcome_raw,
+    type = "outcome",
+    snp_col = "SNP",
+    beta_col = "beta",
+    se_col = "se",
+    effect_allele_col = "effect_allele",
+    other_allele_col = "other_allele",
+    eaf_col = "eaf",
+    pval_col = "pval"
+  )
+  outcome_dat$outcome <- OUTCOME_NAME
+  
+  # ----------------------
+  # Step 4: Harmonize Exposure and Outcome Data ----
+  # ----------------------
+  harmonised_dat <- harmonise_data(exposure_dat, outcome_dat, action = 2)
+  
+  # Skip if no valid SNPs after harmonization
+  if (nrow(harmonised_dat) == 0) {
+    cat("Skipped: No valid SNPs after harmonization\n")
+    next
+  }
+  cat(sprintf("Number of valid IVs after harmonization: %d\n", nrow(harmonised_dat)))
+  
+  # ----------------------
+  # Step 5: Calculate F-statistic (IV Strength Evaluation) ----
+  # ----------------------
+  harmonised_dat <- harmonised_dat %>%
+    mutate(F_statistic = (beta.exposure / se.exposure)^2)
+  f_median <- median(harmonised_dat$F_statistic, na.rm = TRUE)
+  cat(sprintf("Median F-statistic: %.2f\n", f_median))
+  
+  # ----------------------
+  # Step 6: Primary Mendelian Randomization Analysis ----
+  # ----------------------
+  # Select appropriate MR method based on IV count
+  if (nrow(harmonised_dat) >= 2) {
+    mr_results <- mr(
+      dat = harmonised_dat,
+      method_list = c("mr_ivw", "mr_egger_regression", "mr_weighted_median")
+    )
+  } else {
+    mr_results <- mr(dat = harmonised_dat, method_list = "mr_wald_ratio")
+  }
+  
+  # Generate odds ratios and store results
+  mr_results <- generate_odds_ratios(mr_results)
+  all_mr_results[[gene_name]] <- mr_results
+  print(mr_results)
+  
+  # ----------------------
+  # Step 7: Sensitivity Analyses (if ≥3 IVs available) ----
+  # ----------------------
+  if (nrow(harmonised_dat) >= 3) {
+    # MR-Egger intercept test for horizontal pleiotropy
+    pleiotropy_test <- mr_pleiotropy_test(harmonised_dat)
+    cat(sprintf("MR-Egger Intercept P-value: %s\n", pleiotropy_test$pval))
+    
+    # MR-PRESSO test (with error handling)
+    presso_results <- tryCatch(
+      mr_presso(
+        BetaOutcome = "beta_outcome",
+        BetaExposure = "beta_exposure",
+        SdOutcome = "se_outcome",
+        SdExposure = "se_exposure",
+        data = harmonised_dat,
+        OUTLIERtest = TRUE,
+        DISTORTIONtest = TRUE
+      ),
+      error = function(e) NULL
+    )
+    if (!is.null(presso_results)) {
+      cat(sprintf("MR-PRESSO Global Test P-value: %s\n", presso_results$`MR-PRESSO results`$`Global Test`$Pvalue))
+    }
+  }
+  
+  # ----------------------
+  # Step 8: Generate MR Visualization Plots ----
+  # ----------------------
+  # Scatter plot
+  scatter_plot <- mr_scatter_plot(mr_results, harmonised_dat)[[1]] +
+    ggtitle(paste(gene_name, "-", OUTCOME_NAME))
+  ggsave(
+    filename = paste0("../figures/main/0", i, "_scatter.pdf"),
+    plot = scatter_plot,
+    width = 7,
+    height = 5
+  )
+  
+  # Forest plot (≥2 IVs)
+  if (nrow(harmonised_dat) >= 2) {
+    forest_plot <- mr_forest_plot(mr_singlesnp(harmonised_dat))[[1]] +
+      ggtitle(gene_name)
+    ggsave(
+      filename = paste0("../figures/main/0", i, "_forest.pdf"),
+      plot = forest_plot,
+      width = 7,
+      height = 5
+    )
+  }
+  
+  # Funnel plot & Leave-one-out plot
+  funnel_plot <- mr_funnel_plot(mr_singlesnp(harmonised_dat))[[1]] + ggtitle(gene_name)
+  ggsave(paste0("../figures/main/0", i, "_funnel.pdf"), funnel_plot, width=7, height=5)
+  
+  loo_plot <- mr_leaveoneout_plot(mr_leaveoneout(harmonised_dat))[[1]] + ggtitle(gene_name)
+  ggsave(paste0("../figures/main/0", i, "_leaveoneout.pdf"), loo_plot, width=7, height=5)
+  
+  # ----------------------
+  # Step 9: Steiger Directionality Test ----
+  # ----------------------
+  steiger_results <- tryCatch(directionality_test(harmonised_dat), error = function(e) NULL)
+  if (!is.null(steiger_results)) {
+    cat(sprintf("Steiger Test P-value: %s\n", steiger_results$steiger_pval))
+  }
+  
+  # ----------------------
+  # Step 10: Colocalization (Coloc) Analysis ----
+  # ----------------------
+  cat("Performing colocalization analysis...\n")
+  # Prepare full eQTL dataset (no p-value filter)
+  full_eqtl <- eqtl_df %>%
+    select(SNP = variant_id, beta = slope, se = slope_se, MAF = maf) %>%
+    mutate(varbeta = se^2) %>%
+    filter(complete.cases(.), MAF > 0, MAF < 1)
+  
+  # Match SNPs between eQTL and GWAS for coloc
+  full_eqtl$ID_B38_upper <- sapply(full_eqtl$SNP, function(snp) toupper(gtex_to_gwas_id(snp)))
+  coloc_merged <- gwas %>%
+    mutate(ID_B38_upper = toupper(ID_B38)) %>%
+    filter(ID_B38_upper %in% full_eqtl$ID_B38_upper) %>%
+    select(ID_B38_upper, beta, se, eaf, pval) %>%
+    mutate(varbeta = se^2) %>%
+    rename(MAF = eaf) %>%
+    inner_join(full_eqtl, by = "ID_B38_upper", suffix = c(".outcome", ".exposure"))
+  
+  # Run coloc only if sufficient overlapping SNPs
+  if (nrow(coloc_merged) >= COLOC_MIN_SNPS) {
+    # Set default sample sizes if missing
+    N_cases <- unique(gwas$N_cases)[1]
+    N_controls <- unique(gwas$N_controls)[1]
+    if (is.na(N_cases)) {
+      N_cases <- 4000
+      N_controls <- 16000
+    }
+    N_total <- N_cases + N_controls
+    
+    # Prepare coloc input objects
+    coloc_exposure <- list(
+      beta = coloc_merged$beta.exposure,
+      varbeta = coloc_merged$varbeta.exposure,
+      type = "quant",
+      snp = coloc_merged$SNP,
+      MAF = coloc_merged$MAF.exposure,
+      N = EQTL_SAMPLE_SIZE
+    )
+    
+    coloc_outcome <- list(
+      beta = coloc_merged$beta.outcome,
+      varbeta = coloc_merged$varbeta.outcome,
+      type = "cc",
+      snp = coloc_merged$SNP,
+      MAF = coloc_merged$MAF.outcome,
+      N = N_total,
+      s = N_cases / N_total
+    )
+    
+    # Run coloc analysis
+    coloc_results <- coloc.abf(coloc_exposure, coloc_outcome)
+    all_coloc_results[[gene_name]] <- coloc_results
+    cat("Colocalization Posterior Probabilities:\n")
+    print(coloc_results$summary)
+    
+    # Plot top Coloc PP.H4 values
+    pp_data <- data.frame(
+      SNP = coloc_merged$SNP,
+      PP.H4 = coloc_results$results$SNP.PP.H4
+    ) %>%
+      arrange(desc(PP.H4))
+    
+    top_snps <- min(100, nrow(pp_data))
+    coloc_plot <- ggplot(pp_data[1:top_snps, ], aes(x = seq_len(top_snps), y = PP.H4)) +
+      geom_point() +
+      theme_bw() +
+      labs(
+        title = paste(gene_name, "- Coloc PP.H4 (Top", top_snps, "SNPs)"),
+        x = "SNP Index",
+        y = "Posterior Probability H4"
+      )
+    ggsave(paste0("../figures/main/0", i, "_coloc_pph4.pdf"), coloc_plot, width=8, height=4)
+    
+  } else {
+    cat(sprintf("Skipped Coloc: Insufficient overlapping SNPs (n < %d)\n", COLOC_MIN_SNPS))
+  }
+  
+  # ----------------------
+  # Step 11: Reverse MR Analysis (DCM → Gene Expression) ----
+  # ----------------------
+  cat("Performing Reverse MR (DCM → Gene Expression)...\n")
+  dcm_significant_snps <- gwas %>% filter(pval < 5e-8)
+  
+  if (nrow(dcm_significant_snps) > 0) {
+    # Convert SNP IDs between GWAS and GTEx
+    dcm_significant_snps$GTEx_ID <- sapply(dcm_significant_snps$ID_B38, gwas_to_gtex_id)
+    
+    # Prepare reverse exposure/outcome data
+    reverse_outcome <- eqtl_df %>%
+      filter(variant_id %in% dcm_significant_snps$GTEx_ID) %>%
+      select(SNP = variant_id, beta = slope, se = slope_se, eaf = maf, pval = pvalue) %>%
+      mutate(samplesize = EQTL_SAMPLE_SIZE)
+    
+    if (nrow(reverse_outcome) > 0) {
+      reverse_exposure <- dcm_significant_snps %>%
+        filter(GTEx_ID %in% reverse_outcome$SNP) %>%
+        mutate(SNP = GTEx_ID, samplesize = N_total)
+      
+      # Format and harmonize reverse MR data
+      rev_exposure_dat <- format_data(reverse_exposure, type = "exposure")
+      rev_exposure_dat$exposure <- OUTCOME_NAME
+      
+      rev_outcome_dat <- format_data(reverse_outcome, type = "outcome")
+      rev_outcome_dat$outcome <- gene_name
+      
+      rev_harmonised <- harmonise_data(rev_exposure_dat, rev_outcome_dat, action = 2)
+      
+      # Run reverse MR if valid data exists
+      if (nrow(rev_harmonised) > 0) {
+        reverse_mr_res <- mr(rev_harmonised, method_list = "mr_ivw")
+        if (nrow(reverse_mr_res) > 0) {
+          cat(sprintf(
+            "Reverse MR IVW OR = %.4f, P-value = %s\n",
+            exp(reverse_mr_res$b),
+            reverse_mr_res$pval
+          ))
+        }
+      }
+    }
+  } else {
+    cat("Skipped Reverse MR: No genome-wide significant SNPs in DCM GWAS\n")
+  }
+}
+```
+
+# Step 7: Save and export Results
+```{r}
+if(length(all_mr_results) > 0) {
+  combined_mr <- bind_rows(all_mr_results, .id = "Gene")
+  write.csv(combined_mr, file.path(out_dir, "all_mr_results.csv"), row.names = FALSE)
+  cat("所有MR结果已保存至:", file.path(out_dir, "all_mr_results.csv"), "\n")
+}
+
+if(length(all_coloc_results) > 0) {
+  coloc_summary <- lapply(names(all_coloc_results), function(g) {
+    res <- all_coloc_results[[g]]$summary
+    data.frame(Gene = g, t(res))
+  }) %>% bind_rows()
+  write.csv(coloc_summary, file.path(out_dir, "all_coloc_summary.csv"), row.names = FALSE)
+  cat("Coloc结果汇总已保存\n")
+}
+
+cat("\n===== 分析完成！所有图表和结果保存在目录:", out_dir, "=====\n")
+```
