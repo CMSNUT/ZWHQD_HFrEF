@@ -26,11 +26,11 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 
 # Load Packages
 ```{r}
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("data.table")) install.packages("data.table")
-if (!require("openxlsx")) install.packages("openxlsx")
+if (!require("tidyverse")) install.packages("tidyverse", dependencies = TRUE)
+if (!require("data.table")) install.packages("data.table", dependencies = TRUE)
+if (!require("openxlsx")) install.packages("openxlsx", dependencies = TRUE)
 
-if (!require("GEOquery")) BiocManager::install("GEOquery")
+if (!require("GEOquery")) BiocManager::install("GEOquery", dependencies = TRUE)
 
 library(tidyverse)
 library(data.table)
@@ -74,6 +74,12 @@ N_DCM/N_NF = 37 / 14
 
 https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE116250
 
+
+# GSE5406: array, GPL96
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE5406
+
+n_DCM = 86, n_IDC = 108, n_HF = 16
+
 ```{r,warning=FALSE}
 rm(list=ls())
 
@@ -102,6 +108,7 @@ https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE141910
 
 left ventricular transcriptomes of non-failing healthy donors, Peripartum cardiomyopathy (PPCM), Hypertrophic cardiomyopathy (HCM) and Dilated cardiomyopathy (DCM) samples
 ```{r}
+
 ```
 
 # GSE183852: scRNA-Seq

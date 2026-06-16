@@ -26,25 +26,35 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 
 # Load Packages
 ```{r}
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("data.table")) install.packages("data.table")
-if (!require("openxlsx")) install.packages("openxlsx")
+if (!require("tidyverse")) install.packages("tidyverse", dependencies = TRUE)
+if (!require("data.table")) install.packages("data.table", dependencies = TRUE)
+if (!require("openxlsx")) install.packages("openxlsx", dependencies = TRUE)
 
-if (!require("patchwork")) install.packages("patchwork")
-if (!require("pheatmap")) install.packages("pheatmap")
+if (!require("RColorBrewer")) install.packages("RColorBrewer", dependencies = TRUE)
+if (!require("patchwork")) install.packages("patchwork", dependencies = TRUE)
+if (!require("pheatmap")) install.packages("pheatmap", dependencies = TRUE)
+if (!require("ggsci")) install.packages("ggsci", dependencies = TRUE)
 
-if (!require("AnnoProbe")) install.packages("AnnoProbe")
+if (!require("AnnoProbe")) install.packages("AnnoProbe", dependencies = TRUE)
+if (!require("genefilter")) BiocManager::install("genefilter", dependencies = TRUE)
+
+if (!require("limma")) install.packages("limma", dependencies = TRUE)
+if (!require("org.Hs.eg.db")) BiocManager::install("org.Hs.eg.db", dependencies = TRUE)
+
 
 library(tidyverse)
 library(data.table)
 library(openxlsx)
+
+library(RColorBrewer)
+library(patchwork)
+library(pheatmap)
+library(ggsci)
+
 library(AnnoProbe)
 library(genefilter)
 library(limma)
 library(org.Hs.eg.db)
-library(RColorBrewer)
-library(patchwork)
-library(pheatmap)
 ```
 
 # Step 1: Loading Data
@@ -74,8 +84,8 @@ expr_keep <- gse57338_exprs_raw[,keep_samples]
 
 - Figure S1C: Principal component analysis (PCA) of sample expression profiles.
 
+## log2 transformation
 ```{r}
-# log2 transformation
 ex <- expr_keep
 qx <- as.numeric(quantile(ex, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
 LogC <- (qx[5] > 100) ||
@@ -96,8 +106,10 @@ if (any(duplicated(rownames(expr)))) {
   expr <- expr[,-1]
   expr <- as.matrix(expr)
 }
+```
 
-
+## Figure S1A
+```{r}
 # Express the overall distribution of values and observe where the "tail" of background noise falls
 df <- reshape2::melt(expr)
 p <- ggplot(df, aes(x = value, color = Var2)) + 
@@ -106,45 +118,26 @@ p <- ggplot(df, aes(x = value, color = Var2)) +
   xlab("log2 expression") + 
   theme_bw() +
   scale_x_continuous(breaks = seq(from = floor(min(df$value)), to = ceiling(max(df$value)), by = 1)) +
-  geom_vline(xintercept = 3, linetype = "dashed", color = "blue", linewidth = 1)
+  geom_vline(xintercept = 3, linetype = "dashed", color = "blue", linewidth = 1) 
 
 print(p)
 
-# Figure S1A ----
 ggsave("../figures/supplementary/Figure_S1A.pdf",p, width = 14,height = 8,units = "cm", dpi = 300)
 
+```
+
 # Filtering low expression genes
+```{r}
 threshold_log2 <- 3
 ffun <- filterfun(pOverA(p = 0.5, A = threshold_log2))
 keep <- genefilter(expr, ffun)
 
 expr_filt <- expr[keep, ]
 dim(expr_filt)
+```
 
-# Figure S1B ----
-# Check normalization
-pdf("../figures/supplementary/Figure_S1B.pdf", width = 14, height = 8)
-boxplot(expr_filt, 
-        las = 2,  
-        # main = "Check normalization", 
-        ylab = "log2 expression", 
-        col = "lightblue")
-
-abline(h = median(expr_filt, na.rm = TRUE), col = "red", lty = 2)
-dev.off()
-
-# Figure S1C ----
-# Check batch effect
-# PCA
-pca <- prcomp(t(expr_filt), scale. = TRUE)
-pca_df <- data.frame(pca$x[,1:2], Group = pheno$group)
-p <- ggplot(pca_df, aes(PC1, PC2, color = Group)) + 
-  geom_point(size = 3) + 
-  stat_ellipse() + 
-  theme_minimal()
-ggsave("../figures/supplementary/Figure_S1C.pdf",p, width = 7,height = 5,units = "cm", dpi = 300)
-
-# Correlation within the group
+## Correlation within the group
+```{r}
 cor_mat <- cor(expr_filt)
 
 within_cor <- sapply(colnames(expr_filt), function(s) {
@@ -180,6 +173,33 @@ if (mean_within > mean_between) {
 save(pheno, expr_filt, file = "../data/processed/geo/gse57338.RData")
 ```
 
+## Figure S1B
+```{r}
+# Check normalization
+pdf("../figures/supplementary/Figure_S1B.pdf", width = 14, height = 8)
+boxplot(expr_filt, 
+        las = 2,  
+        # main = "Check normalization", 
+        ylab = "log2 expression", 
+        col = "lightblue")
+
+abline(h = median(expr_filt, na.rm = TRUE), col = "red", lty = 2)
+dev.off()
+```
+
+## Figure S1C
+```{r}
+# Check batch effect
+# PCA
+pca <- prcomp(t(expr_filt), scale. = TRUE)
+pca_df <- data.frame(pca$x[,1:2], Group = pheno$group)
+p <- ggplot(pca_df, aes(PC1, PC2, color = Group)) + 
+  geom_point(size = 1) + 
+  stat_ellipse() + 
+  theme_minimal() + 
+  scale_color_aaas()
+ggsave("../figures/supplementary/Figure_S1C.pdf",p, width = 7,height = 5,units = "cm", dpi = 300)
+```
 
 # Step 3: DEG
 ```{r}
@@ -226,7 +246,7 @@ deg_all$significance <- ifelse(
 
 p_volcano <- ggplot(deg_all, aes(x = log2FC, y = -log10(adj.P.Val), color = significance)) +
   geom_point(alpha = 0.7, size = 1) +
-  scale_color_manual(values = c("blue", "gray", "red")) +
+  scale_color_manual(values = c(aaas_colors[2], "gray", aaas_colors[1])) +
   geom_vline(xintercept = c(-lfc, lfc), linetype = "dashed", color = "gray40", linewidth = 0.4) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "gray40", linewidth = 0.4) +
   theme_bw(base_size = 10) +
@@ -270,7 +290,7 @@ mat <- expr_filt[heat_genes, sample_order]
 mat_z <- t(scale(t(mat)))
 
 breaks <- seq(-2, 2, length.out = 100)
-palette <- colorRampPalette(c("blue", "white", "red"))(99)
+palette <- colorRampPalette(c(aaas_colors[2], "white", aaas_colors[1]))(99)
 
 # 分组注释
 anno_col <- data.frame(

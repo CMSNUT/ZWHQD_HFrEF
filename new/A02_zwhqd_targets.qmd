@@ -35,9 +35,9 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 
 # Load Packages
 ```{r}
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("data.table")) install.packages("data.table")
-if (!require("openxlsx")) install.packages("openxlsx")
+if (!require("tidyverse")) install.packages("tidyverse", dependencies = TRUE)
+if (!require("data.table")) install.packages("data.table", dependencies = TRUE)
+if (!require("openxlsx")) install.packages("openxlsx", dependencies = TRUE)
 
 library(tidyverse)  #Core toolkit for data manipulation, pipe operations, and data cleaning
 library(data.table) # Fast, memory-efficient handling of large datasets

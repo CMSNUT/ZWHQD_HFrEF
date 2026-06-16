@@ -28,19 +28,36 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 
 # Load packages
 ```{r}
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("openxlsx")) install.packages("openxlsx")
+if (!require("tidyverse")) install.packages("tidyverse", dependencies = TRUE)
+if (!require("data.table")) install.packages("data.table", dependencies = TRUE)
+if (!require("openxlsx")) install.packages("openxlsx", dependencies = TRUE)
+
+
+if (!require("WGCNA")) BiocManager::install("WGCNA", dependencies = TRUE)
+if (!require("flashClust")) install.packages("flashClust", dependencies = TRUE)
+if (!require("robustbase")) install.packages("robustbase", dependencies = TRUE)
+if (!require("dynamicTreeCut")) install.packages("dynamicTreeCut", dependencies = TRUE)
+
+
+if (!require("cowplot")) install.packages("cowplot", dependencies = TRUE)
+if (!require("ggvenn")) install.packages("ggvenn", dependencies = TRUE)
+if (!require("corrplot")) install.packages("corrplot", dependencies = TRUE)
+if (!require("ggsci")) install.packages("ggsci", dependencies = TRUE)
+if (!require("magick")) install.packages("magick", dependencies = TRUE)
+
 
 library(tidyverse)
+library(data.table)
 library(openxlsx)
+
 library(WGCNA)
-library(ggvenn)
-library(corrplot)
 library(flashClust)
 library(robustbase) 
 library(dynamicTreeCut)
 
 library(cowplot)
+library(ggvenn)
+library(corrplot)
 library(ggsci)
 library(magick)
 ```
