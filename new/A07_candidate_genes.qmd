@@ -1,0 +1,282 @@
+---
+title: "06. Identification of candidate genes"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+# Load Packages
+```{r}
+library(ggvenn)
+library(tidyverse)
+library(openxlsx)
+library(ggsci)
+```
+
+# Candidate Genes
+```{r}
+rm(list = ls())
+
+load("../data/processed/geo/gse57338_degs_results.RData")
+load("../data/processed/tcm/16_herb_compound_target.RData")
+load("../data/processed/geo/gse57338_hub_genes_wgcna.RData")
+
+deg_genes <- rownames(deg_sig) 
+herb_targets <- unique(herb_compound_target$Symbol)
+
+# disease_genes: intersecting DEGs and WGCNA
+disease_genes <- union(deg_genes,hub_genes_wgcna$Gene)
+
+# candidate_genes: intersecting herb_targets and disease_genes
+candidate_genes <-intersect(herb_targets, disease_genes)
+
+# candidate_genes1 <-intersect(herb_targets, deg_genes)
+# candidate_genes2 <-intersect(herb_targets, hub_genes_wgcna$Gene)
+
+# candidate_genes <- unique(union(candidate_genes1,candidate_genes2))
+
+herb_targets_df <- data.frame(Gene = herb_targets) %>%
+  arrange(Gene)
+
+deg_genes_df <- data.frame(Gene = deg_genes) %>%
+  arrange(Gene)
+
+wgcna_genes_df <- hub_genes_wgcna %>%
+  arrange(Gene)
+
+disease_genes_df <- data.frame(Gene = disease_genes) %>%
+  arrange(Gene)
+
+candidate_genes_df <- data.frame(Gene = candidate_genes) %>%
+  arrange(Gene)
+
+deg_candidate <- deg_all[rownames(deg_all) %in% candidate_genes, ]
+ 
+deg_candidate$regulation <- ifelse(
+  deg_candidate$log2FC >= lfc, "Up",
+  ifelse(deg_candidate$log2C <= -lfc, "Down", "NS")
+)
+
+# hit_core <- herb_compound_target %>%
+#     dplyr::filter(Symbol %in% candidate_genes_df$Gene) %>%
+#   arrange(Herb.Name.Pinyin,Symbol)
+# 
+# unique(hit_core$Herb.Name.Pinyin)
+# 
+# key_compounds <- hit_core[,c("Herb.Name.Pinyin", "Compound.Name","Symbol")]
+```
+
+## Figure 3A: Ccandidate_genes
+```{r}
+gene_list <- list(
+  `Herb Targets` = herb_targets,
+  `Disease Genes` = disease_genes
+)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(2),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=10))
+
+# save
+ggsave("../figures/main/nFigure_3A.pdf", p, width=6, height=6, dpi=300)
+```
+
+## Table S3.
+```{r}
+save(herb_targets_df, deg_genes_df, wgcna_genes_df, candidate_genes_df, file = "../data/processed/network/01_herb_disease_genes.RData")
+
+write.xlsx(
+  list(
+    Herb_Targets = herb_targets_df,
+    DEGs = deg_genes_df,
+    WGCNA_Genes = wgcna_genes_df,
+    Candidate_Genes = candidate_genes_df
+  ),
+  "../tables/Table_S3.xlsx"
+)
+```
+
+
+# Herb-compound-Target (HIT) Network
+## Load Packages
+
+```{r}
+library(tidyverse)
+library(openxlsx)
+library(data.table)
+library(clusterProfiler)
+library(igraph)
+library(centiserve)
+library(RCy3)
+```
+
+## Step 1: Loading data
+```{r}
+rm(list = ls())
+
+load("../data/processed/network/01_herb_disease_genes.RData")
+load("../data/processed/tcm/16_herb_compound_target.RData")
+
+herb_compound_target <- herb_compound_target %>%
+  dplyr::filter( Symbol %in% candidate_genes_df$Gene) %>%
+  dplyr::select(Herb.Name.Pinyin, Compound, Symbol) %>%
+  dplyr:: rename(Herb = Herb.Name.Pinyin, Target = Symbol)  %>%
+  distinct() %>%
+  arrange(Herb,Target)
+
+save(herb_compound_target,file = "../data/processed/network/02_herb_compound_target.RData")
+
+```
+
+## Step 2: Build herb-compound-target network
+```{r}
+herb_compound <- herb_compound_target %>%
+  dplyr::select(Herb, compound) %>%
+  distinct()
+  
+compound_target <- herb_compound_target %>%
+  dplyr::select(compound, Target) %>%
+  distinct()
+  
+# edges
+edges <- bind_rows(
+  herb_compound %>% 
+    dplyr::rename(source = Herb, target = compound) %>% 
+    mutate(interaction = "herb_compound"),
+  compound_target %>%
+    dplyr::rename(source = compound, target = Target) %>%
+    mutate(interaction = "compound_target")
+)
+
+# nodes
+nodes <- data.frame(id = unique(c(edges$source, edges$target))) %>%
+  mutate(type = case_when(
+    id %in% herb_compound$Herb        ~ "Herb",
+    id %in% compound_target$compound  ~ "compound",
+    id %in% compound_target$Target    ~ "Target",
+    TRUE                              ~ "Other"
+  ))
+
+save(nodes,edges,file = "../data/processed/network/03_HIT_network.RData")
+```
+
+## Figure_3B. HIT network.
+
+```{r}
+rm(list = ls())
+
+load("../data/processed/network/03_HIT_network.RData")
+
+cytoscapePing()  
+
+deleteAllNetworks() 
+
+createNetworkFromDataFrames(
+  nodes = nodes,
+  edges = edges,
+  title = "HFrEF_HIT_Network",
+  collection = "HIT_Network"
+)
+
+# layout
+layoutNetwork("force-directed")
+
+# style
+style_name <- "HIT_Style_By_Nodes_Type"
+try(deleteVisualStyle(style_name), silent = TRUE)
+
+# default style
+defaults <- list(
+  NODE_SHAPE = "RECTANGLE",
+  NODE_SIZE = 30,
+  NODE_FILL_COLOR = "#CCCCCC",
+  NODE_LABEL_FONT_FACE = "Arial,plain,12",
+  EDGE_WIDTH = 0.5,
+  EDGE_STROKE_COLOR = "#E0E0E0",
+  EDGE_TRANSPARENCY = 200         
+)
+
+# mapping style
+mappings <- list(
+  # node shape
+  mapVisualProperty(
+    visual.prop = 'node shape', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "compound", "Target"),
+    visual.prop.values = c("ROUND RECTANGLE","ELLIPSE", "DIAMOND")
+  ),
+  
+  # node color
+  mapVisualProperty(
+    visual.prop = 'node fill color', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "compound", "Target"),
+    visual.prop.values = c("#fe9acc", "#fe0000", "#0401b9")
+  ),
+  
+  # node size
+  mapVisualProperty(
+    visual.prop = 'node size',
+    table.column = 'type',
+    mapping.type = 'd',
+    table.column.values = c("Herb", "compound", "Target"),
+    visual.prop.values = c(30, 20, 30)
+  ),
+  
+  # node label
+  mapVisualProperty(
+    visual.prop = 'node label', 
+    table.column = 'name', 
+    mapping.type = 'p'
+  ),
+  
+  mapVisualProperty(
+    visual.prop = 'node label color', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "compound", "Target"),
+    visual.prop.values = c("#000000", "#000000", "#FFFFFF")
+  )
+)
+
+# apply style
+createVisualStyle(
+  style.name = style_name, 
+  defaults = defaults, 
+  mappings = mappings
+)
+
+setVisualStyle(style_name)
+
+# Figure_3B.pdf / Figure_3B.png
+```
+

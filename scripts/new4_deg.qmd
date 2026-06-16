@@ -1,0 +1,309 @@
+---
+title: "04. Differentially Expressed Genes (DEGs)  (DEG)"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+# Load Packages
+```{r}
+library(tidyverse)
+library(data.table)
+library(openxlsx)
+library(patchwork)
+library(AnnoProbe)
+library(genefilter)
+library(limma)
+library(org.Hs.eg.db)
+library(RColorBrewer)
+library(pheatmap)
+```
+
+# Step 1: Loading Data
+```{r}
+rm(list = ls())
+load("../data/raw/geo/GSE57338_raw.RData")
+
+HC <- gse57338_pheno_raw$`disease status:ch1` == "non-failing"
+HF <- gse57338_pheno_raw$`disease status:ch1` == "idiopathic dilated CMP"
+
+keep_samples <- rownames(gse57338_pheno_raw)[HC |HF]
+pheno <- gse57338_pheno_raw[keep_samples, ]
+
+pheno$group <- ifelse(pheno$`disease status:ch1` == "non-failing", "HC", "HF") 
+pheno$group <- factor(pheno$group, levels = c("HC", "HF"))
+
+expr_keep <- gse57338_exprs_raw[,keep_samples]
+```
+
+---
+
+# Step 2: Preprocessing
+
+- Figure S1A: Distribution of expression density across samples.
+
+- Figure S1B: Boxplot of gene expression levels across samples.
+
+- Figure S1C: Principal component analysis (PCA) of sample expression profiles.
+
+```{r}
+# log2 transformation
+ex <- expr_keep
+qx <- as.numeric(quantile(ex, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
+LogC <- (qx[5] > 100) ||
+          (qx[6]-qx[1] > 50 && qx[2] > 0)
+if (LogC) { ex[which(ex <= 0)] <- NaN
+  expr_keep <- log2(ex) }
+
+# check GPL and annotate the probes to genes.
+
+probe2gene=idmap(gse57338_gpl) 
+expr_annotated <- filterEM(expr_keep, probe2gene)
+
+# Processing of duplicated genes
+expr <- as.matrix(expr_annotated)
+if (any(duplicated(rownames(expr)))) {
+  expr <- aggregate(expr, by = list(rownames(expr)), FUN = mean)
+  rownames(expr) <- expr[,1]
+  expr <- expr[,-1]
+  expr <- as.matrix(expr)
+}
+
+
+# Express the overall distribution of values and observe where the "tail" of background noise falls
+df <- reshape2::melt(expr)
+p <- ggplot(df, aes(x = value, color = Var2)) + 
+  geom_density(show.legend = FALSE) + 
+  # labs(title = "Expression density across samples") +
+  xlab("log2 expression") + 
+  theme_bw() +
+  scale_x_continuous(breaks = seq(from = floor(min(df$value)), to = ceiling(max(df$value)), by = 1)) +
+  geom_vline(xintercept = 3, linetype = "dashed", color = "blue", linewidth = 1)
+
+print(p)
+
+ggsave("../figures/supplementary/nFigure_S1A.pdf",p, width = 14,height = 8,units = "cm", dpi = 300)
+
+# Filtering low expression genes
+threshold_log2 <- 3
+ffun <- filterfun(pOverA(p = 0.5, A = threshold_log2))
+keep <- genefilter(expr, ffun)
+
+expr_filt <- expr[keep, ]
+dim(expr_filt)
+
+# Check normalization
+pdf("../figures/supplementary/nFigure_S1B.pdf", width = 14, height = 8)
+boxplot(expr_filt, 
+        las = 2,  
+        # main = "Check normalization", 
+        ylab = "log2 expression", 
+        col = "lightblue")
+
+abline(h = median(expr_filt, na.rm = TRUE), col = "red", lty = 2)
+dev.off()
+
+# Check batch effect
+# PCA
+pca <- prcomp(t(expr_filt), scale. = TRUE)
+pca_df <- data.frame(pca$x[,1:2], Group = pheno$group)
+p <- ggplot(pca_df, aes(PC1, PC2, color = Group)) + 
+  geom_point(size = 3) + 
+  stat_ellipse() + 
+  theme_minimal()
+ggsave("../figures/supplementary/nFigure_S1C.pdf",p, width = 7,height = 5,units = "cm", dpi = 300)
+
+# Correlation within the group
+cor_mat <- cor(expr_filt)
+
+within_cor <- sapply(colnames(expr_filt), function(s) {
+  idx <- which(pheno$geo_accession == s)
+  gr <- pheno$group[idx]
+  same_group <- pheno$geo_accession[pheno$group == gr]
+  same_group <- setdiff(same_group, s)
+  
+  if (length(same_group) == 0) return(NA)
+  mean(cor_mat[s, same_group], na.rm = TRUE)
+})
+
+between_cor <- sapply(colnames(expr_filt), function(s) {
+  idx <- which(pheno$geo_accession == s)
+  gr <- pheno$group[idx]
+  diff_group <- pheno$geo_accession[pheno$group != gr]
+  if(length(diff_group)==0) return(NA)
+  mean(cor_mat[s, diff_group], na.rm = TRUE)
+})
+
+mean_within = mean(within_cor, na.rm = TRUE)
+mean_between = mean(between_cor, na.rm = TRUE)
+
+cat("Average correlation coefficient within the group：", round(mean_within, 4), "\n")
+cat("Average correlation coefficient between groups：", round(mean_between, 4), "\n")
+
+if (mean_within > mean_between) {
+  cat("✅ No significant batch effect\n")
+} else {
+  cat("⚠️ Have significant batch effect, suggest batch correction(ComBat/SVA)\n")
+}
+
+save(pheno, expr_filt, file = "../data/processed/geo/gse57338.RData")
+```
+
+
+# Step 3: DEG
+```{r}
+load("../data/processed/geo/gse57338.RData")
+group <- factor(pheno$group)  
+design <- model.matrix(~ 0 + group)
+colnames(design) <- levels(group)
+contr <- paste(levels(group)[2], levels(group)[1], sep = "-")
+contr.matrix <- makeContrasts(contrasts = contr, levels = design)
+
+fit <- lmFit(expr_filt, design)
+fit2 <- contrasts.fit(fit, contr.matrix)
+fit2 <- eBayes(fit2)
+
+res <- topTable(fit2, adjust = "fdr", number = Inf)
+
+save(res, file = "../data/processed/geo/gse57338_res.RData")
+```
+
+# Step 4: Significant DEGs
+```{r}
+# lfc <- log2(1.5)
+lfc <- 0.585
+
+deg_all <- as.data.frame(res) %>%
+  dplyr::rename(log2FC = logFC)
+
+deg_up <- deg_all %>% filter(adj.P.Val < 0.05, log2FC > lfc)
+deg_down <- deg_all %>% filter(adj.P.Val < 0.05, log2FC < -lfc)
+
+cat("The number of all DEGs:", nrow(deg_all), "\n")
+cat("The number of up DEGs:", nrow(deg_up), "\n")
+cat("The number of down DEGs:", nrow(deg_down), "\n")
+```
+
+---
+
+#  Figure 2A: Volcano Plot.
+
+```{r}
+deg_all$significance <- ifelse(
+  deg_all$`adj.P.Val` < 0.05 & abs(deg_all$log2FC) > lfc,
+  ifelse(deg_all$log2FC > lfc, paste0("Up(",nrow(deg_up),")"), paste0("Down(",nrow(deg_down),")")), "NS")
+
+p_volcano <- ggplot(deg_all, aes(x = log2FC, y = -log10(adj.P.Val), color = significance)) +
+  geom_point(alpha = 0.7, size = 1) +
+  scale_color_manual(values = c("blue", "gray", "red")) +
+  geom_vline(xintercept = c(-lfc, lfc), linetype = "dashed", color = "gray40", linewidth = 0.4) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "gray40", linewidth = 0.4) +
+  theme_bw(base_size = 10) +
+  labs(
+    # tag = "A",
+    x = "log2(Fold Change)", 
+    y = "-log10(Adjusted P-value)") +
+  theme_bw() + theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+
+ggsave("../figures/main/nFigure_2A.pdf",p_volcano, width = 7,height = 5,dpi = 300)
+```
+
+---
+
+# Figure 2B. Heatmap
+```{r}
+deg_sig <- deg_all %>% filter(adj.P.Val < 0.05, abs(log2FC) > lfc)
+
+N_top <- 50
+
+up_top <- deg_sig %>%
+  filter(log2FC > 0) %>%
+  arrange(desc(log2FC)) %>%
+  head(N_top)
+
+down_top <- deg_sig %>%
+  filter(log2FC < 0) %>%
+  arrange(log2FC) %>%
+  head(N_top)
+
+heat_genes <- c(rownames(up_top), rownames(down_top))
+
+sample_order <- pheno %>%
+  arrange(group) %>%   
+  pull(geo_accession)  
+
+mat <- expr_filt[heat_genes, sample_order]
+
+mat_z <- t(scale(t(mat)))
+
+breaks <- seq(-2, 2, length.out = 100)
+palette <- colorRampPalette(c("blue", "white", "red"))(99)
+
+# 分组注释
+anno_col <- data.frame(
+  Group = pheno$group[match(sample_order, pheno$geo_accession)]
+)
+rownames(anno_col) <- sample_order
+
+p_heat <- pheatmap(
+  mat_z,
+  annotation_col = anno_col,
+  annotation_names_col = F,
+  annotation_legend = T,
+  annotation_height = 0.2,
+  color = palette,
+  breaks = breaks,
+  scale = "none",      
+  show_rownames = FALSE,
+  show_colnames = FALSE,
+  treeheight_row = 20,
+  treeheight_col = 0,
+  cluster_cols = FALSE,    
+  cluster_rows = TRUE,   
+  border_color = NA,
+  fontsize = 10
+)
+
+pdf("../figures/main/nFigure_2B.pdf", width = 7, height = 5)
+print(p_heat)
+dev.off()
+```
+
+# Step 7: Saving DEG Results
+```{r}
+save(deg_all,deg_sig,deg_up, deg_down, lfc, file = "../data/processed/geo/gse57338_degs_results.RData")
+```
+
+# Table S2: DEG Result
+```{r}
+load("../data/processed/geo/gse57338_degs_results.RData")
+
+deg_all <- deg_all %>%
+  arrange(significance)
+
+write.xlsx(
+  list(DEG_Result = deg_all),
+  "../tables/Table_S3.xlsx"
+)
+```

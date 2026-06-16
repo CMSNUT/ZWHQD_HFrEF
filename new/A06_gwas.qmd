@@ -1,0 +1,182 @@
+---
+title: "06. GWAS Significant Site Adjacent Genes"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+---
+
+# Load packages
+```{r}
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("data.table")) install.packages("data.table")
+
+
+if (!require("GenomicRanges")) BiocManager::install("GenomicRanges")
+
+if (!require("org.Hs.eg.db")) BiocManager::install("org.Hs.eg.db")
+
+if (!require("TxDb.Hsapiens.UCSC.hg19.knownGene")) BiocManager::install("TxDb.Hsapiens.UCSC.hg19.knownGene")
+
+if (!require("CMplot")) install.packages("CMplot")
+
+
+
+library(tidyverse)
+library(data.table)
+library(openxlsx)
+library(org.Hs.eg.db)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(GenomicRanges)
+library(CMplot) # Manhattan Map
+# https://ai.so.com/search?search=%E4%BF%9D%E5%A7%86%E7%BA%A7%E6%95%99%E7%A8%8B%21%E5%B0%8F%E6%9E%9C%E6%95%99%E4%BD%A0%E5%AD%A6%E4%B9%A0%E6%9B%BC%E5%93%88%E9%A1%BF%E5%9B%BE%21Manhattan%E5%9B%BE%21+&src=so_result_natural&srcg=so_result_natural&chatid=4945eaf8e25ef908
+```
+
+# Load HERMES2.0 GWAS summary 
+```{r}
+gwas_file <- "../data/raw/opengwas/HERMES2_GWAS_DCM_EUR/FORMAT-METAL_Pheno5-DCM_EUR.tsv.gz"
+
+gwas <- fread(gwas_file, header = TRUE, sep = "\t", data.table = FALSE)
+```
+
+# Screening significant SNP （P < 5e-8）
+```{r}
+sig_snps <- gwas %>% 
+  filter(pval < 5e-8) %>%
+  distinct(chr, pos_b37, .keep_all = TRUE)
+cat(sprintf("显著SNP数量: %d\n", nrow(sig_snps)))
+```
+
+# 4. 获取基因注释
+```{r}
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene  
+genes_gr <- genes(txdb, single.strand.genes.only = FALSE)  # 返回GRanges对象
+
+gene_ids <- names(genes_gr)
+
+gene_sym <- AnnotationDbi::select(org.Hs.eg.db, keys = gene_ids, columns = "SYMBOL", keytype = "ENTREZID")
+# 转换为命名字符向量
+gene_sym_vec <- setNames(gene_sym$SYMBOL, gene_sym$ENTREZID)
+
+```
+
+# 5. 构建显著SNP的GRanges对象
+```{r}
+sig_gr <- GRanges(
+  seqnames = paste0("chr", sig_snps$chr),
+  ranges = IRanges(start = sig_snps$pos_b37 - 50000, end = sig_snps$pos_b37 + 50000),
+  rsID = sig_snps$rsID,
+  pval = sig_snps$pval,
+  pos = sig_snps$pos_b37
+)
+
+overlaps <- findOverlaps(sig_gr, genes_gr)
+neighbor_genes <- data.frame(
+  SNP_rsID = sig_gr$rsID[queryHits(overlaps)],
+  SNP_chr = as.character(seqnames(sig_gr)[queryHits(overlaps)]),
+  SNP_pos = sig_gr$pos[queryHits(overlaps)],
+  Gene_ENTREZID = names(genes_gr)[subjectHits(overlaps)],
+  stringsAsFactors = FALSE
+) %>% distinct()
+
+# 添加基因符号
+neighbor_genes$Gene_SYMBOL <- gene_sym_vec[neighbor_genes$Gene_ENTREZID]
+
+gwas_genes <- unique(neighbor_genes$Gene_SYMBOL[!is.na(neighbor_genes$Gene_SYMBOL)])
+writeLines(gwas_genes, "../data/processed/opengwas/GWAS_neighbor_genes.txt")
+```
+
+
+# 6. 已知DCM致病基因
+```{r}
+known_dcm_genes <- c(
+  "ADRB1", "CACNA1C", "BAG3", "TTN", "LMNA", "MYH7", "MYBPC3", "TNNT2", "TNNI3",
+  "ACTC1", "TPM1", "MYL2", "MYL3", "ACTN2", "DES", "DMD", "FHL2", "LAMA4", "LDB3",
+  "NEXN", "PLN", "PSEN1", "PSEN2", "RBM20", "SCN5A", "SGCD", "TAZ", "TCAP", "VCL",
+  "ANKRD1", "CSRP3", "CRYAB", "JPH2", "MYOZ2", "NEBL"
+)
+```
+
+# 7. 合并集合B
+```{r}
+setB <- unique(c(gwas_genes, known_dcm_genes))
+
+writeLines(sort(setB), "../data/processed/opengwas/SetB_DCM_genes.txt")
+
+gene_source <- data.frame(
+  Gene = setB,
+  Source = ifelse(setB %in% gwas_genes, "GWAS_near_sig", "Known_DCM_gene")
+)
+write.xlsx(gene_source, "../data/processed/opengwas/SetB_DCM_genes_with_source.xlsx")
+write.xlsx(neighbor_genes, "../data/processed/opengwas/GWAS_significant_SNPs_neighbor_genes.xlsx")
+```
+
+# 10. 输出结果
+```{r}
+writeLines(setB, "./results/05_setB_gwas_genes.txt")
+write.csv(data.frame(Gene = setB), "./results/05_setB_gwas_genes.csv", row.names = FALSE)
+```
+
+# 11. 曼哈顿图
+```{r}
+colnames(gwas)[colnames(gwas) == "rsID"] <- "SNP"
+colnames(gwas)[colnames(gwas) == "chr"] <- "CHR"
+colnames(gwas)[colnames(gwas) == "pos_b37"] <- "BP"
+colnames(gwas)[colnames(gwas) == "pval"] <- "P"
+
+
+```
+
+# 12. QQ图
+```{r}
+pdf("./figures/QQ_HERMES2.0_DCM.pdf", width = 5, height = 5)
+qq(gwas$pval, main = "QQ plot of HERMES2.0 DCM GWAS")
+dev.off()
+```
+
+# 13. 显著位点邻近基因详情表（补充材料）
+```{r}
+sig_with_genes <- sig_snps %>%
+  left_join(neighbor_genes_raw, by = c("rsid" = "SNP")) %>%
+  group_by(rsid) %>%
+  summarise(
+    CHR = first(chr),
+    POS = first(pos_b37),
+    P = first(pval),
+    Nearby_Genes = paste(unique(Gene_symbol[!is.na(Gene_symbol)]), collapse = ";")
+  )
+write.csv(sig_with_genes, "./supplementary/Table_S5_GWAS_significant_SNPs_genes.csv", row.names = FALSE)
+```
+
+# 14. 集合B来源表
+```{r}
+setB_summary <- data.frame(
+  Gene = setB,
+  Source = ifelse(setB %in% known_dcm_genes, "Known DCM gene", "GWAS neighboring gene")
+)
+write.csv(setB_summary, "./results/05_setB_gwas_genes_with_source.csv", row.names = FALSE)
+
+cat("集合B构建完成！\n")
+```
+
+

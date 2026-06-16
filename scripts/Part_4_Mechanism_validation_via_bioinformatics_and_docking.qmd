@@ -1,0 +1,1147 @@
+---
+title: "Part 4: Mechanism validation via bioinformatics and docking"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+---
+
+# Identification and Validation of Biomarker Genes by Machine Learning
+
+## Load Packages
+```{r}
+library(tidyverse)
+library(data.table)
+library(caret)
+library(glmnet)
+library(e1071)
+library(randomForest)
+library(gbm)
+library(pROC)
+library(ggplot2)
+library(ggsci)
+library(corrplot)
+library(openxlsx)
+library(ggvenn)
+```
+
+## Step 1: Loading data
+```{r}
+rm(list = ls())
+
+load("../data/processed/geo/GSE141910/GSE141910_preprocessed_final.RData")
+
+load("../data/processed/network/08_hub_genes.RData")
+
+expr_matrix <- t(expr_fpkm_corr[rownames(expr_fpkm_corr) %in% hub_genes,])
+
+expr_matrix <- expr_matrix[,hub_genes]
+
+group <- pheno_final[rownames(expr_matrix),"group"] %>% as.numeric()-1
+
+expr_data <- data.frame(expr_matrix, group = group)
+```
+
+## Step 2: Stratified sampling
+```{r}
+set.seed(42)
+
+train_index <- caret::createDataPartition(
+  expr_data$group, 
+  p = 0.7, 
+  list = FALSE
+)
+
+train_data <- expr_data[train_index, ]
+test_data  <- expr_data[-train_index, ]
+
+x_train <- as.matrix(train_data[, -ncol(train_data)])
+y_train <- train_data$group
+x_test  <- as.matrix(test_data[, -ncol(test_data)])
+y_test  <- test_data$group
+
+save(train_data, test_data, x_train,y_train,x_test,y_test, file = "../data/processed/ml/01_model_data.RData")
+```
+
+## Step 4: Hub genes correlation analysis
+```{r}
+cor_matrix <- cor(x_train)
+
+off_diag_abs <- abs(cor_matrix[lower.tri(cor_matrix)])
+
+max_abs <- max(off_diag_abs, na.rm = TRUE)
+min_abs <- min(off_diag_abs, na.rm = TRUE)
+
+cor_df <- cor_matrix %>%
+  as.data.frame() %>%
+  rownames_to_column("Gene1") %>%  
+  tidyr::pivot_longer(
+    cols = -Gene1,                
+    names_to = "Gene2",            
+    values_to = "cor"              
+  )
+
+cor_df <- cor_df[as.character(cor_df$Gene1) != as.character(cor_df$Gene2), ]
+
+cor_df$row_id <- as.numeric(factor(cor_df$Gene1, levels = hub_genes))
+
+cor_df$col_id <- as.numeric(factor(cor_df$Gene2, levels = hub_genes))
+
+cor_df <- cor_df[cor_df$row_id > cor_df$col_id, ]
+
+p <- ggplot(cor_df, aes(x = col_id, y = row_id)) +
+  geom_point(aes(fill = cor), shape = 21, size = 10, stroke = 0) +
+  geom_text(aes(label = sprintf("%.2f", cor)), size = 2.5, color = "black") +  
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", 
+                       midpoint = 0, limits = c(-1, 1),
+                       name = "Correlation") +
+  scale_y_continuous(breaks = 1:length(hub_genes), labels = hub_genes, trans = "reverse") +
+  scale_x_continuous(breaks = 1:length(hub_genes), labels = hub_genes) +
+  labs(x="",y="") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1.2, size = 10),
+        axis.text.y = element_text(size = 10),
+        legend.position = c(0.85,0.55)) +
+  coord_fixed()
+
+ggsave("../figures/supplementary/Figure_S4A.pdf", p, width = 7, height = 7, dpi = 300)
+```
+
+## Step 4: ROC-AUC for each gene
+```{r}
+compute_auc <- function(gene, x, y) {
+  roc_obj <- roc(response = y, predictor = x[, gene], quiet = TRUE, direction = "auto")
+  auc_val <- round(auc(roc_obj), 3)
+  return(auc_val)
+}
+
+gene_auc_df <- data.frame(
+  Gene = hub_genes,
+  Train_AUC = sapply(hub_genes, compute_auc, x = x_train, y = y_train),
+  Test_AUC  = sapply(hub_genes, compute_auc, x = x_test,  y = y_test)
+) 
+
+hub_genes_tbl2 <- hub_genes_tbl %>%
+  left_join(gene_auc_df,by="Gene")
+
+save(gene_auc_df, hub_genes_tbl2, 
+     file = "../data/processed/ml/02_gene_auc.RData")
+
+write.xlsx(
+  hub_genes_tbl2,
+  "../tables/Table2_Hub_Genes_AUC.xlsx"
+)
+```
+
+## Step 5: Feature selection
+
+### z-scores
+```{r}
+rm(list = ls())
+
+load("../data/processed/ml/01_model_data.RData")
+
+train_data$group <- factor(train_data$group, levels = c(0,1), labels = c("Normal","DCM_HFrEF"))
+
+test_data$group <- factor(test_data$group, levels = c(0,1), labels = c("Normal","DCM_HFrEF"))
+
+df <- train_data
+preProc <- caret::preProcess(df[, -which(colnames(df)=="group")], method = c("center", "scale"))
+
+df_scaled <- df
+df_scaled[, -which(colnames(df)=="group")] <- predict(preProc, df[, -which(colnames(df)=="group")])
+
+set.seed(42)
+train_control <- caret::trainControl(
+  method = "cv",
+  number = 10,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
+```
+
+### LASSO
+```{r}
+set.seed(42)
+
+lasso_model <- caret::train(
+  group ~ .,
+  data = df_scaled,
+  method = "glmnet",
+  metric = "ROC",
+  trControl = train_control,
+  tuneGrid = expand.grid(alpha=1, lambda=seq(0.001,0.1,0.001))
+)
+
+lasso_coef <- coef(lasso_model$finalModel, lasso_model$bestTune$lambda)
+lasso_selected <- rownames(lasso_coef)[which(lasso_coef[,1]!=0)][-1]
+
+cat("LASSO selected:", length(lasso_selected), "genes\n")
+cat(lasso_selected, "\n")
+
+save(lasso_model,lasso_selected, file = "../data/processed/ml/02_lasso.RData")
+```
+
+### SVM-RFE
+```{r}
+set.seed(42)
+
+svm_model <- caret::train(
+  group ~ .,
+  data = df_scaled,
+  method = "svmLinear",   
+  metric = "ROC",
+  trControl = train_control  
+)
+
+imp_svm <- varImp(svm_model)$importance
+svm_score <- imp_svm$DCM_HFrEF   
+names(svm_score) <- rownames(imp_svm)
+svm_selected <- names(sort(svm_score, decreasing=TRUE))[svm_score>0]
+
+cat("SVM-RFE selected:", length(svm_selected), "genes\n")
+cat(svm_selected, "\n")
+
+save(svm_model,svm_selected, file = "../data/processed/ml/03_svm_rfe.RData")
+```
+
+### Random Forest
+```{r}
+set.seed(42)
+rf_model <- caret::train(
+  group ~ .,
+  data = df_scaled,
+  method = "rf",          
+  metric = "ROC",
+  trControl = train_control,  
+  ntree = 500
+)
+imp_rf <- varImp(rf_model)$importance
+imp_rf <- imp_rf[order(imp_rf$Overall, decreasing = TRUE), , drop=FALSE] 
+rf_selected <- rownames(imp_rf)[imp_rf$Overall > 0] 
+
+cat("RF selected:", length(rf_selected), "genes\n")
+
+cat(rf_selected, "\n")
+
+save(rf_model, rf_selected, file = "../data/processed/ml/04_rf.RData")
+```
+
+### GBM
+```{r}
+set.seed(42)
+gbm_grid <- expand.grid(
+  n.trees = 100,
+  interaction.depth = 2,
+  shrinkage = 0.1,
+  n.minobsinnode = 5
+)
+
+gbm_model <- caret::train(
+  group ~ .,
+  data = df_scaled,
+  method = "gbm",
+  metric = "ROC",
+  trControl = train_control,
+  tuneGrid = gbm_grid,
+  verbose = FALSE 
+)
+
+imp_gbm <- varImp(gbm_model)$importance
+gbm_selected <- rownames(imp_gbm)[imp_gbm$Overall > 0]
+
+cat("GBM selected:", length(gbm_selected), "features\n")
+cat(gbm_selected, "\n")
+
+save(gbm_model,gbm_selected, file = "../data/processed/ml/05_gbm.RData")
+```
+
+### Consensus genes
+```{r}
+consensus_genes <- Reduce(intersect, list(lasso_selected, svm_selected, rf_selected, gbm_selected))
+cat("Consensus genes:", length(consensus_genes), "\n")
+print(consensus_genes)
+
+consensus_genes <- data.frame(Gene = consensus_genes)
+
+save(consensus_genes, file =  "../data/processed/ml/06_consensus_genes.RData")
+
+write.xlsx(consensus_genes, "../tables/consensus_genes.xlsx")
+```
+
+## Step 6: Feature selection Visualization
+```{r}
+# Figure S5A
+lasso_coef <- coef(lasso_model$finalModel, lasso_model$bestTune$lambda)
+lasso_df <- data.frame(
+  Gene = rownames(lasso_coef)[-1],
+  Coef = as.numeric(lasso_coef)[-1]
+) %>% filter(Coef != 0)
+
+pS5A <- ggplot(lasso_df, aes(x = reorder(Gene, Coef), y = Coef, fill = Coef > 0)) +
+  geom_col() +
+  coord_flip() +
+  labs( x = "", y = "Coefficient") +
+  theme_bw() +
+  theme(
+    text = element_text( size = 10),
+    axis.text = element_text(size=7),
+    axis.title = element_text(size = 8, face = "bold"),
+    legend.position = "none",
+    panel.grid = element_blank(),
+    # axis.ticks.y = element_blank()
+  )
+ggsave("../figures/supplementary/Figure_S5A.pdf",pS5A, width = 7, height = 5,units = "cm",dpi = 300)
+
+
+# Figure S5B
+imp_svm <- varImp(svm_model)$importance
+svm_df <- data.frame(
+  Gene = rownames(imp_svm),
+  Score = imp_svm$DCM_HFrEF
+) %>% arrange(desc(Score)) %>% head(15)
+
+pS5B <- ggplot(svm_df, aes(x = reorder(Gene, Score), y = Score, fill = Score)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(x = "", y = "Importance") +
+  theme_bw() +
+  theme(
+    text = element_text( size = 10),
+    axis.text = element_text(size=7),
+    axis.title = element_text(size = 8, face = "bold"),
+    legend.position = "none",
+    panel.grid = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+ggsave("../figures/supplementary/Figure_S5B.pdf",pS5B, width = 7, height = 5,units = "cm",dpi = 300)
+
+
+# Figure S5C
+imp_rf <- varImp(rf_model)$importance
+rf_df <- data.frame(
+  Gene = rownames(imp_rf),
+  Score = imp_rf$Overall
+) %>% arrange(desc(Score))
+
+pS5C <- ggplot(rf_df, aes(x = reorder(Gene, Score), y = Score, fill = Score)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = "", y = "Importance score") +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_bw() +
+  theme(
+    text = element_text( size = 10),
+    axis.text = element_text(size=7),
+    axis.title = element_text(size = 8, face = "bold"),
+    legend.position = "none",
+    panel.grid = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+ggsave("../figures/supplementary/Figure_S5C.pdf", pS5C, width = 7, height = 5)
+
+## Figure S5D
+imp_gbm <- varImp(gbm_model)$importance
+gbm_df <- data.frame(
+  Gene = rownames(imp_gbm),
+  Score = imp_gbm$Overall
+) %>% arrange(desc(Score)) %>% head(15)
+
+pS5D <- ggplot(gbm_df, aes(x = reorder(Gene, Score), y = Score, fill = Score)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = "", y = "Importance") +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_bw() +
+  theme(
+    text = element_text( size = 10),
+    axis.text = element_text(size=7),
+    axis.title = element_text(size = 8, face = "bold"),
+    legend.position = "none",
+    panel.grid = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+ggsave("../figures/supplementary/Figure_S5D.pdf", pS5D, width = 7, height = 5)
+```
+
+### Venn Plot: Consensus genes 
+```{r}
+# Venn
+gene_list <- list(
+  LASSO = lasso_selected,
+  `SVM-RFE` = svm_selected,
+  RF = rf_selected,
+  GBM = gbm_selected
+)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(4),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=7))
+
+# save
+ggsave("../figures/main/Figure_6A.pdf", p, width=7, height=5, dpi=300, units="cm")
+ggsave("../figures/main/Figure_6A.png", p, width=7, height=5, dpi=300, units="cm")
+```
+
+## Step 7: Logistic regression model
+```{r}
+load("../data/processed/ml/06_consensus_genes.RData")
+load("../data/processed/ml/01_model_data.RData")
+
+formula_lr <- as.formula(paste("group ~", paste(consensus_genes$Gene, collapse = "+")))
+lr_model <- glm(formula_lr, data = train_data, family = binomial())
+
+save(lr_model, file = "../data/processed/ml/07_lr_model.RData")
+```
+
+## Step 8: Nomogram
+```{r}
+library(rms)
+# rms
+dd <- datadist(train_data)
+options(datadist = dd)
+
+lrm_mod <- lrm(formula_lr, data = train_data, x = TRUE, y = TRUE)
+
+nom <- nomogram(lrm_mod,
+                fun = plogis,          
+                funlabel = "Predicted Probability",
+                fun.at = c(0.05, 0.5,0.95),
+                lp = FALSE)     
+
+pdf("../figures/main/Figure_6B.pdf", width = 7, height = 5)
+par(mar = c(1, 1, 1, 1))  
+plot(nom,
+     xfrac = 0.35,   
+     cex.axis = 0.6, 
+     cex.lab = 0.7)  
+dev.off()
+
+```
+
+## Step 8: External validation
+
+### GSE116250: External validation set
+```{r}
+library(org.Hs.eg.db)
+
+rm(list = ls())
+
+load("../data/processed/ml/06_consensus_genes.RData")
+load("../data/processed/ml/07_lr_model.RData")
+load("../data/raw/geo/gse116250_raw.RData")
+
+gse116250_expr_trans <- gse116250_fpkm_raw %>%
+  column_to_rownames("GeneID") %>%
+  mutate(across(everything(), ~ .x + 1)) %>%  
+  log2() %>%
+  t() %>% 
+  as.data.frame()
+
+entrez_ids <- colnames(gse116250_expr_trans)  
+symbols <- mapIds(org.Hs.eg.db, keys = entrez_ids, keytype = "ENTREZID", column = "SYMBOL", multiVals = "first")
+
+keep <- !is.na(symbols)
+gse116250_expr_annot <- t(gse116250_expr_trans[, keep]) %>%
+  as.data.frame() %>%
+  mutate(Gene = symbols[keep], .before = 1)
+
+common_genes <- intersect(consensus_genes$Gene, (gse116250_expr_annot$Gene))
+
+if (all(common_genes %in% consensus_genes$Gene)) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+
+gse116250_expr_merged <- gse116250_expr_annot %>%
+  as.data.frame() %>%
+  dplyr::filter(Gene %in% common_genes) %>%
+  group_by(Gene) %>%
+  summarise(across(everything(), mean, na.rm = TRUE)) %>%
+  column_to_rownames("Gene") %>%
+  t() %>%                          
+  as.data.frame()
+
+gse116250_expr_merged <- gse116250_expr_merged[,consensus_genes$Gene]
+
+# pheno info
+Normal <- trimws(gse116250_pheno_raw$characteristics_ch1.1) == "disease: non-failing"
+DCM_HFrEF <- trimws(gse116250_pheno_raw$characteristics_ch1.1) == "disease: dilated cardiomyopathy"
+
+gse116250_expr_filtered <- rbind(gse116250_expr_merged[Normal,],gse116250_expr_merged[DCM_HFrEF,]) %>%
+  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
+
+save(gse116250_expr_filtered, file = "../data/processed/ml/gse116250.RData")
+```
+
+### GSE19303: External validation set  
+```{r}
+rm(list = ls())
+
+library(AnnoProbe)
+
+load("../data/processed/ml/06_consensus_genes.RData")
+load("../data/processed/ml/07_lr_model.RData")
+load("../data/raw/geo/gse19303_raw.RData")
+
+ex <- gse19303_exprs_raw
+qx <- as.numeric(quantile(ex, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
+
+LogC <- (qx[5] > 100) ||
+          (qx[6]-qx[1] > 50 && qx[2] > 0)
+if (LogC) { ex[which(ex <= 0)] <- NaN
+  ex <- log2(ex + 1) }
+
+probe2gene <- idmap("GPL570")
+gse19303_expr_annot <-  as.data.frame(ex) %>% 
+  rownames_to_column("probe_id") %>%
+  inner_join(probe2gene, by = "probe_id") %>%
+  dplyr::select(-probe_id) %>%
+  mutate(Gene = symbol, .before = 1) %>%
+  dplyr::select(-symbol)
+
+common_genes <- intersect(consensus_genes$Gene, (gse19303_expr_annot$Gene))
+
+if (all(common_genes %in% consensus_genes$Gene)) {
+  cat("Good dataset\n")
+} else {
+  cat("Bad dataset\n")
+}
+
+gse19303_expr_merged <- gse19303_expr_annot %>%
+  as.data.frame() %>%
+  dplyr::filter(Gene %in% common_genes) %>%
+  group_by(Gene) %>%
+  summarise(across(everything(), mean, na.rm = TRUE)) %>%
+  column_to_rownames("Gene") %>%
+  t() %>%                          
+  as.data.frame()
+
+gse19303_expr_merged <- gse19303_expr_merged[,consensus_genes$Gene]
+
+# pheno info
+Normal <- !grepl("^DCM_", gse19303_pheno_raw$title)
+DCM_HFrEF <- grepl("^DCM_", gse19303_pheno_raw$title) & 
+                  as.numeric(gse19303_pheno_raw$`lvef:ch1`) <= 40
+
+# grepl("_baseline", gse19303_pheno_raw$title) &
+
+gse19303_expr_filtered <- rbind(gse19303_expr_merged[Normal,],gse19303_expr_merged[DCM_HFrEF,]) %>%
+  mutate(group = c(rep(0,sum(Normal)), rep(1,sum(DCM_HFrEF))))
+
+save(gse19303_expr_filtered, file = "../data/processed/ml/gse19303.RData")
+```
+
+
+## Step 9: ROC 
+
+
+```{r}
+rm(list = ls())
+
+source("external_roc_cm.R")
+
+load("../data/processed/ml/01_model_data.RData")
+load("../data/processed/ml/gse116250.RData")
+load("../data/processed/ml/gse19303.RData")
+load("../data/processed/ml/07_lr_model.RData")
+
+dataset_list <- list(
+  Train = list(data=train_data, name="GSE141910_Train"),
+  Test = list(data=test_data, name="GSE141910_Test"),
+  GSE116250 = list(data=gse116250_expr_filtered, name="GSE116250")
+  # ,
+  # GSE19303 = list(data=gse19303_expr_filtered, name="GSE19303")
+)
+
+
+roc_all <- map_dfr(dataset_list, ~calc_roc(lr_model, .x$data, .x$name)$df)
+
+p6C <- ggplot(
+  roc_all, 
+  aes(x=Specificity, y=Sensitivity, color=Group)
+  ) +
+  geom_line(linewidth = 1) +
+  geom_abline(slope=1, intercept=0, linetype="dashed", color="gray50") +
+  scale_color_aaas() +
+  labs(x="1 - Specificity", y="Sensitivity") +
+  theme_bw() + 
+  theme(legend.position = c(0.7,0.2), 
+        legend.background = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 8),
+        axis.title = element_text(size = 10),
+        panel.grid = element_blank(),
+      )
+
+ggsave("../figures/main/Figure_6C.pdf", p6C, width=7, height=7, dpi=300)
+
+```
+
+## Step 10: calibration curve
+```{r}
+dd <- datadist(train_data)
+options(datadist = "dd")
+form <- as.formula(paste0("group ~ ", paste(consensus_genes$Gene, collapse = "+")))
+fit <- lrm(form,data=train_data,x=T,y=T)
+cal_train <- calibrate(fit,method="boot",B=1000)
+
+cal_manual <- function(testdata,model,name){
+  pred <- predict(model,newdata = testdata,type="fitted")
+  df <- data.frame(pred=pred,obs=testdata$group)
+  fit_loess <- loess(obs~pred,data=df,span=0.75)
+  seq_x <- seq(0,1,length.out=100)
+  seq_y <- predict(fit_loess,newdata=data.frame(pred=seq_x))
+  seq_y[seq_y>1] <-1;seq_y[seq_y<0]<-0
+  return(data.frame(Pred=seq_x,Obs=seq_y,Dataset=name))
+}
+
+df_train <- data.frame(
+  Pred = cal_train[, "predy"],
+  Obs  = cal_train[, "calibrated.corrected"],
+  Dataset = "GSE141910_Train"
+)
+
+cal_manual <- function(newdat, mod, name){
+  pred <- predict(mod, newdata = newdat, type = "fitted")
+  obs <- newdat$group
+  df <- data.frame(pred = pred, obs = obs)
+  lo <- loess(obs ~ pred, data = df, span = 0.75)
+  xseq <- seq(0, 1, length.out = 100)
+  yseq <- predict(lo, newdata = data.frame(pred = xseq))
+  yseq[yseq > 1] <- 1
+  yseq[yseq < 0] <- 0
+  return(data.frame(Pred = xseq, Obs = yseq, Dataset = name))
+}
+
+df_test <- cal_manual(test_data[, c(consensus_genes$Gene, "group")], fit, "GSE141910_Test")
+df_gse116250  <- cal_manual(gse116250_expr_filtered[, c(consensus_genes$Gene, "group")],  fit, "GSE116250")
+
+all_cal <- rbind(df_train, df_test, df_gse116250)
+
+p6D <- ggplot(all_cal, aes(x=Pred, y=Obs, color=Dataset)) +
+  geom_smooth(method="loess", se=F, span=0.8, size=1) +
+  geom_abline(slope=1, intercept=0, linetype="dashed", color="black") +
+  scale_color_brewer(palette = "Set2") +
+  labs(x="Predicted Probability", y="Actual Probability") +
+  xlim(0,1) + ylim(0,1) +
+  theme_bw()+
+  theme(panel.grid=element_blank())
+
+ggsave("../figures/main/Figure_6D.pdf", p6D, width=7, height=7, dpi=300)
+```
+
+## herb-ingredient-target
+```{r}
+load("../data/processed/tcm/14_compound_target_final.RData")
+load("../data/processed/ml/06_consensus_genes.RData")
+
+hit_core <- compound_target_final %>%
+    dplyr::filter(Symbol %in% consensus_genes$Gene) %>%
+  arrange(Herb.Name.Pinyin,Symbol)
+
+unique(hit_core$Herb.Name.Pinyin)
+
+key_compounds <- hit_core[,c("Herb.Name.Pinyin", "Compound.Name","Symbol")]
+```
+
+# Figure 6
+```{r}
+
+```
+
+
+# Single‑Cell Transcriptome Expression Mapping
+## Load Packages
+```{r}
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+library(dplyr)
+library(Matrix)
+library(harmony)
+```
+
+## Step 1: Loading data
+
+```{r}
+rm(list=ls())
+gc()
+load("../data/processed/ml/06_consensus_genes.RData")
+
+load("../data/raw/geo/GSE183852/GSE183852_DCM_Cells/GSE183852_DCM_Cells.Robj")
+
+new.cluster.ids <- c(
+  "Fibroblasts",
+  "Endothelium",
+  "Pericytes",
+  "Macrophages",
+  "T_Cells",
+  "Smooth_Muscle",
+  "Monocytes",
+  "NK_Cells",
+  "Neurons",
+  "B_Cells",
+  "Lymphatic"
+)
+
+```
+
+## Step 2: 细胞注释UMAP
+```{r}
+p1 <- DimPlot(HDCM, label = TRUE, repel = TRUE, pt.size = 0.1, label.size = 2.5) +
+  theme_bw(base_family = "sans") +  
+  theme(
+    panel.border = element_rect(fill = NA, color = "black", size = 1.0),
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 8),
+    legend.spacing.y = unit(0.02, "cm"),  
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = 8),  
+    axis.title = element_text(size = 8)  
+  )
+
+ggsave("../results/figures/main/Figure_6A_UMAP.pdf", p1, width = 10, height = 8, units = "cm",dpi = 300)
+
+ggsave("../results/figures/main/Figure_6A_UMAP.png", p1, width = 10, height = 8, units = "cm",dpi = 300)
+```
+
+
+
+---
+
+
+
+
+# Bayesian co-localization analysis
+
+## Load Packages
+```{r}
+library(data.table)   
+library(ggplot2)      
+library(coloc)         
+library(tidyverse) 
+library(arrow)
+library(rtracklayer)
+library(GenomicRanges)
+library(future)
+library(future.apply)
+```
+
+## Step 1: Set paths
+```{r}
+# download.file("http://hgdownload.cse.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz", destfile = "../data/raw/opengwas/hg19ToHg38.over.chain.gz")
+
+data_dir <- "../data/raw/opengwas"          
+out_dir  <- "../data/processed/opengwas" 
+
+chain_file <- file.path(data_dir, "hg19ToHg38.over.chain") 
+
+if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+
+# Core genes
+load("../data/processed/ml/06_consensus_genes.RData")
+
+```
+
+## Step 2: reading and cleaning GTEx eQTL data
+```{r}
+cat("=== Reading GTEx eQTL (left ventricle) ===\n")
+
+eqtl_file <- file.path(data_dir, "GTEx_Analysis_v8_eQTL/Heart_Left_Ventricle.v8.signif_variant_gene_pairs.txt.gz")
+
+eqtl_raw <- fread(eqtl_file, header = TRUE, sep = "\t")
+save(eqtl_raw, file = file.path(out_dir,"eqtl_heart_LV_raw.RData"))
+
+eqtl_clean <- eqtl_raw %>%
+  dplyr::mutate(
+    gene_id = stringr::str_remove(gene_id, "\\..*$"),
+    pval = pval_nominal,
+    beta = slope,
+    varbeta = slope_se^2,
+    MAF = maf
+  ) %>%
+  dplyr::filter(pval < 1e-5) %>%
+  dplyr::mutate(
+    id_temp = stringr::str_remove(variant_id, "_b38$"),
+    chr = stringr::str_extract(id_temp, "^chr[0-9XYM]+"),
+    pos = as.numeric(stringr::str_extract(id_temp, "(?<=_)[0-9]+(?=_)")),
+    ref = stringr::str_extract(id_temp, "(?<=_)[ATCG]+(?=_[ATCG]+$)"),
+    alt = stringr::str_extract(id_temp, "(?<=_)[ATCG]+$")
+  ) %>%
+  dplyr::filter(
+    !is.na(chr), 
+    !is.na(pos), 
+    !is.na(ref), 
+    !is.na(alt)
+  ) %>%
+  dplyr::select(
+    gene_id, 
+    chr, 
+    pos, 
+    ref, 
+    alt, 
+    beta, 
+    varbeta, 
+    MAF, 
+    pval, 
+    variant_id
+  )
+
+cat("eQTL valid records (P<1e-5):", nrow(eqtl_clean), "\n")
+
+save(eqtl_clean, file= file.path(out_dir, "eqtl_heart_LV_clean.RData"))
+
+rm(eqtl_raw, eqtl_clean); gc()
+
+
+```
+
+## Step 3: reading and lifting over HERMES GWAS (hg19 → hg38)
+
+- [HERMES dilated cardiomyopathy 2024 GWAS: European ancestry](https://www.kp4cd.org/node/1482)
+
+- 
+
+```{r}
+# cat("\n=== Reading HERMES GWAS ===\n")
+# hermes_raw <- fread(file.path(data_dir, "HERMES2_GWAS_DCM_EUR/FORMAT-METAL_Pheno5-DCM_EUR.tsv.gz"))
+# 
+# save(hermes_raw, file = file.path(out_dir, "hermes_DCM_GWAS_raw.RData"))
+
+load(file.path(out_dir, "hermes_DCM_GWAS_raw.RData"))
+
+# sample sizes
+# https://doi.org/10.1038/s41588-024-01952-y
+N_cases_hermes   <- 6001
+N_controls_hermes <- 449382   # from the paper
+N_total_hermes    <- N_cases_hermes + N_controls_hermes   # 455383
+s_hermes          <- N_cases_hermes / N_total_hermes
+
+cat("HERMES sample sizes: cases =", N_cases_hermes, ", controls =", N_controls_hermes,
+    ", total =", N_total_hermes, "\n")
+
+# Prepare GRanges for liftOver
+hermes_gr <- GenomicRanges::GRanges(
+  seqnames = paste0("chr", hermes_raw$chr),
+  ranges = IRanges::IRanges(start = hermes_raw$pos_b37, end = hermes_raw$pos_b37)
+)
+chain <- rtracklayer::import.chain(chain_file)
+hermes_gr_hg38 <- rtracklayer::liftOver(hermes_gr, chain)
+success <- which(lengths(hermes_gr_hg38) > 0)
+hermes_hg38 <- hermes_raw[success, ]
+hermes_hg38$chr <- as.character(GenomicRanges::seqnames(unlist(hermes_gr_hg38[success])))
+hermes_hg38$pos <- IRanges::start(unlist(hermes_gr_hg38[success]))
+
+# Build HERMES GWAS dataset
+hermes_gwas <- hermes_hg38 %>%
+  dplyr::mutate(
+    ref = A2,
+    alt = A1,
+    beta = A1_beta,
+    varbeta = se^2,
+    pval = pval,
+    variant_id = rsID,
+    MAF_raw = A1_freq,
+    MAF = ifelse(MAF_raw > 0.5, 1 - MAF_raw, MAF_raw)
+  ) %>%
+  dplyr::filter(!is.na(beta), !is.na(varbeta), !is.na(pval)) %>%
+  dplyr::select(chr, pos, ref, alt, beta, varbeta, pval, variant_id, MAF)
+
+cat("HERMES successfully converted SNPs:", nrow(hermes_gwas),
+    sprintf("(%.2f%%)", 100 * nrow(hermes_gwas) / nrow(hermes_raw)), "\n")
+
+
+save(hermes_gwas, N_cases_hermes, N_total_hermes,  file = file.path(out_dir, "hermes_DCM_GWAS_hg38.RData"))
+
+rm(hermes_raw, hermes_gr, hermes_gr_hg38, chain, success); gc()
+```
+
+## Step 4: reading Jurgens GWAS (hg38)
+
+- [Dilated cardiomyopathy 2024 GWAS: European ancestry](https://www.kp4cd.org/node/1558)
+
+```{r}
+# Jurgens GWAS summary statistics
+# jurgens_raw <- fread("../data/raw/opengwas/Jurgens_DCM_GWAS/DCM_GWAS/Jurgens_DCM_GWAS_META.tsv.gz", header = TRUE)
+
+# save(jurgens_raw, file = file.path(out_dir, "jurgens_DCM_GWAS_raw.RData"))
+
+load(file.path(out_dir, "jurgens_DCM_GWAS_raw.RData"))
+
+# names(jurgens_raw)
+
+# https://www.nature.com/articles/s41588-024-01975-5
+# N_cases_jurgens <- max(jurgens_raw$N_cases)
+# N_controls_jurgens <- max(jurgens_raw$N_controls)
+N_cases_jurgens <- 9365
+N_controls_jurgens <- 946368  # from paper
+N_total_jurgens <- N_cases_jurgens + N_controls_jurgens
+
+s_jurgens <- N_cases_jurgens / N_total_jurgens
+
+jurgens_gwas <- jurgens_raw %>%
+  dplyr::mutate(
+    chr = paste0("chr", CHR),
+    pos = POS,
+    ref = NEA,
+    alt = EA,
+    beta = BETA,
+    varbeta = SE^2,
+    pval = P,
+    variant_id = ifelse(is.na(rsID) | rsID == "", ID_B38, rsID),
+    MAF_raw = EAFREQ,
+    MAF = ifelse(MAF_raw > 0.5, 1 - MAF_raw, MAF_raw)
+  ) %>%
+  dplyr::filter(!is.na(pval)) %>%
+  dplyr::select(chr, pos, ref, alt, beta, varbeta, pval, variant_id, MAF)
+
+cat("Jurgens 有效 SNP 数:", nrow(jurgens_gwas), "\n")
+rm(jurgens_raw); gc()
+
+
+save(jurgens_gwas, N_cases_jurgens, N_controls_jurgens, N_total_jurgens, s_jurgens, file = "../data/processed/opengwas/jurgens_DCM_GWAS_hg38.RData")
+
+rm(jurgens_raw, jurgens_gwas, jurgens_gwas); gc()
+```
+
+## Step 5: matching SNPs (only identical alleles, no flipping)
+```{r}
+match_identical <- function(eqtl_df, gwas_df) {
+  eqtl_match <- eqtl_df %>%
+    dplyr::select(gene_id, chr, pos, ref_eqtl = ref, alt_eqtl = alt,
+                  beta_eqtl = beta, varbeta_eqtl = varbeta, MAF_eqtl = MAF,
+                  pval_eqtl = pval, variant_id_eqtl = variant_id)
+  gwas_match <- gwas_df %>%
+    dplyr::select(chr, pos, ref_gwas = ref, alt_gwas = alt,
+                  beta_gwas = beta, varbeta_gwas = varbeta, MAF_gwas = MAF,
+                  pval_gwas = pval, variant_id_gwas = variant_id)
+  matched_pos <- dplyr::inner_join(eqtl_match, gwas_match, by = c("chr", "pos"))
+  matched_identical <- matched_pos %>%
+    dplyr::filter(ref_eqtl == ref_gwas & alt_eqtl == alt_gwas) %>%
+    dplyr::select(-ref_eqtl, -alt_eqtl, -ref_gwas, -alt_gwas)
+  return(matched_identical)
+}
+
+load(file.path(out_dir, "eqtl_heart_LV_clean.RData"))
+load(file.path(out_dir, "hermes_DCM_GWAS_hg38.RData"))
+load(file.path(out_dir, "jurgens_DCM_GWAS_hg38.RData"))
+
+matched_hermes <- match_identical(eqtl_clean, hermes_gwas)
+matched_jurgens <- match_identical(eqtl_clean, jurgens_gwas)
+
+cat("\n=== Matching results ===\n")
+cat("HERMES matched records (identical alleles):", nrow(matched_hermes), "\n")
+cat("Jurgens matched records (identical alleles):", nrow(matched_jurgens), "\n")
+
+rm(hermes_gwas, jurgens_gwas); gc()
+```
+
+## Step 6: evaluating match quality
+```{r}
+evaluate_matching <- function(matched_df, original_eqtl, name) {
+  cat("\n========== ", name, " matching quality ==========\n")
+  total_eqtl <- nrow(original_eqtl)
+  matched_n <- nrow(matched_df)
+  cat("Match rate:", matched_n, "/", total_eqtl, sprintf("(%.2f%%)", 100 * matched_n / total_eqtl), "\n")
+  
+  snp_per_gene <- matched_df %>% dplyr::group_by(gene_id) %>% dplyr::summarise(n = dplyr::n())
+  cat("SNPs per gene: median =", median(snp_per_gene$n), 
+      ", mean =", round(mean(snp_per_gene$n),1),
+      ", range =", min(snp_per_gene$n), "-", max(snp_per_gene$n), "\n")
+  cat("Genes with ≥10 SNPs:", sum(snp_per_gene$n >= 10), "/", nrow(snp_per_gene), "\n")
+  
+  if (all(c("MAF_eqtl", "MAF_gwas") %in% names(matched_df))) {
+    maf_cor <- cor(matched_df$MAF_eqtl, matched_df$MAF_gwas, method = "spearman", use = "complete.obs")
+    cat("MAF Spearman correlation:", round(maf_cor, 4), "\n")
+  }
+  
+  if (all(c("pval_eqtl", "pval_gwas") %in% names(matched_df))) {
+    logp_eqtl <- -log10(matched_df$pval_eqtl)
+    logp_gwas <- -log10(matched_df$pval_gwas)
+    p_cor <- cor(logp_eqtl, logp_gwas, method = "spearman", use = "complete.obs")
+    cat("-log10(P) Spearman correlation:", round(p_cor, 4), "\n")
+  }
+  
+  original_genes <- unique(original_eqtl$gene_id)
+  matched_genes <- unique(matched_df$gene_id)
+  cat("Gene coverage:", length(matched_genes), "/", length(original_genes),
+      sprintf("(%.2f%%)", 100 * length(matched_genes) / length(original_genes)), "\n")
+}
+
+# Save original eqtl_clean for evaluation
+eqtl_original <- eqtl_clean
+evaluate_matching(matched_hermes, eqtl_original, "HERMES")
+evaluate_matching(matched_jurgens, eqtl_original, "Jurgens")
+```
+
+## Step 7: filtering genes with ≥10 SNPs
+```{r}
+filter_genes <- function(matched_df) {
+  genes_keep <- matched_df %>%
+    dplyr::group_by(gene_id) %>%
+    dplyr::summarise(n = dplyr::n()) %>%
+    dplyr::filter(n >= 10) %>%
+    dplyr::pull(gene_id)
+  filtered <- matched_df %>% dplyr::filter(gene_id %in% genes_keep)
+  cat("Genes retained (≥10 SNPs):", length(genes_keep), "\n")
+  cat("Total SNP‑gene pairs after filtering:", nrow(filtered), "\n")
+  return(filtered)
+}
+
+matched_hermes_final <- filter_genes(matched_hermes)
+matched_jurgens_final <- filter_genes(matched_jurgens)
+
+rm(eqtl_clean, eqtl_original, matched_hermes, matched_jurgens); gc()
+```
+
+---
+
+## Step 8: running P‑value based colocalisation in parallel
+```{r}
+run_coloc_pval_gene <- function(sub_df, N_gwas, s_gwas, N_eqtl = 386,
+                                p1 = 1e-4, p2 = 1e-4, p12 = 1e-5) {
+  if (nrow(sub_df) < 10) return(NULL)
+  d1 <- list(pvalues = sub_df$pval_eqtl,
+             snp = sub_df$variant_id_eqtl,
+             N = N_eqtl,
+             type = "quant")
+  d2 <- list(pvalues = sub_df$pval_gwas,
+             snp = sub_df$variant_id_gwas,
+             N = N_gwas,
+             type = "cc",
+             s = s_gwas)
+  res <- tryCatch(coloc.abf(d1, d2, p1 = p1, p2 = p2, p12 = p12),
+                  error = function(e) NULL)
+  if (is.null(res)) return(NULL)
+  data.frame(gene = unique(sub_df$gene_id),
+             n_snps = res$summary["n snps"],
+             PP.H0 = res$summary["PP.H0"],
+             PP.H1 = res$summary["PP.H1"],
+             PP.H2 = res$summary["PP.H2"],
+             PP.H3 = res$summary["PP.H3"],
+             PP.H4 = res$summary["PP.H4"])
+}
+```
+
+## Step 9: Parallel wrapper
+```{r}
+run_parallel_pval <- function(matched_df, N_gwas, s_gwas, ncores = 8) {
+  gene_list <- split(matched_df, matched_df$gene_id)
+  cat("Total genes to analyse:", length(gene_list), "\n")
+  plan(multisession, workers = ncores)
+  results <- future_lapply(gene_list, function(x) {
+    run_coloc_pval_gene(x, N_gwas, s_gwas)
+  }, future.seed = TRUE)
+  plan(sequential)
+  results <- do.call(rbind, results)
+  return(results)
+}
+```
+
+
+## Step 10: Run colocalisation
+```{r}
+cat("\n=== 4. Running HERMES colocalisation (P‑value based) ===\n")
+
+ncores <- parallel::detectCores() - 1
+res_hermes <- run_parallel_pval(matched_hermes_final, N_total_hermes, s_hermes, ncores = ncores)
+
+cat("\n=== 5. Running Jurgens colocalisation (P‑value based) ===\n")
+res_jurgens <- run_parallel_pval(matched_jurgens_final, N_total_jurgens, s_jurgens, ncores = ncores)
+```
+
+## Step: 11. Identify high‑confidence colocalisation (PP.H4 > 0.8) 
+```{r}
+hits_hermes <- res_hermes %>% dplyr::filter(PP.H4 > 0.8)
+hits_jurgens <- res_jurgens %>% dplyr::filter(PP.H4 > 0.8)
+```
+
+## Step 12. Save results
+```{r}
+fwrite(res_hermes, file.path(out_dir, "coloc_results_HERMES_pval.csv"))
+fwrite(hits_hermes, file.path(out_dir, "coloc_hits_HERMES_pval_PPH4_0.8.csv"))
+fwrite(res_jurgens, file.path(out_dir, "coloc_results_Jurgens_pval.csv"))
+fwrite(hits_jurgens, file.path(out_dir, "coloc_hits_Jurgens_pval_PPH4_0.8.csv"))
+```
+
+## Step 13. Summary 
+```{r}
+cat("\n========== FINAL SUMMARY ==========\n")
+cat("HERMES: analysed", nrow(res_hermes), "genes; high‑confidence hits (PP.H4>0.8):", nrow(hits_hermes), "\n")
+if (nrow(hits_hermes) > 0) print(hits_hermes[, c("gene", "PP.H4")])
+cat("\nJurgens: analysed", nrow(res_jurgens), "genes; high‑confidence hits (PP.H4>0.8):", nrow(hits_jurgens), "\n")
+if (nrow(hits_jurgens) > 0) print(hits_jurgens[, c("gene", "PP.H4")])
+
+overlap <- intersect(hits_hermes$gene, hits_jurgens$gene)
+cat("\nOverlap between GWAS hits:", length(overlap), "genes\n")
+if (length(overlap) > 0) {
+  cat("Overlapping genes:", paste(overlap, collapse = ", "), "\n")
+  writeLines(overlap, file.path(out_dir, "overlap_genes.txt"))
+}
+
+cat("\nAll results saved in:", out_dir, "\n")
+cat("Analysis completed.\n")
+```
+
+# GSEA Pathway Analysis of Causal Genes
+
+# Figure 7
+```{r}
+```
+---
+
+# Docking of Active Ingredients and Core Targets
+
+
+# Figure 8
+```{r}
+```
+---
+
+<table class="nav-table" width="100%">
+  <tr>
+    <td align="left">
+      [Home](../index.qmd) 
+    </td>
+    <td align="right">
+      [Previous](Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.qmd) | [Next](Part_5_TF_miRNA_regulatory_network.qmd)
+    </td>
+  </tr>
+</table>
+
+# References {-}

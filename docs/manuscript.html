@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Kun Hou">
+<meta name="author" content="Supervisor’s name">
+<meta name="keywords" content="Zhenwu Huangqi Decoction; Dilated cardiomyopathy-induced HFrEF; Network pharmacology; Bayesian colocalization analysis; Molecular docking">
+
+<title>Integration of Network Pharmacology, Multi-Omics and Molecular Docking Reveals the Mechanism of Zhenwu Huangqi Decoction in Treating Dilated Cardiomyopathy-induced Heart Failure with Reduced Ejection Fraction – ZWHQD for HFrEF</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-234273d1456647dabc34a594ac50e507.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-7a569902547c3c11cfef75b8fa5321d2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">ZWHQD for HFrEF</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./manuscript.html" aria-current="page"> 
+<span class="menu-text">Main</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./supplementary/supp_info.html"> 
+<span class="menu-text">Supp</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-scripts" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Scripts</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-scripts">    
+        <li>
+    <a class="dropdown-item" href="./scripts/Part_1_Data_acquisition_and_preprocessing.html">
+ <span class="dropdown-text">Part 1: Data acquisition and preprocessing</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./scripts/Part_2_Screening_of_HFrEF_related_genes.html">
+ <span class="dropdown-text">Part 2: Screening of HFrEF-related genes</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./scripts/Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.html">
+ <span class="dropdown-text">Part 3: Mechanism exploration of ZWHQD against HFrEF</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./scripts/Part_4_Mechanism_validation_via_bioinformatics_and_docking.html">
+ <span class="dropdown-text">Part 4: Mechanism validation via bioinformatics and docking</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./scripts/Part_5_TF_miRNA_regulatory_network.html">
+ <span class="dropdown-text">Part 5: TF-miRNA regulatory network</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="-1">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#materials-and-methods" id="toc-materials-and-methods" class="nav-link" data-scroll-target="#materials-and-methods">Materials and Methods</a>
+  <ul>
+  <li><a href="#collection-of-active-ingredients-of-zwhqd" id="toc-collection-of-active-ingredients-of-zwhqd" class="nav-link" data-scroll-target="#collection-of-active-ingredients-of-zwhqd">Collection of active ingredients of ZWHQD</a></li>
+  <li><a href="#identification-of-zwhqd-candidate-target-genes" id="toc-identification-of-zwhqd-candidate-target-genes" class="nav-link" data-scroll-target="#identification-of-zwhqd-candidate-target-genes">Identification of ZWHQD candidate target genes</a></li>
+  <li><a href="#identification-of-hfref-associated-genes" id="toc-identification-of-hfref-associated-genes" class="nav-link" data-scroll-target="#identification-of-hfref-associated-genes">Identification of HFrEF-associated genes</a></li>
+  <li><a href="#identification-of-zwhqd-hfref-hub-gene-set" id="toc-identification-of-zwhqd-hfref-hub-gene-set" class="nav-link" data-scroll-target="#identification-of-zwhqd-hfref-hub-gene-set">Identification of ZWHQD-HFrEF hub gene set</a></li>
+  <li><a href="#go-and-kegg-enrichment-analysis-of-the-zwhqd-hfref-hub-genes" id="toc-go-and-kegg-enrichment-analysis-of-the-zwhqd-hfref-hub-genes" class="nav-link" data-scroll-target="#go-and-kegg-enrichment-analysis-of-the-zwhqd-hfref-hub-genes">GO and KEGG enrichment analysis of the ZWHQD-HFrEF hub genes</a></li>
+  <li><a href="#immune-infiltration-analysis-using-the-cibersort-algorithm" id="toc-immune-infiltration-analysis-using-the-cibersort-algorithm" class="nav-link" data-scroll-target="#immune-infiltration-analysis-using-the-cibersort-algorithm">Immune infiltration analysis using the CIBERSORT algorithm</a></li>
+  <li><a href="#identification-of-causally-associated-zwhqd-hfref-core-genes-via-mendelian-randomization" id="toc-identification-of-causally-associated-zwhqd-hfref-core-genes-via-mendelian-randomization" class="nav-link" data-scroll-target="#identification-of-causally-associated-zwhqd-hfref-core-genes-via-mendelian-randomization">Identification of causally associated ZWHQD-HFrEF core genes via Mendelian Randomization</a></li>
+  <li><a href="#assessment-of-the-diagnostic-value-of-zwhqd-hfref-core-genes" id="toc-assessment-of-the-diagnostic-value-of-zwhqd-hfref-core-genes" class="nav-link" data-scroll-target="#assessment-of-the-diagnostic-value-of-zwhqd-hfref-core-genes">Assessment of the Diagnostic Value of ZWHQD-HFrEF Core Genes</a></li>
+  <li><a href="#estimation-of-aucell-scores-for-target-cell-subsets" id="toc-estimation-of-aucell-scores-for-target-cell-subsets" class="nav-link" data-scroll-target="#estimation-of-aucell-scores-for-target-cell-subsets">Estimation of AUCell Scores for Target Cell Subsets</a></li>
+  <li><a href="#single-gene-set-enrichment-analysis-of-interested-gene" id="toc-single-gene-set-enrichment-analysis-of-interested-gene" class="nav-link" data-scroll-target="#single-gene-set-enrichment-analysis-of-interested-gene">Single gene set enrichment analysis of interested gene</a></li>
+  <li><a href="#molecular-docking-of-key-zwhqd-constituents-with-interested-gene" id="toc-molecular-docking-of-key-zwhqd-constituents-with-interested-gene" class="nav-link" data-scroll-target="#molecular-docking-of-key-zwhqd-constituents-with-interested-gene">Molecular docking of Key ZWHQD constituents with interested gene</a></li>
+  </ul></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a>
+  <ul>
+  <li><a href="#active-ingredients-and-target-genes-of-zwhqd" id="toc-active-ingredients-and-target-genes-of-zwhqd" class="nav-link" data-scroll-target="#active-ingredients-and-target-genes-of-zwhqd">Active ingredients and target genes of ZWHQD</a></li>
+  <li><a href="#potential-hfref-associated-genes" id="toc-potential-hfref-associated-genes" class="nav-link" data-scroll-target="#potential-hfref-associated-genes">Potential HFrEF-associated genes</a></li>
+  <li><a href="#functional-enrichment-of-zwhqd-hfref-hub-genes" id="toc-functional-enrichment-of-zwhqd-hfref-hub-genes" class="nav-link" data-scroll-target="#functional-enrichment-of-zwhqd-hfref-hub-genes">Functional enrichment of ZWHQD-HFrEF hub genes</a></li>
+  <li><a href="#immune-infiltration-profiling" id="toc-immune-infiltration-profiling" class="nav-link" data-scroll-target="#immune-infiltration-profiling">Immune Infiltration Profiling</a></li>
+  <li><a href="#causal-core-genes-associated-with-zwhqd-hfref" id="toc-causal-core-genes-associated-with-zwhqd-hfref" class="nav-link" data-scroll-target="#causal-core-genes-associated-with-zwhqd-hfref">Causal Core Genes Associated with ZWHQD-HFrEF</a></li>
+  <li><a href="#diagnostic-value-of-core-genes-in-hfref" id="toc-diagnostic-value-of-core-genes-in-hfref" class="nav-link" data-scroll-target="#diagnostic-value-of-core-genes-in-hfref">Diagnostic Value of Core Genes in HFrEF</a></li>
+  <li><a href="#cell-subpopulation-annotation-and-aucell-scoring-in-scrna-seq" id="toc-cell-subpopulation-annotation-and-aucell-scoring-in-scrna-seq" class="nav-link" data-scroll-target="#cell-subpopulation-annotation-and-aucell-scoring-in-scrna-seq">Cell subpopulation annotation and AUCell scoring in scRNA-seq</a></li>
+  <li><a href="#gene-set-enrichment-analysis-of-casp8" id="toc-gene-set-enrichment-analysis-of-casp8" class="nav-link" data-scroll-target="#gene-set-enrichment-analysis-of-casp8">Gene set enrichment analysis of CASP8</a></li>
+  <li><a href="#molecular-docking-of-casp8-with-five-constituents-of-zwhqd" id="toc-molecular-docking-of-casp8-with-five-constituents-of-zwhqd" class="nav-link" data-scroll-target="#molecular-docking-of-casp8-with-five-constituents-of-zwhqd">Molecular docking of CASP8 with five constituents of ZWHQD</a></li>
+  </ul></li>
+  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">Discussion</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  <li><a href="#funding" id="toc-funding" class="nav-link" data-scroll-target="#funding">Funding</a></li>
+  <li><a href="#credit-authorship-contribution-statement" id="toc-credit-authorship-contribution-statement" class="nav-link" data-scroll-target="#credit-authorship-contribution-statement">CRediT authorship contribution statement</a></li>
+  <li><a href="#declaration-of-competing-interest" id="toc-declaration-of-competing-interest" class="nav-link" data-scroll-target="#declaration-of-competing-interest">Declaration of competing interest</a></li>
+  <li><a href="#acknowledgements" id="toc-acknowledgements" class="nav-link" data-scroll-target="#acknowledgements">Acknowledgements</a></li>
+  <li><a href="#figure-legends" id="toc-figure-legends" class="nav-link" data-scroll-target="#figure-legends">Figure legends</a></li>
+  <li><a href="#tables" id="toc-tables" class="nav-link" data-scroll-target="#tables">Tables</a></li>
+  <li><a href="#supplementary-materials" id="toc-supplementary-materials" class="nav-link" data-scroll-target="#supplementary-materials">Supplementary materials</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+    </div>
+<!-- main -->
+<main class="content column-page-right" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Integration of Network Pharmacology, Multi-Omics and Molecular Docking Reveals the Mechanism of Zhenwu Huangqi Decoction in Treating Dilated Cardiomyopathy-induced Heart Failure with Reduced Ejection Fraction</h1>
+</div>
+
+
+<div class="quarto-title-meta-author column-page-right">
+  <div class="quarto-title-meta-heading">Authors</div>
+  <div class="quarto-title-meta-heading">Affiliations</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">Kun Hou <a href="mailto:xxx@163.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/0000-xxxx-xxxx-xxxx" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            Health Science Center, Xi’an Jiaotong University
+          </p>
+        <p class="affiliation">
+            Hanzhong Traditional Chinese Medicine Hospital
+          </p>
+      </div>
+    <div class="quarto-title-meta-contents">
+    <p class="author">Supervisor’s name <a href="mailto:xxx@163.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/0000-xxxx-xxxx-xxxx" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            Health Science Center, Xi’an Jiaotong University
+          </p>
+        <p class="affiliation">
+            The First Affiliated Hospital of Xi’an Jiaotong University
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta column-page-right">
+
+      
+  
+    
+  </div>
+  
+<div>
+  <div class="abstract">
+    <div class="block-title">Abstract</div>
+    <p><strong>Background:</strong> Dilated cardiomyopathy (DCM) is a primary myocardial disorder characterized by left ventricular dilation and systolic dysfunction, which is the leading cause of heart failure with reduced ejection fraction (HFrEF) and malignant arrhythmias, contributing to high cardiovascular mortality worldwide. Zhenwu Huangqi Decoction (ZWHQD), a classic modified traditional Chinese medicine (TCM) formula, has been widely applied in clinical adjuvant treatment of chronic heart failure owing to its effects of warming yang, draining dampness, and tonifying qi. However, the systematic molecular mechanism and core therapeutic targets of ZWHQD against DCM-HFrEF remain unclear, limiting its modernization and standardized clinical application.</p>
+    <p><strong>Methods:</strong> In this study, an integrative multi-omics strategy combining network pharmacology, weighted gene co-expression network analysis (WGCNA), multi-algorithm machine learning screening, immune infiltration analysis, Bayesian eQTL colocalization validation, single-cell enrichment analysis, and molecular docking was adopted to systematically explore the therapeutic mechanism of ZWHQD for DCM-HFrEF. Differentially expressed genes (DEGs) between DCM-HFrEF and normal control samples were identified. WGCNA was performed to screen disease-specific key gene modules. Candidate disease targets were obtained by intersecting DEGs and key module genes. Active compounds and corresponding drug targets of ZWHQD were retrieved from multiple TCM databases, and overlapping drug-disease targets were screened to construct herb-compound-target regulatory networks. Functional enrichment analyses including Gene Ontology (GO) and Kyoto Encyclopedia of Genes and Genomes (KEGG) were conducted to clarify biological functions and signaling pathways. Protein-protein interaction (PPI) network combined with CytoHubba multi-algorithm scoring and MCODE cluster analysis was used to screen hub genes. Four machine learning algorithms (LASSO, Random Forest, SVM-RFE, XGBoost) were integrated to identify robust core diagnostic genes, and a nomogram prediction model was constructed for disease risk evaluation. Immune infiltration landscape was analyzed to explore the correlation between core genes and immune cell disorders. Genetic colocalization and single-cell ssGSEA enrichment were performed for core gene validation. Finally, molecular docking was implemented to verify the stable binding activity between key active compounds and core target proteins.</p>
+    <p><strong>Results:</strong> A total of 101 active compounds and 246 corresponding drug targets of ZWHQD were identified. A total of 689 DCM-HFrEF-related DEGs were screened, and two key disease co-expression modules closely associated with DCM-HFrEF phenotype were identified via WGCNA. A total of 50 candidate disease targets were obtained by intersecting DEGs and key module genes, and 50 overlapping drug-disease targets were further screened. Functional enrichment results revealed that these targets were mainly enriched in inflammatory response, myocardial remodeling, immune cell regulation, and multiple core cardiovascular signaling pathways, including PI3K-Akt, TNF, and MAPK signaling pathways. Ten consensus hub genes were screened via PPI network and multi-algorithm hub gene verification. Four core genes were finally identified by integrated machine learning algorithms, which constructed a high-efficiency nomogram diagnostic model with excellent AUC values in training, test, and external validation sets. Immune infiltration analysis showed significant differences in the abundance of 11 types of immune cells between DCM-HFrEF and normal groups, and core genes were closely correlated with infiltrating immune cells. Bayesian eQTL colocalization confirmed the strong genetic causal association between core genes and DCM-HFrEF. Single-cell enrichment analysis verified the specific activation of core gene sets in diseased cardiomyocytes and immune cells. Molecular docking results demonstrated that the key active compounds of ZWHQD could stably bind to core target proteins via hydrogen bonds, hydrophobic interactions, and π-π stacking effects with low binding energy.</p>
+    <p><strong>Conclusion:</strong> This study systematically reveals that ZWHQD exerts therapeutic effects on DCM-HFrEF through a multi-compound, multi-target, multi-pathway synergistic mechanism. The core genes and key signaling pathways identified in this study provide novel biomarkers and potential therapeutic targets for DCM-HFrEF, and the constructed nomogram model offers an objective diagnostic tool for clinical risk assessment. This study provides a solid theoretical basis for the clinical popularization and modern pharmacological mechanism research of ZWHQD in the treatment of DCM-HFrEF.</p>
+  </div>
+</div>
+
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>Zhenwu Huangqi Decoction; Dilated cardiomyopathy-induced HFrEF; Network pharmacology; Bayesian colocalization analysis; Molecular docking</p>
+  </div>
+</div>
+
+</header>
+
+
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<hr>
+<p>Chronic heart failure (CHF) is a severe terminal cardiovascular disease characterized by high incidence, recurrent hospitalization and elevated mortality worldwide.<span class="citation" data-cites="valente2026HF"><sup><a href="#ref-valente2026HF" role="doc-biblioref">1</a></sup></span>. Driven by population aging and urbanization, the global disease burden of CHF continues to rise. Recent systematic reviews and meta-analyses have reported a global HF incidence of 2.72 per 1000 person-years, with steadily increasing patient numbers<span class="citation" data-cites="ballena2026HF"><sup><a href="#ref-ballena2026HF" role="doc-biblioref">2</a></sup></span>. According to left ventricular ejection fraction (LVEF), heart failure can be classified into three subtypes, namely heart failure with reduced ejection fraction (HFrEF, LVEF ≤ 40%), heart failure with mildly reduced ejection fraction (HFmrEF, LVEF 41%~49%), and heart failure with preserved ejection fraction (HFpEF, LVEF ≥ 50%)<span class="citation" data-cites="bozkurt2021HF"><sup><a href="#ref-bozkurt2021HF" role="doc-biblioref">3</a></sup></span>. As the most debilitating subtype of CHF, heart failure with reduced ejection fraction (HFrEF) accounts for 48%–66% of all global HF cases<span class="citation" data-cites="valente2026HF"><sup><a href="#ref-valente2026HF" role="doc-biblioref">1</a></sup></span> and 34.87% of hospitalized HF patients in China<span class="citation" data-cites="li2026ChinaHF"><sup><a href="#ref-li2026ChinaHF" role="doc-biblioref">4</a></sup></span>. Clinically, dilated cardiomyopathy (DCM) represents one of the most crucial and common underlying etiologies of HFrEF. As a prevalent primary cardiomyopathy affecting 1 in 250 to 1 in 500 adults globally, DCM triggers persistent pathological changes including progressive left ventricular dilatation, diffuse systolic impairment and ongoing myocardial fibrosis. These irreversible cardiac structural and functional lesions are the primary drivers of subsequent HFrEF development, rendering DCM-HFrEF a high-risk HF subtype with poor clinical prognosis.</p>
+<p>Current clinical management of HFrEF relies primarily on guideline-directed medical therapy (GDMT), which comprises first-line agents including angiotensin receptor-neprilysin inhibitors, renin-angiotensin-aldosterone system inhibitors, β-blockers, mineralocorticoid receptor antagonists, and sodium-glucose cotransporter 2 inhibitors<span class="citation" data-cites="shahverdi2026HFrEF"><sup><a href="#ref-shahverdi2026HFrEF" role="doc-biblioref">5</a></sup></span>. Standard GDMT effectively improves cardiac function, reduces cardiovascular adverse events, and prolongs patient survival. However, real-world clinical practice is often constrained by delayed treatment initiation, nonstandard medication sequences, and inadequate dose titration. Notably, even optimized quadruple GDMT cannot reverse irreversible myocardial injury and pathological ventricular remodeling. Long-term medication also inevitably causes adverse reactions and drug resistance, leaving considerable residual cardiovascular risks in HFrEF patients<span class="citation" data-cites="shahverdi2026HFrEF jurin2026HFrEF"><sup><a href="#ref-shahverdi2026HFrEF" role="doc-biblioref">5</a>,<a href="#ref-jurin2026HFrEF" role="doc-biblioref">6</a></sup></span>.</p>
+<p>Traditional Chinese medicine (TCM) has long been applied for adjuvant CHF treatment, featuring multi-component, multi-target properties and satisfactory safety profiles. TCM interventions can effectively relieve clinical symptoms, inhibit pathological myocardial remodeling, and improve long-term outcomes of HF patients<span class="citation" data-cites="lan2024TCM"><sup><a href="#ref-lan2024TCM" role="doc-biblioref">7</a></sup></span>. Zhenwu Decoction, a classical TCM formula for warming yang and promoting diuresis, has been widely used for HFrEF treatment. Multiple meta-analyses have confirmed that combined Zhenwu Decoction and routine Western therapy significantly improves clinical efficacy and cardiac function indicators with high safety<span class="citation" data-cites="mo2017ZWD han2022ZWD"><sup><a href="#ref-mo2017ZWD" role="doc-biblioref">8</a>,<a href="#ref-han2022ZWD" role="doc-biblioref">9</a></sup></span>. Clinically, elderly HFrEF patients frequently manifest qi deficiency symptoms. A cross-sectional cohort study involving 1676 hospitalized CHF patients demonstrated that qi deficiency and blood stasis syndrome accounts for 26.19% of all TCM syndromes, ranking second only to phlegm-turbidity and blood stasis syndrome<span class="citation" data-cites="du2024HF"><sup><a href="#ref-du2024HF" role="doc-biblioref">10</a></sup></span>. Patients with this syndrome typically suffer from fatigue, shortness of breath, spontaneous perspiration, and recurrent respiratory infections. Simple yang-warming and diuretic treatment fails to alleviate qi deficiency-related symptoms, thereby restricting overall therapeutic efficacy.</p>
+<p>Zhenwu Huangqi Decoction (ZWHQD) is an optimized modified formula derived from traditional Zhenwu Decoction with the addition of <em>Astragalus membranaceus</em>. Modern pharmacological studies have validated that <em>Astragalus membranaceus</em> exerts cardioprotective effects via anti-inflammatory, anti-fibrotic, and cardiac function-improving activities<span class="citation" data-cites="lu2011HQ yang2012HQ"><sup><a href="#ref-lu2011HQ" role="doc-biblioref">11</a>,<a href="#ref-yang2012HQ" role="doc-biblioref">12</a></sup></span>. According to TCM theories, DCM-HFrEF corresponds to the TCM categories of “palpitation”, “heart paralysis”, and “edema”, with core pathogenesis of heart-kidney yang deficiency, qi insufficiency, blood stasis, and internal dampness retention. Following the sovereign-minister-assistant-courier compatibility principle, ZWHQD achieves integrated effects of warming yang, tonifying qi, activating blood circulation, and eliminating dampness. Prepared <em>Aconiti Lateralis Radix Praeparata</em> acts as the sovereign drug to warm kidney yang and promote diuresis. <em>Astragalus membranaceus</em> serves as the major minister drug to tonify qi and relieve edema, further strengthening the yang-warming effect of aconite. <em>Poria cocos</em> and <em>Atractylodis Macrocephalae Rhizoma</em> function as assistant minister herbs to invigorate the spleen and eliminate dampness. <em>Paeonia Lactiflora Radix</em> nourishes yin and moderates the dry nature of aconite, while <em>Zingiberis Rhizoma</em> warms the middle energizer to assist yang activation. Clinical studies have verified that ZWHQD ameliorates cardiac function, relieves fatigue and edema, and improves the quality of life in DCM-HFrEF patients<span class="citation" data-cites="zhou2023ZWHQD"><sup><a href="#ref-zhou2023ZWHQD" role="doc-biblioref">13</a></sup></span>. Its core bioactive components, including quercetin, kaempferol, astragaloside, and formononetin, exhibit anti-inflammatory, anti-fibrotic, anti-apoptotic, and myocardial protective activities.</p>
+<p>Notably, there remains a scarcity of systematic and multi-dimensional investigations exploring the molecular regulatory network, core therapeutic targets, and potential signaling pathways of ZWHQD in the intervention of DCM-HFrEF<span class="citation" data-cites="zhai2025NetPharm"><sup><a href="#ref-zhai2025NetPharm" role="doc-biblioref">14</a></sup></span>. Traditional research methods centered on single genes and single pathways are insufficient to fully elucidate the holistic and synergistic therapeutic characteristics of traditional Chinese medicine (TCM) formulas, which feature multi-component, multi-target, and multi-pathway therapeutic mechanisms for heart failure treatment<span class="citation" data-cites="huang2024ZWD"><sup><a href="#ref-huang2024ZWD" role="doc-biblioref">15</a></sup></span>. In contrast, network pharmacology perfectly aligns with the holistic concept of TCM, enabling the systematic construction of a “drug-ingredient-target-disease” multi-level regulatory network to comprehensively reveal the holistic synergistic therapeutic mechanism of TCM compounds against heart failure<span class="citation" data-cites="yan2023ZWD"><sup><a href="#ref-yan2023ZWD" role="doc-biblioref">16</a></sup></span>.</p>
+<p>Multiple omics and bioinformatics approaches can complement network pharmacology to systematically explore the molecular mechanisms of ZWHQD in HFrEF treatment. Transcriptomic analyses including DEG and WGCNA facilitate the identification of heart failure‑associated hub genes and core regulatory modules, supporting the excavation of key pathogenic and therapeutic pathways<span class="citation" data-cites="li2025DEG"><sup><a href="#ref-li2025DEG" role="doc-biblioref">17</a></sup></span>. Functional enrichment analysis aids the annotation of candidate gene functions and signaling pathways, while immune infiltration analysis enables quantitative evaluation of myocardial immune microenvironment alterations and clarifies the immunomodulatory effects of TCM intervention<span class="citation" data-cites="zhu2025Immune"><sup><a href="#ref-zhu2025Immune" role="doc-biblioref">18</a></sup></span>. Machine learning enhances the reliability of core biomarker screening from omics data by eliminating the randomness of conventional statistical analyses<span class="citation" data-cites="saqib2024ML hamid2025ML"><sup><a href="#ref-saqib2024ML" role="doc-biblioref">19</a>,<a href="#ref-hamid2025ML" role="doc-biblioref">20</a></sup></span>, and Bayesian colocalization analysis further strengthens the credibility of genetic association inference between key biomarkers and disease phenotypes. Single-cell transcriptomics combined with single-gene enrichment analysis provides high-resolution cellular insights into myocardial heterogeneity and microenvironmental remodeling, refining the cellular and molecular regulatory mechanisms of TCM treatment<span class="citation" data-cites="rao2021scRNA zhang2024scRNA gardner2026scRNA"><sup><a href="#ref-rao2021scRNA" role="doc-biblioref">21</a>–<a href="#ref-gardner2026scRNA" role="doc-biblioref">23</a></sup></span>. Molecular docking validates the molecular binding activity between TCM active components and core targets, offering theoretical basis for subsequent target verification<span class="citation" data-cites="xing2025Docking"><sup><a href="#ref-xing2025Docking" role="doc-biblioref">24</a></sup></span>. Collectively, the integration of these multi-dimensional analytical strategies can provide sufficient and abundant for the mechanistic exploration of ZWHQD against HFrEF.</p>
+<p>Identification of blood-absorbed bioactive constituents and their corresponding therapeutic targets serves as an essential prerequisite for elucidating the material basis and molecular mechanisms of orally administered TCM formulas. Several well-known TCM databases, such as TCMID<span class="citation" data-cites="xue2013TCMID"><sup><a href="#ref-xue2013TCMID" role="doc-biblioref">25</a></sup></span>, TCMSP<span class="citation" data-cites="ru2014TCMSP"><sup><a href="#ref-ru2014TCMSP" role="doc-biblioref">26</a></sup></span>, ETCM<span class="citation" data-cites="xu2019ETCM"><sup><a href="#ref-xu2019ETCM" role="doc-biblioref">27</a></sup></span> and HERB<span class="citation" data-cites="fang2021HERB"><sup><a href="#ref-fang2021HERB" role="doc-biblioref">28</a></sup></span>, predominantly archive intrinsic phytochemicals of crude medicinal herbs. Nonetheless, only orally absorbed prototype components and blood-circulating metabolites can directly bind to disease-relevant targets to trigger pharmacological effects. Accordingly, target prediction under the “formula–blood-absorbed component–target” framework bears higher physiological credibility than screening solely based on original herbal compounds. As a specialized database focusing on experimentally validated blood-ingredient information, DCABM-TCM<span class="citation" data-cites="liu2023DCABM"><sup><a href="#ref-liu2023DCABM" role="doc-biblioref">29</a></sup></span> curates 1816 verified blood-derived prototypes and metabolites from 192 classic formulas and 194 medicinal plants through comprehensive literature retrieval, furnishing solid data support for screening bioactive ingredients of ZWHQD.</p>
+<p>This study aimed to explore the potential molecular mechanism underlying the therapeutic effects of ZWHQD against DCM-HFrEF. We adopted a multi-dimensional analytical strategy that integrates network pharmacology, weighted gene co-expression network analysis (WGCNA), multi-algorithm machine learning screening, immune infiltration analysis, genetic colocalization verification, single-cell enrichment analysis, and molecular docking. We first systematically identified the core active compounds, candidate therapeutic targets, and key signaling pathways responsible for ZWHQD-mediated DCM-HFrEF treatment. We further evaluated the modulatory effect of ZWHQD on the immune microenvironment of DCM-HFrEF. We then utilized multiple machine learning algorithms to screen and validate potential key therapeutic targets. Moreover, we performed genetic colocalization analysis and single-cell enrichment analysis to validate the reliability of these pivotal targets. Finally, we verified the binding affinity between core active compounds and their corresponding target proteins.</p>
+<hr>
+</section>
+<section id="materials-and-methods" class="level1">
+<h1>Materials and Methods</h1>
+<hr>
+<section id="collection-of-active-ingredients-of-zwhqd" class="level2">
+<h2 class="anchored" data-anchor-id="collection-of-active-ingredients-of-zwhqd">Collection of active ingredients of ZWHQD</h2>
+<p>The <a href="http://bionet.ncpsb.org.cn/dcabm-tcm/">DCABM-TCM</a><span class="citation" data-cites="liu2023DCABM"><sup><a href="#ref-liu2023DCABM" role="doc-biblioref">29</a></sup></span> database was used as the primary source to systematically retrieve blood‑absorbed compounds from each medicinal herb in ZWHQD, along with their chemical structural information. These candidate components were screened according to established criteria, and standardized chemical data were obtained from the <a href="https://pubchem.ncbi.nlm.nih.gov/">PubChem</a><span class="citation" data-cites="kim2025pubchem"><sup><a href="#ref-kim2025pubchem" role="doc-biblioref">30</a></sup></span> database.</p>
+<p>Specifically, we identified and collected blood-absorbed compounds from six medicinal herbs of ZWHQD (see <a href="#tbl-1" class="quarto-xref">Table&nbsp;1</a>) by performing Chinese Pinyin-based herb queries in the <a href="http://bionet.ncpsb.org.cn/dcabm-tcm/">DCABM-TCM</a><span class="citation" data-cites="liu2023DCABM"><sup><a href="#ref-liu2023DCABM" role="doc-biblioref">29</a></sup></span> database. To refine the candidate list, we applied multiple filters: (i) compounds without a valid PubChem Compound Identifier (CID) were discarded; (ii) highly toxic diester diterpenoid alkaloids (e.g., aconitine) derived from <em>Aconiti Radix Lateralis Preparata</em> (Fu Zi) were excluded, because during the standard decoction process of ZWHQD, these compounds undergo substantial hydrolysis, converting into less toxic monoester alkaloids (e.g., benzoylaconine) and further into non‑toxic amine alcohol alkaloids (e.g., aconine), resulting in negligible or undetectable levels in the final decoction<span class="citation" data-cites="gao2022Aconitine huang2007Aconitine"><sup><a href="#ref-gao2022Aconitine" role="doc-biblioref">31</a>,<a href="#ref-huang2007Aconitine" role="doc-biblioref">32</a></sup></span>; (iii) ubiquitous endogenous substances, including common saccharides, amino acids, organic acids and their metabolites, as well as other nutritional components, were excluded because they lack target‑specific pharmacological functions and contribute minimally to the therapeutic properties of ZWHQD.</p>
+<p>Given the notable pharmacological bioactivity of compounds from <em>Astragalus Membranaceus</em>, we manually supplemented cycloastragenol, an in vivo bioactive metabolite of astragaloside IV with well-ocumented effects<span class="citation" data-cites="zhao2025cycloastragenol"><sup><a href="#ref-zhao2025cycloastragenol" role="doc-biblioref">33</a></sup></span>, into the active compound dataset. After completing systematic filtration and manual supplementation, we defined the remaining compounds as the final candidate active ingredients of ZWHQD.</p>
+<p>Finally, to characterize the molecular properties of these candidate active ingredients, we queried each qualified compound in <a href="https://pubchem.ncbi.nlm.nih.gov/">PubChem</a><span class="citation" data-cites="kim2025pubchem"><sup><a href="#ref-kim2025pubchem" role="doc-biblioref">30</a></sup></span>. For each compound, we extracted core chemical data, including IUPAC names, molecular formulas, molecular weights and SMILES strings. Additionally, we downloaded the corresponding SDF files. The SMILES strings (or SDF files) were used for target prediction, and the SDF files also provided the essential 3D conformers for subsequent molecular docking.</p>
+</section>
+<section id="identification-of-zwhqd-candidate-target-genes" class="level2">
+<h2 class="anchored" data-anchor-id="identification-of-zwhqd-candidate-target-genes">Identification of ZWHQD candidate target genes</h2>
+<p>we predicted potential targets of the blood-absorbed compounds using seven authoritative online platforms, including <a href="http://bionet.ncpsb.org.cn/batman-tcm/">BATMAN-TCM 2.0</a><span class="citation" data-cites="kong2023batman"><sup><a href="#ref-kong2023batman" role="doc-biblioref">34</a></sup></span>, <a href="https://prediction.charite.de/">SuperPred 3.0</a><span class="citation" data-cites="gallo2022superpred"><sup><a href="#ref-gallo2022superpred" role="doc-biblioref">35</a></sup></span>, <a href="https://www.swisstargetprediction.ch/">SwissTargetPrediction</a><span class="citation" data-cites="daina2019swiss"><sup><a href="#ref-daina2019swiss" role="doc-biblioref">36</a></sup></span>, <a href="https://www.lilab-ecust.cn/pharmmapper/">PharmMapper</a><span class="citation" data-cites="liu2010pharm"><sup><a href="#ref-Wang2017pharm" role="doc-biblioref">38</a></sup></span>, <a href="http://targetnet.scbdd.com/">TargetNet</a><span class="citation" data-cites="yao2016targetnet"><sup><a href="#ref-yao2016targetnet" role="doc-biblioref">39</a></sup></span>, <a href="https://ppb3.gdb.tools/">PPB3</a><span class="citation" data-cites="Darsaraee2026ppb3"><sup><a href="#ref-Darsaraee2026ppb3" role="doc-biblioref">40</a></sup></span>, and <a href="https://sea.bkslab.org/">SEA</a><span class="citation" data-cites="keiser2007sea"><sup><a href="#ref-keiser2007sea" role="doc-biblioref">41</a></sup></span>.</p>
+<p>Subsequently, we retained high‑confidence target candidates using the following thresholds: score ≥0.84 for BATMAN‑TCM 2.0; probability ≥70% and accuracy ≥90% for SuperPred; probability ≥0.1 for SwissTargetPrediction; z‑score &gt;0 and Norm Fit &gt;0.9 for PharmMapper; probability ≥0.5 for TargetNet; single human protein for PPB3; and P Value &lt; 1e<sup>-10</sup>, Z.Score &gt; 5 and Max.Tc &gt;0.5 for SEA. All predicted targets restricted to human origin only.</p>
+<p>To ensure analytical uniformity and interoperability, we then mapped and standardized all retained candidates to official human gene symbols using the <a href="https://www.uniprot.org/">UniProt knowledgebase</a>. We confirmed non‑standard names or aliases, excluded targets that could not be standardized, and removed redundant entries.</p>
+<p>Finally, we refined the target list through multi‑tool voting combined with literature evidence. We preferentially retained targets appearing in at least two tools, and we also considered single‑tool high‑confidence targets when supported by published literature.</p>
+</section>
+<section id="identification-of-hfref-associated-genes" class="level2">
+<h2 class="anchored" data-anchor-id="identification-of-hfref-associated-genes">Identification of HFrEF-associated genes</h2>
+<p>We integrated multiple transcriptome datasets from the GEO database and systematically carried out the screening and validation of target genes related to heart failure with reduced ejection fraction (HFrEF). <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE141910">GSE141910</a> was selected as data sources for the bulk RNA-seq expression spectrum of HFrEF in this study, and <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE116250">GSE116250</a>, <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE161472">GSE161472</a>, <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135055">GSE135055</a>, <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE120895">GSE120895</a>, and <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE19303">GSE19303</a> were selected as a validation set to perform the diagnostic value assessment with the sample heart tissues. <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183852">GSE183852</a> was selected for subsequent 10X single-cell RNA sequencing (scRNA-seq) analysis.</p>
+<p>We annotated probes to gene symbols using the org.Hs.eg.db database and retained the maximum expression value for genes with multiple matching probes. We then used the <strong>[sva]</strong>() package to remove batch effects across series and groups in GSE141910<span class="citation" data-cites="zhang2020SVA"><sup><a href="#ref-zhang2020SVA" role="doc-biblioref">42</a></sup></span>.</p>
+<p>We performed differential expression analysis between the HFrEF and healthy control (Normal) groups using the <strong>[DESeq2]</strong>(https://github.com/thelovelab/DESeq2)<span class="citation" data-cites="love2014DESeq2"><sup><a href="#ref-love2014DESeq2" role="doc-biblioref">43</a></sup></span> package. We calculated the fold change (FC) as the ratio of mean expression in disease samples to that in normal samples, and set the thresholds for differentially expressed genes (DEGs) at p &lt; 0.05 and an absolute log2FC ≥ 0.585.</p>
+<p>We also used weighted gene co-expression network analysis (WGCNA)<span class="citation" data-cites="zhang2005WGCNA"><sup><a href="#ref-zhang2005WGCNA" role="doc-biblioref">44</a></sup></span> to identify gene sets highly correlated with disease traits. We removed outliers, filtered out low‑expression genes, and constructed a scale‑free co‑expression network before merging modules with similar expression profiles. After removing batch effects, we calculated gene significance (GS) as the correlation between module eigengenes and disease traits, and module membership (MM) as the correlation between gene expression and module eigengenes. We then selected candidate disease genes by intersecting the WGCNA results (MM ≥ 0.6, GS ≥ 0.2) with the differentially expressed genes.</p>
+</section>
+<section id="identification-of-zwhqd-hfref-hub-gene-set" class="level2">
+<h2 class="anchored" data-anchor-id="identification-of-zwhqd-hfref-hub-gene-set">Identification of ZWHQD-HFrEF hub gene set</h2>
+<p>The network integration and analysis tool CytoScape 3.10.3 was employed to construct the “Herb-Ingredient-Target” interaction network, with the constituent serving as the connecting node. The “Target” nodes depicted in this network are regarded as the target of action, with their symbol IDs matching those of the candidate target genes for the constituents of ZWHQD.</p>
+<p>Potential HFrEF genes were obtained via a process of data integration involving WGCNA and DEG analysis. The matched proteins of potential HFrEF genes were imported into the <a href="https://string-db.org/">STRING</a> database for subsequent analyses, along with candidate ZWHQD target proteins corresponding to the “Target” nodes in the “Herb-Ingredient-Target” network. The biological species was selected as “<em>Homo sapiens</em>”, and the inclusion criteria were set to ensure that targets meeting the minimum interaction threshold of “medium confidence (0.400)” would be included in the protein-protein interaction (PPI) network analysis. The inter-node degree was calculated using the CytoNCA plug-in with CytoScape 3.10.3 software. Subsequently, we identified significant sub-networks (degree cutoff = 2, node score cutoff = 0.2, k-core = 2, max.depth = 100) among the potential target proteins using the Molecular Complex Detection (MCODE) plug-in. Additionally, the top-ranked target genes computed by the Cytohubba plugin, which were screened using four local-based methods and six global-based methods, and genes that overlapped with the results of DEGs (|log2 FC| &gt; 0.585) and WGCNA, would be incorporated into the collection of hub genes screened by the MCODE key sub-networks as a complement. Then, ZWHQD-HFrEF hub genes characterized by Chinse materia medica were acquired for subsequent identification.</p>
+</section>
+<section id="go-and-kegg-enrichment-analysis-of-the-zwhqd-hfref-hub-genes" class="level2">
+<h2 class="anchored" data-anchor-id="go-and-kegg-enrichment-analysis-of-the-zwhqd-hfref-hub-genes">GO and KEGG enrichment analysis of the ZWHQD-HFrEF hub genes</h2>
+<p>After obtaining the ZWHQD-HFrEF hub genes, which is characterized by both ZWHQD and disease, we performed enrichment analysis to better elucidate its biological significance. To ensure the uniqueness of the target genes, the Symbol IDs of the genes were converted to ENTREZIDs based on the <em>[org.Hs.eg.db]</em>(https://gith ub.com/ruby-on-bioc/org.Hs.eg.db) package, and the <em>[clusterProfiler]</em>(https://github.com/YuLab-SMU/clusterProfiler) package was used for gene ontology (GO) enrichment and Kyoto encyclopedia of genes and genomes (KEGG) signaling pathway enrichment of the ZWHQD-HFrEF hub set. The final visual presentation then includes entries for which the results are significant (<em>p</em> &lt; 0.001) and have the leading enrichment scores for cell component (CC), biological process (BP), molecular function (MF), and metabolic pathway. The differential expression of ZWHQD-HFrEF hub genes between the HFrEF and HC groups was also demonstrated.</p>
+</section>
+<section id="immune-infiltration-analysis-using-the-cibersort-algorithm" class="level2">
+<h2 class="anchored" data-anchor-id="immune-infiltration-analysis-using-the-cibersort-algorithm">Immune infiltration analysis using the CIBERSORT algorithm</h2>
+<p>To investigate the composition of the immune micro-environment in HFrEF peripheral blood tissue samples and to further analyze the classes of immune cells that play an important role in RA. This algorithm is based on linear support vector regression and was used for deconvolution analysis. Using LM22 as the reference dataset for gene expression labeling of immune cell types, the deconvo_tme() function in the <a href="https://github.com/Moonerss/CIBERSORT">CIBERSORT</a> package was applied to estimate the abundance and relative proportions of immune cell subpopulations in each sample. The distribution of these relative cell subpopulations within the HFrEF group, between the HFrEF and HC groups, and the Spearman’s rank correlation with the ZWHQD-HFrEF genes were also examined.</p>
+</section>
+<section id="identification-of-causally-associated-zwhqd-hfref-core-genes-via-mendelian-randomization" class="level2">
+<h2 class="anchored" data-anchor-id="identification-of-causally-associated-zwhqd-hfref-core-genes-via-mendelian-randomization">Identification of causally associated ZWHQD-HFrEF core genes via Mendelian Randomization</h2>
+<p>MR analysis was conducted to investigate the potential causal relationship between the ZWHQD-HFrEF genes and RA. As “exposure” factors for HFrEF “outcome”, we batch matched the expression quantitative trait loci (eQTL) that regulate the appropriate ZWHQD-HFrEF hub gene. The TwoSampleMR package (https://github.com/MRCIEU/TwoSampleMR) was utilized for the purpose of performing MR analysis. Single nucleotide polymorphisms (SNPs) that were significantly associated with eQTLs regulating ZWHQD-HFrEF hub genes were extracted as instrumental variables (IVs) at the traditional genome-wide level (correlation hypothesis, threshold chosen as p &lt; 5 × 10^-8). Meanwhile, IVs in strong linkage disequilibrium were excluded (independence hypothesis, r2 &lt; 0.001, kb = 10,000). The IEU open genome-wide association study (GWAS) project (https://gwas.mrcieu.ac.uk/) was then queried, and the GWAS dataset with ID ebi-a-GCST90018910 was selected as the source of HFrEF “outcome”. The harmonise_data() function was used to align the effect alleles and effect sizes between the eQTL “exposure” data of ZWHQD genes and the “outcome” GWAS data of HFrEF for MR analysis. To ensure that the SNPs can be used as proxies for “exposure” to reflect their association with “outcome”, and to avoid the effects of weak instrument bias, the F statistic was used to circumvent the strength of the genetic variant IVs. The explanatory effect of each IV on the “exposure” variance is also independent, as each selected IV is independent of the others. Therefore, the phenotypic variance explained (PVE) is calculated as the sum of the proportions of the exposure variance explained by each IV.</p>
+<p>For the primary MR analysis, the inverse variance weighted (IVW) method was selected if the number of SNPs in the “exposure” gene eQTL that could be used as valid IVs was greater than or equal to two. In the absence of a clear preference, the results were analyzed using the Wald ratio method. (p &lt; 0.05). The odds ratio (OR) is a statistically analyzed effect size whose value is greater than or &lt;1. This indicates that “exposure” to the eQTL regulating the hub gene acts as a risk or protective factor and has a causal effect on the “outcome” of RA. In addition, MR-Egger, Weighted Median, MR pleiotropy residual sum and outlier (MR-PERSSO), and Leave-One-Out analysis. These were employed to complement the primary analysis and to further identify possible horizontal pleiotropy in the analytical process, as well as to assess the robustness of the results.</p>
+<p>The Bayesian co-localization analysis, conducted with the Coloc package (https://github.com/chr1swallace/coloc), provides further reinforcement and clarification of causal associations through the exploitation of vertical pleiotropy, whereby the gene eQTL acts as the “exposure”. On this basis, the Steiger directionality test and reverse MR analysis would be employed to further investigate the directionality of causal associations to circumvent endogeneity bias, particularly bidirectional causality, and so forth (exclusivity hypothesis).</p>
+</section>
+<section id="assessment-of-the-diagnostic-value-of-zwhqd-hfref-core-genes" class="level2">
+<h2 class="anchored" data-anchor-id="assessment-of-the-diagnostic-value-of-zwhqd-hfref-core-genes">Assessment of the Diagnostic Value of ZWHQD-HFrEF Core Genes</h2>
+<p>To investigate the diagnostic value of ZWHQD-HFrEF core genes that are causally associated with RA, we would utilize them as variables for HFrEF diagnostic prediction analysis. Logistic regression models were constructed using the lrm() function in the rms package. Genes with a significant association (p &lt; 0.1) in the univariate logistic regression were included in the multivariate logistic regression. Nomograms were then generated using the nomogram() function.</p>
+<p>To evaluate the model fit (discrimination) and predicted probability (calibration), we utilized the roc() function and the calibrate() function from the pROC package to create a ROC curve and a corrected calibration curve. Additionally, we performed decision curve analysis (DCA) using the decision_curve() function in the rmda package to ascertain the extent of risk or benefit associated with clinical decisions that impact patients.</p>
+</section>
+<section id="estimation-of-aucell-scores-for-target-cell-subsets" class="level2">
+<h2 class="anchored" data-anchor-id="estimation-of-aucell-scores-for-target-cell-subsets">Estimation of AUCell Scores for Target Cell Subsets</h2>
+<p>In order to convert the post-read HFrEF patient samples to Seurat objects, the <em>CreateSeuratObject()</em> function of the Seurat package (https://github.com/satijalab/seurat) was employed. The <em>PercentageFeatureSet()</em> function was utilized to assess the quantity of erythrocyte and mitochondrial RNA per cell in the sample. Following the implementation of quality control and data filtering, the data underwent normalization using the <em>NormalizeData()</em> function with the LogNormalize method. Subsequently, the <em>FindVariableFeatures()</em> function of the Seurat package was employed to identify highly variable genes (HVGs) within the peripheral blood mononuclear cell sample, with the objective of facilitating subsequent analyses in the identification of bio-signals. To reduce the variability among the sample genes for subsequent feature dimensionality reduction, the data was normalized using the <em>ScaleData()</em> function. The top 2,000 genes exhibiting the highest variability were selected for principal component analysis (PCA). Cell subclusters were obtained through unsupervised clustering of cells using the <em>FindNeighbor()</em> and <em>FindClusters()</em> functions (reduction = 1.5), which were then downscaled to two dimensions using Uniform Manifold Approximation and Projection (UMAP) techniques. To enhance the precision of cell subpopulation annotation, we undertook an initial review of the automatic annotation results generated by the <em>singleR</em> package. Subsequently, the cell subpopulations were manually annotated by referencing the marker genes for various cell types in peripheral blood tissues available in the <a href="http://xteam.xbio.top/CellMarker/">CellMarker</a> database. The results of the cell subpopulation annotation, obtained through a combination of automatic and manual annotation, were visualized using the <em>DimPlot()</em> function.</p>
+<p>The AUCell package was utilized to identify enriched pathways and gene expression of the ZWHQD-HFrEF core gene set in cells for scRNA-seq. The <em>AUCell_buildRankings()</em> function and the <em>AUCell_calcAUC()</em> function were used to compute the gene expression rankings and the AUCs enriched in cells, respectively, which were then mapped to the UMAP and t-SNE visualizations of the cell subpopulations and visualized the density distribution by heatmap.</p>
+</section>
+<section id="single-gene-set-enrichment-analysis-of-interested-gene" class="level2">
+<h2 class="anchored" data-anchor-id="single-gene-set-enrichment-analysis-of-interested-gene">Single gene set enrichment analysis of interested gene</h2>
+<p>The expression of the interested gene in the set of ZWHQD-HFrEF core genes served as the basis for grouping. The bulk RNA samples were then categorized into high-expression and low-expression groups. Differences between groups (p &lt; 0.05, |log2 FC| &gt; 1) were analyzed using the limma package. The groups were then ordered according to the log2 FC, which indicates the correlation between the sample genes and the phenotypes of the interested genes. A GSEA should be conducted on the genes of interest that are associated with the differentially expressed genes, utilizing the clusterProfiler package.</p>
+</section>
+<section id="molecular-docking-of-key-zwhqd-constituents-with-interested-gene" class="level2">
+<h2 class="anchored" data-anchor-id="molecular-docking-of-key-zwhqd-constituents-with-interested-gene">Molecular docking of Key ZWHQD constituents with interested gene</h2>
+<p>We obtained the SDF file of the 3D Conformer of the candidate constituents of ZWHQD from the PubChem compound database (https://pubchem.ncbi.nlm.nih.gov/) and the 3D structure of the interested targets from the Protein Data Bank (PDB, http://www.rcsb.org/). The Maestro 13.5 interface of Schr ̈odinger software was applied to perform the requisite pre-processing. This included the removal of water molecules, the addition of polar hydrogen atoms, and the generation of grid binding pockets (SiteScore &gt; 1, DScore &gt; 1, balance &gt; 0.3, volume &gt; 225). Molecular docking was performed between the receptor of the interested target gene and the ligand of the candidate constituent. The grid module was then applied to obtain the docking score. Subsequently, the docked structure files were exported and visualized using PyMol 2.6 software.</p>
+<hr>
+</section>
+</section>
+<section id="results" class="level1">
+<h1>Results</h1>
+<hr>
+<section id="active-ingredients-and-target-genes-of-zwhqd" class="level2">
+<h2 class="anchored" data-anchor-id="active-ingredients-and-target-genes-of-zwhqd">Active ingredients and target genes of ZWHQD</h2>
+<p>We identified a total of 101 active ingredients of ZWHQD from the DCABM-TCM Database, with cycloastragenol manually supplemented. Detailed information on these compounds is provided in the. These active ingredients primarily cover flavonoids, terpenoids, phenolic acids, tannins, alkaloids, glycosides, as well as gingerol and shogaol derivatives. We further collected putative target proteins of these active ingredients from seven online databases. All retrieved target entries were standardized to official gene Symbol IDs according to the UniProt database. Ultimately, a total of 811 candidate genes corresponding to 98 effective compounds were obtained for the subsequent mechanistic exploration of ZWHQD, as summarized in the Final_All worksheet of.</p>
+</section>
+<section id="potential-hfref-associated-genes" class="level2">
+<h2 class="anchored" data-anchor-id="potential-hfref-associated-genes">Potential HFrEF-associated genes</h2>
+<p>A gene expression profile dataset with 20,810 genes was obtained by annotating the GSE141910 subsets and removing the batch effect (<a href="">Supplementary Figure S1</a>).</p>
+<p>Differential expression analysis was performed on 20,810 genes using DESeq2. Genes with |log2FC| &gt; 0.585 (i.e., absolute fold change &gt; 1.5) and adjusted P value (padj) &lt; 0.05 were considered significantly differentially expressed. Differential expression analysis of 21,572 genes was conducted via DESeq2. Genes satisfying the thresholds of |_2| &gt; _2(1.5) and adjusted P value (padj) &lt; 0.05 were defined as significant differentially expressed genes (DEGs). In total, 3,188 DEGs were screened, consisting of 1,986 upregulated and 1,202 downregulated genes. The number of upregulated genes was obviously predominant, reflecting robust activation of inflammatory response, immune function and cellular stress injury-related pathways in HFrEF myocardium. By contrast, fewer genes exhibited decreased expression, among which protective functional genes, metabolic regulators and tissue structural genes were largely suppressed. Highly expressed upregulated genes contained COL22A1 (_2=4.23), SEZ6L (3.69), TNMD (3.38), SFRP4 (3.22), PENK (3.20), FHAD1-AS1 (3.16), HBD (3.07), LYPD1 (3.03), LAMP5 (3.03) and CAPN6 (2.96), which predominantly participate in extracellular matrix remodeling, neuropeptide signaling and cellular stress response. In contrast, downregulated genes were mainly implicated in inflammatory modulation, substance metabolism, ion transport and epithelial differentiation. Representative downregulated genes included IL1RL1 (_2=-3.88), SERPINA3 (-3.23), RNASE2 (-3.07), PI15 (-3.04), LOC105378356 (-3.01), FAM83B (-3.01), OVOS2P (-3.00), LCN6 (-2.99), TUBA3E (-2.87) and LBP (-2.85). The volcano plot and heatmap of all DEGs are shown in <a href="#fig-1" class="quarto-xref">Figure&nbsp;1</a> A and B, respectively.</p>
+<p>We also examined associations between disease traits and transcriptomic gene expression patterns using WGCNA. <strong>Twenty-one</strong> gene modules were identified in the analysis on the basis of hierarchical clustering dendrograms, and correlations between the modules and their association with disease traits were calculated using the Spearman’s rank correlation test and Mantel test (<strong>Fig. 2E</strong>). WGCNA identified <strong>675</strong> hub genes from MEbrown (r = <strong>0.84</strong>, p = <strong>8e-04</strong>) and MEroyalblue (r = -0.70, p = 8e-07) that were significantly correlated with disease traits (<strong>Fig. 1C, D</strong>). The potential HFrEF genes for the study were formed by combining the DEGs (|log2 FC| &gt; 0.585) with the WGCNA hub genes.</p>
+</section>
+<section id="functional-enrichment-of-zwhqd-hfref-hub-genes" class="level2">
+<h2 class="anchored" data-anchor-id="functional-enrichment-of-zwhqd-hfref-hub-genes">Functional enrichment of ZWHQD-HFrEF hub genes</h2>
+<p>and used to construct the “Herb-Ingredient-Target” visualization network (Fig3A). A total of <em>787</em> nodes and <em>10401</em> edges were included in the PPI network of potential ZWHQD targets and candidate ZWHQD targets. <em>Six</em> subnetworks were co-clustering based on MCODE algorithm. We considered the targets in the two subnetworks with the highest MCODE score as MCODE hub targets (Fig.3B). The top-ranked targets obtained by the local-based and global-based methods of the Cytohubba algorithm served as a complement to the results (Fig.3C), and were compiled into a collection of 117 ZWHQD-HFrEF hub genes (including 68 HFrEF hub genes, 61 ZWHQD genes, and 18 intersected genes) for subsequent studies (Fig.3D).</p>
+<p>The number of <em>177</em> hub genes characterized with both ZWHQD and HFrEF was analyzed based on GO enrichment and KEGG signaling pathway enrichment, which indicates that ZWHQD on GO–CCs focuses on membrane microdomain, membrane raft, cell substrate junction, focal adhesion, and endoplasmic reticulum lumen. It was also involved in sets of GO-BPs, mainly including response to oxidative stress, response to molecule of bacterial origin, response to lipopolysaccharide, epithelial cell proliferation, and response to radiation. Furthermore, ZWHQD was mainly related to DNA binding transcription factor binding, cytokine receptor binding, receptor ligand activity, and RNA polymerase II specific DNA binding transcription factor binding, cytokine activity and some other GO-MFs (Fig.3E; Supplementary Fig. S2A, B). The KEGG signaling pathway analysis demonstrates that the phosphoinositide 3 kinase (PI3K)‐serine/ threonine kinase (AKT) signaling pathway (p = 1.66E-29, Gene Count = 42) is most highly correlated with the ZWHQD-HFrEF hub genes. Some pathways that are reported to be strongly associated with inflammatory response, autoimmune response, and even RA, such as the mitogenactivated protein kinase (MAPK) signaling pathway, the tumor necrosis factor (TNF) signaling pathway and the interleukin-17 (IL-17) signaling pathway are also enriched in the top rank (Fig.3F, Supplementary Fig. S2C, D).</p>
+</section>
+<section id="immune-infiltration-profiling" class="level2">
+<h2 class="anchored" data-anchor-id="immune-infiltration-profiling">Immune Infiltration Profiling</h2>
+<p>Immune infiltration analysis was used to estimate the abundance of immune cells in the gene expression profile dataset (Fig. 4A). Group box plots show the differences in the estimation of cell proportions between the RA/HC sample groups (Fig. 4C), where the cell types with significant differences were, in descending order, dendritic cells activated (p &lt; 0.05), T cells cluster of differentiation (CD) 8+ (p &lt; 0.05), T cells CD4+ memory resting (p &lt; 0.01), mast cells resting (p &lt; 0.01), macrophages M1 (p &lt; 0.01). Sequential box plot showed the estimation of cell proportions in HFrEF samples (Fig. 4C), natural killer (NK) cells resting, T cells CD8+, macrophages M0, T cells CD4+ memory resting, and monocytes are considered as the five cell categories with the highest cell proportions in HFrEF samples. Spearman’s rank correlation coefficients were used to characterize the correlation between the expression profiles of the HFrEF hub genes and the abundance of immune cell infiltration, which are shown in a correlation heat map (Fig. 4B). monocytes, T cells CD8+, dendritic cells activated presented a strong correlation with ZWHQDRA hub genes.</p>
+</section>
+<section id="causal-core-genes-associated-with-zwhqd-hfref" class="level2">
+<h2 class="anchored" data-anchor-id="causal-core-genes-associated-with-zwhqd-hfref">Causal Core Genes Associated with ZWHQD-HFrEF</h2>
+<p>We identified eQTL regulating ZWHQD-HFrEF hub genes that were batch-matched as exposure factors for HFrEF outcome, and 289 SNPs that satisfied the correlation hypothesis and the independence assumption hypothesis were considered as IVs for MR analysis. A total of seven ZWHQD-HFrEF core genes, including CASP8, PPARG, IKBKB, PPARA, IFNG, MYC, and STAT3 (), were identified as being causally associated with RA. Among these, CASP8 [IVW, OR = 0.8425, 95 %CI(0.6993, 1.0151), p = 0.0014], PPARG [IVW, OR = 0.8901, 95 % CI(0.8292, 0.9555), p = 0.0013], STAT3 [IVW, OR = 0.8940, 95 %CI (0.8053, 0.9925), p = 0.0356) were the protective factors on RA, while IKBKB (IVW, OR = 1.1310, 95 %CI(1.0032, 1.2751), p = 0.0443), IFNG [IVW, OR = 1.1918, 95 %CI(1.0059, 1.4119), p = 0.0451), MYC [IVW, OR = 1.2673, 95 %CI(1.0482, 1.5322), p = 0.0145], PPARA [WR, OR = 1.2781, 95 %CI(1.0022, 1.6299), p = 0.0480] show the negative correlation with HFrEF (Fig. 6B). The FDR correction, as implemented through the Benjamini-Hochberg method, is designed to exclude false positives for CASP8 (adjusted p = 0.0255) and PPARG. (adjusted p = 0.0373). No heterogeneity or horizontal pleiotropy were significant for the seven genes in the primary analysis. Bayesian co-localization analysis fairly suggested that CASP8 (coloc. abf-PP.H3 = 0.137, coloc.abf-PP.H4 = 0.484) shared the same variant with RA, quite indicating that PPARG (coloc.abf-PP.H3 = 0.557, coloc. abf-PP.H4 = 0.201), STAT3 (coloc.abf-PP.H3 = 0.537, coloc.abf-PP.H4 = 0.107), IKBKB (coloc.abf-PP.H3 = 0.474, coloc.abf-PP.H4 = 0.0326), MYC (coloc.abf-PP.H3 = 0.693, coloc.abf-PP.H4 = 0.0063), and HFrEF associated different variants in a particular the genomic region. PPARA (coloc.abf-PP.H2 = 0.670, coloc.abf-PP.H3 = 0.0775) and IFNG (coloc.abf-PP.H2 = 0.682, coloc.abf-PP.H3 = 0.194) did not share genetic linkage in genomic region (). Bidirectional MR analysis was performed to show that HFrEF did not have a causal effect on the levels of the seven identified target genes (Supplementary Fig. S4), and Steiger filtering further ensured the directionality of causal associations ().</p>
+<p>Identification of ZWHQD-HFrEF core genes with causal association by MR analysis. A: The volcano diagram of MR results for ZWHQD-HFrEF hub genes and the risk of RA. B: The forest plot of MR results for ZWHQD-HFrEF core genes that causally associated with RA.</p>
+</section>
+<section id="diagnostic-value-of-core-genes-in-hfref" class="level2">
+<h2 class="anchored" data-anchor-id="diagnostic-value-of-core-genes-in-hfref">Diagnostic Value of Core Genes in HFrEF</h2>
+<p>We obtained the bulk RNA dataset (GSE17755) containing CASP8, PPARG, IKBKB, PPARA, IFNG, MYC, and STAT3 in the expression profiles and created a training set (n = 126) and a validation set (n = 31) at a ratio of 7:3 to explore the diagnostic value of ZWHQD-HFrEF core genes. The nomogram shows the results of visualizing the multivariate logistic regression model constructed using the ZWHQD-HFrEF core genes as predictors of HFrEF (Fig. 7A). The ROC curve was created to show that the AUC value was 0.908 [cutoff value = 0.623 (0, 0.783)] for nomogram, 0.807 [cutoff value = 0.681 (0. 167, 0.840)] for STAT3 and 0.760 [cutoff value = 0.646 (0.333, 0.960)] for CASP8 indicating highly discriminative multivariate model fit (Fig. 7B). Meanwhile, the slope of the corrected calibration curve was closer to 1, which means a pretty calibration for predicted probability (Fig. 7C). Furthermore, model evaluation curves of DCA showed that the standard net benefit of the nomogram was higher than any a single factor that we had included in a certain risk threshold, which comprehensively reflected the advantage to clinical diagnostic decisions. It also reflected the pretty prediction effect of the nomogram (Fig. 7D). Several lines of evidence suggest the potential key role played by ZWHQD-HFrEF core genes in causing, diagnosing, and intervening in RA.</p>
+</section>
+<section id="cell-subpopulation-annotation-and-aucell-scoring-in-scrna-seq" class="level2">
+<h2 class="anchored" data-anchor-id="cell-subpopulation-annotation-and-aucell-scoring-in-scrna-seq">Cell subpopulation annotation and AUCell scoring in scRNA-seq</h2>
+<p>The scRNA-seq dataset (GSE159117) from the GEO database was filtered and quality controlled to generate normalized Seurat object data containing 2406 genes. The expression characteristics of this HFrEF sample are shown in the violin plot and scatterplot (Supplementary Fig. S3A). We identified the top 2000 HVGs for subsequent PCA (Supplementary Fig. 3C). MZB1 and IGJ are the top two HVGs, all of which have been reported to play a role in IgM assembly and/or biosynthesis. The scaled data can be further processed through a linear downscaling PCA to reduce the scale of the data (Supplementary Fig. 3B). JackStraw plot and ElbowPlot then determine the first 15 dimensions as the number of valid PCs in the dataset (Supplementary Fig. 3D). Based on this, the k-nearest neighbor classification algorithm was constructed based on Euclidean distances in PCA space, edges were drawn between cells with similar feature expression patterns, and downstream clustering resolution was set to 1.5 (Supplementary Fig. 3E). The UMAP and t-SNE techniques revealed 15 cell subclusters after nonlinear dimensionality reduction clustering (Supplementary Fig. 3F, G), which were finally annotated into five cell subpopulations of B cells, T cells, NK cells, classical monocytes, and non-classical monocytes (Fig. 5A, B).</p>
+<p>In the subpopulation of scRNA-seq cells, we calculated AUCell scores for the custom ZWHQD-HFrEF hub gene set and its PI3K-AKT signaling pathway with the highest enrichment in enrichment analysis. Highly active cells in the interested gene set would exhibit higher AUCell scores, and the result described that monocytes present a significant degree of activity in these two gene sets (Fig. 5C, D).</p>
+</section>
+<section id="gene-set-enrichment-analysis-of-casp8" class="level2">
+<h2 class="anchored" data-anchor-id="gene-set-enrichment-analysis-of-casp8">Gene set enrichment analysis of CASP8</h2>
+<p>CASP8 was the one that belonged to the intersection of potential disease and candidate Chinese materia medica targets among ZWHQDRA core genes. Hence, we contemplated CASP8 as the interested gene to conduct GSEA for the single biomarker. The upregulated pathway is mainly enriched on some items of molecular regulation (Spliceosome, Protein export, Proteasome, Nucleocytoplasmic transport, DNA replication, RNA degradation, Ribosome, mRNA surveillance pathway, Necroptosis, Cell cycle, etc.), immunoreaction (Antigen processing and presentation, Th17 cell differentiation, Th1 and Th2 cell differentiation, NK cell-mediated cytotoxicity, T cell receptor signaling pathway, B cell receptor signaling pathway), and some autoimmunity disease (Graftversus-host disease, Autoimmune thyroid disease, Allograft rejection, Inflammatory bowel disease, Type I diabetes mellitus). Moreover, a downregulated pathway demonstrates drug metabolism (Drug metabolism - cytochrome P450, Metabolism of xenobiotics by cytochrome P450, and Drug metabolism - other enzymes). In general, the top10 items of KEGG signaling pathway category enriched in expression profiles related to CASP8-related biomarkers were displayed in a visualization (Fig. 3D).</p>
+</section>
+<section id="molecular-docking-of-casp8-with-five-constituents-of-zwhqd" class="level2">
+<h2 class="anchored" data-anchor-id="molecular-docking-of-casp8-with-five-constituents-of-zwhqd">Molecular docking of CASP8 with five constituents of ZWHQD</h2>
+<p>To evaluate the affinity and interaction patterns of the candidate constituent of ZWHQD with CASP8. The 3D structure of CASP8 was downloaded from the PDB database and the relevant data can be accessed via the following PDB DOI: https://doi.org/10.2210/pd b4ZBW/pdb. The five ingredients with the highest degree values in the “Chinese Materia Medica-Ingredient-Target” (beta-sitosterol, quercetin, kaempferol, stigmasterol, and diosmetin) were identified. The SiteMap module was employed to ascertain potential target protein pockets and sites, with the highest-scoring results selected as probable ligand binding pockets of the target proteins. The coordinates of these pockets were then obtained (X: 14.65, Y: 14.46, Z: 41.4). The molecular docking scores corresponding to the structure of the protein complex were obtained with the assistance of Maestro 13.5 interface of Schr ̈odinger software (Table 4). The results demonstrate the binding between the ligand of these candidate constituents and the receptor of the target gene of CASP8 through charge interactions, including hydrogen bonding and van der Waals forces. The complex structure, following the molecular docking procedure, was rendered threedimensionally by PyMol 2.6 software, demonstrating the successful accommodation of the small molecules’ ligand of the candidate constituents within the hydrophobic pocket of the receptor of CASP8 (Fig. 8).</p>
+</section>
+</section>
+<section id="discussion" class="level1">
+<h1>Discussion</h1>
+<p>Chronic heart failure with reduced ejection fraction（HFrEF）is a progressive clinical syndrome characterized by impaired left ventricular systolic function and persistent low-grade systemic inflammation. Beyond hemodynamic derangements, HFrEF frequently involves extracardiac organ dysfunction, including renal impairment and vascular remodeling（Savarese et al., 2023; PMID: 36625890). With the convergence of contemporary genetic methodologies and large-scale, well-characterized clinical cohorts, genome-wide association studies（GWAS）employing single nucleotide polymorphisms（SNPs）have facilitated the discovery of multiple genomic loci significantly associated with an increased risk of developing HFrEF. Notably, a large cross-ancestry meta‑analysis identified 13 distinct genetic loci associated with HFrEF, highlighting the heterogeneity of its genetic architecture（Joseph et al., 2022; DOI: 10.1038/s41467-022-35323-0; PMID: 36517599). Many of these loci implicate pathways involved in immune regulation, myocardial remodeling, and inflammation（Joseph et al., 2022). Emerging evidence has revealed that the human leukocyte antigen（HLA）system plays a significant role in the pathogenesis and prognosis of HFrEF. A recent study demonstrated that the HLA‑DR2 family, particularly the HLA‑DRB5-101 allele, is carried by approximately 15% of chronic HFrEF patients and shows the highest significant association with mortality（Rasper et al., 2024; AHA Abstract 4142554). Carriers of this allele exhibit elevated cardiac injury markers, including troponin T, independent of renal function, along with increased inflammatory markers such as TIMD4 and CD80（Rasper et al., 2024). Mechanistically, functional experiments revealed that silencing HLA‑DRB5 in macrophages reduces antigen presentation capacity and T cell activation, and that HLA‑DR2-positive dendritic cells promote T cell invasion into cardiac organoids（Rasper et al., 2024). These findings underscore a direct immunogenetic link between HLA alleles and adverse outcomes in HFrEF, positioning the HLA‑DRB5*0101 allele as a promising prognostic biomarker and a potential therapeutic target.</p>
+<p>As a prevalent cardiovascular disorder, the global incidence and burden of HFrEF have increased markedly over recent decades. Heart failure affects approximately 64 million people worldwide（Joseph et al., 2022). In a multinational contemporary cohort, among patients with recorded ejection fraction, 39.1% were classified as having reduced ejection fraction, underscoring the substantial proportion of HFrEF within the overall heart failure population（Boehm et al., 2023; DOI: 10.1136/heartjnl-2022-321702; PMID: 36781225). In China, the situation is similarly severe: an estimated 14.3 million individuals were living with heart failure in 2023, representing a 208.4% increase over three decades, with HFrEF accounting for a substantial fraction of these cases（GBD 2023 China Heart Failure Study, 2025; DOI: 10.1186/s40779-025-00650-y; PMID: 39695816). While HFrEF management has advanced with guideline-directed medical therapies, the intricate pathogenesis involving immune dysregulation, myocardial fibrosis, and neurohormonal activation, coupled with protracted medication cycles and significant adverse event burden, has collectively placed a substantial toll not only on the afflicted population but also on healthcare systems and society at large（Savarese et al., 2023).</p>
+<p>The objective of this investigation is to elucidate the mechanism underlying the efficacy of ZWHQD intervention in HFrEF and identify the core genetic determinants of therapeutic response. The ZWHQD‑HFrEF hub gene set was obtained through a screening process combined with the MCODE algorithm, resulting in the identification of a potential collection of core genes associated with therapeutic effects. To gain insight into its mechanistic basis, we examined the statistically significant and top‑enriched terms identified in the ZWHQD‑HFrEF hub gene set through gene set enrichment analysis（GSEA）for in-depth interpretation. The enrichment analyses yielded results indicating the relevance of various biological functions and signaling pathways to immune and inflammatory processes in HFrEF. Among these, the PI3K‑AKT signaling pathway exhibited a particularly high degree of enrichment, drawing our particular attention. It is well established that the PI3K‑AKT pathway plays a central role in regulating cardiomyocyte survival, hypertrophy, energy metabolism, and inflammation, and its activation has been shown to confer cardioprotective effects by enhancing anti‑apoptotic and pro‑survival signaling in the failing heart（Matsui &amp; Rosenzweig, 2011; DOI: 10.2174/138161211796390976; PMCID: PMC3337715). A growing body of preclinical evidence has linked PI3K/AKT activation to reduced myocardial apoptosis and attenuation of pro‑inflammatory cascades that exacerbate heart failure progression（Revuelta‑López et al., 2025; DOI: 10.3390/jcdd12070266; PMCID: PMC12295477). Notably, multiple traditional Chinese medicine formulations and their active components have been demonstrated to improve heart failure outcomes via modulation of the PI3K/AKT signaling pathway（Zhong et al., 2023).</p>
+<p>The interaction between two kinases, PI3 K and AKT, also known as protein kinase B, represents the central step of the pathway. This pathway involves two metabolites, phosphatidylinositol-4,5bisphosphate (PIP2) and phosphatidylinositol-3, 4, 5-bisphosphate (PIP3), in addition to two genes coding for phosphatase and tensin homolog (PTEN) and phosphatidylinositol 3-phosphate-dependent protein kinase-1 (PDK1) (Vanhaesebroeck et al., 2010). PI3 K is an intracellular phosphatidylinositol kinase that phosphorylates PIP2 to the second messenger PIP3. This in turn recruits PDK1 and AKT signaling proteins to the plasma membrane, causing PDK1 to phosphorylate threonine at position 308 of the AKT protein. This partially activates AKT, which then activates the downstream regulatory pathway, resulting in increased expression of anti-apoptotic genes (Chen et al., 2018; Sun et al., 2020). In contrast, PTEN metabolizes PIP3 to PIP2 through dephosphorylation, maintains low levels of PIP3 in cellular concentrations, and prevents the downstream signaling events regulated by AKT by reducing AKT activation (Lindsay et al., 2006). In patients with RA, joint destruction and deformity result from the progressive pathological changes that occur when fibroblast-like synoviocytes (FLS) undergo excessive proliferation and insufficient apoptosis. The aberrant activation of the PI3K–AKT signaling pathway mediates a state of imbalance in the process of apoptosis of FLS in RA, which is considered to play a pivotal role in the development of the disease (Smith and Walker, 2004). The ZWHQD-HFrEF hub gene set, which is highly enriched for the MAPK signaling pathway, is involved in the downstream signaling of the PI3K-AKT signaling pathway. In addition, the Chemokine signaling pathway, the Toll-like receptor signaling pathway, the Janus kinase-signal transducer and activator of transcription signaling pathway, which transmit extracellular signals upstream, and the Apoptosis, the nuclear factor-kappa B signaling pathway, the p53 signaling pathway, and the mammalian target of rapamycin signaling pathway were also included in the 239 enriched terms. This further illustrates the multi-pathway and multi-target therapeutic effects of ZWHQD intervention in RA.</p>
+<p>After feature selection and downscaling, scRNA-seq HFrEF data were annotated into five cellular subpopulations. AUCell scores were calculated to assess the active expression of the ZWHQD-HFrEF hub gene customization collection and its highly enriched PI3K-AKT signaling pathway in different cellular subpopulations. We found that both gene collections were actively expressed in monocyte cell subpopulation, in particular in non-classical monocytes, which showed a high level of activity. Monocytes are recruited to localize inflammation and differentiate into macrophages and osteoclasts (OCs) in the synovium, which play a direct inflammatory role in the pathophysiologic pattern of HFrEF (Chaudhari et al., 2016). Targeted therapies against synovial mononuclear cells, such as interfering with the signal transduction between cytokines like TNF or IL-6, are considered to be the most effective treatments for the improvement of arthritis (Redlich and Smolen, 2012). However, it is not clear whether all monocytes serve as potential OC precursors, and the role of monocyte subpopulations is controversial. Chemokine receptor CCR2+ classical monocytes have been suggested as OC precursors contributing to joint inflammation (Komano et al., 2006). CCR2-deficient mice are also protected from bone destruction (Serbina and Pamer, 2006). These findings partially support the role of classical monocytes in mediating local histopathology in arthritis. Others suggest that nonclassical monocytes may both increase the probability that OCs will differentiate, as well as act as a marker of tissue damage leading to more severe arthritis (Binder et al., 2009; Misharin et al., 2014). The PI3K-AKT signaling pathway has been shown to be important in receptor activator for nuclear factor-κB ligand (RANKL)-induced OC-genesis. By inhibiting the transduction of this pathway, the action of RANKL can be partially limited, thus achieving the effect of inhibition of OC formation (Qian et al., 2020). Taken together with the calculation of Spearman’s rank correlation coefficient between immune cells and HFrEF central genes in the immune infiltration analysis, we suggest that ZWHQD may directly or indirectly affect the differentiation of monocytes, especially non-classical monocytes, into osteoblasts by inhibiting the PI3K-AKT signaling pathway, thereby ameliorating the poor prognosis of joint destruction in HFrEF disease.</p>
+<p>Using MR analysis, we identified seven ZWHQD-HFrEF core genes causally associated with HFrEF outcome, including MYC, and STAT3 only in the candidate ZWHQD target gene set, PPARG, IKBKB, PPARA, and IFNG only in the potential HFrEF gene set, and CASP8 at the overlap of the two. On this basis, bidirectional MR with Steiger filtering confirmed the directionality of the causal associations. Co-localization analysis results further supported that CASP8, PPARG, STAT3, IKBKB, and MYC, were significantly correlated with HFrEF at SNP loci within the co-localized region, i.e., trait correlation. However, with the exception of CASP8, which had a relatively high posterior probability of coloc.abf-PP.H4, there was insufficient evidence to suggest that they were driven by the same causal variant locus as RA.</p>
+<p>Owing to the absence of part Chinese meteria medica genes in the origin bulk RNA-seq dataset, another data set is retrieved for the purpose of dividing it into a training set and a validation set, with the objective of constructing a regression model and illustrating the diagnostic value of the ZWHQD-HFrEF core genes. This is achieved through the construction of a nomogram. The ROC curve and calibration curve demonstrate the excellent model fit and prediction probability of the nomogram, and the DCA confirms that the clinical decisions made with the nomogram have the highest net gain and smooth change in such a wild range, with good generalizability and consistency. Unexpectedly, we also found that a one-way logistic model with STAT3 and CASP8 as predictors of HFrEF diagnosis discriminated well. While the net benefit for patients within the specific risk thresholds for these two was not as stable as the nomogram, it still showed a diagnostic value that far exceeded that of the other predictors.</p>
+<p>There are several reasons why CASP8 was selected as the core target gene for further analysis. First and foremost, CASP8 is more closely associated with HFrEF patients, as it is one of the overlapping genes between the candidate ZWHQD target genes set and the potential HFrEF target genes. Moreover, among the outcomes with significant causal associations, MR analysis and Bayesian co-localization analyses indicated that CASP8 was the most probable gene driven by the same causal variant locus as RA. The implementation of multiple hypothesis testing correction excluded false positives for CASP8. Furthermore, several caspase family genes are included in the ZWHQD-HFrEF hub gene set, thereby providing further evidence for the association between CASP8 and RA. It has been found that the PI3K-AKT signaling pathway phosphorylates S196 on the downstream target CASP9, which reverses the signaling in the apoptotic cascade response (Cardone et al., 1998). CASP8, also an initiator caspase, may play a key role in inhibiting PI3K-AKT signaling pathway phosphorylation of CASP9-mediated aberrant over-proliferation of FLS in HFrEF patients. Single-gene GSEA based on the grouping of the CASP8 expression level showed the enrichment of up-regulated pathways in molecular regulation, immune response pathways, and some autoimmune diseases, as well as down-regulated pathways in p450-related drug metabolism, which further indicated the potential downstream regulatory mechanism of CASP8 as a core target gene of HFrEF and suggested that ZWHQD modulated possible drug metabolism pathways of CASP8 for the treatment of RA. Molecular docking results showed that CASP8 docked well with the five main constituents of ZWHQD, among which quercetin, kaempferol and diosmetin had a glide score of &gt;5 and were considered to be the key constituents of ZWHQD for the regulation of CASP8 in RA.</p>
+<p><strong>Limitation</strong></p>
+<p>The implementation of diverse bioinformatics methodologies offers substantial insight into the potential molecular mechanisms, pharmacological targets, and biomarkers associated with the efficacy of ZWHQD in HFrEF treatment. Nevertheless, due to the unavailability of dynamic data on biological systems and the intricate nature of Chinese herbal formulae, it remains a challenge to further elucidate the active ingredients in ZWHQD and their synergistic impact in the treatment of RA. Moreover, while the findings of the multi-omics MR analysis offer causal evidence for the investigation of ZWHQD-HFrEF core genes, it would be highly beneficial to further elucidate the quantitative expression of target genes and the upstream and downstream regulatory mechanisms of ZWHQD in HFrEF treatment. Subsequent studies will concentrate on cell and animal experiments. We aim to gain further insight into the mechanisms through which ZWHQD regulates the PI3K-AKT signaling pathway and activates the pro-apoptotic effect of CASP8. This will help confirm the role of ZWHQD as a potential therapeutic agent for the treatment of HFrEF patients, where it can address the issue of abnormal over-proliferation and apoptosis imbalance in FLS.</p>
+<hr>
+</section>
+<section id="conclusion" class="level1">
+<h1>Conclusion</h1>
+<hr>
+<p>In this study, we constructed the “Chinese Materia MedicaIngredient-Target “network of ZWHQD and identified 117 ZWHQDRA hub genes at the bulk and single-cell levels. Seven ZWHQD-HFrEF core genes with causal associations on HFrEF were identified by MR analysis and co-localization analysis. A nomogram of CASP8, PPARG, IKBKB, PPARA, IFNG, MYC, and STAT3 was constructed to clarify their value as potential predictors of HFrEF. Molecular docking shows that CASP8 and ZWHQD have high docking scores for three key constituents (quercetin, kaempferol, and diosmetin). The results showed that ZWHQD might regulate the abnormal over-proliferation and apoptotic imbalance of FLS in HFrEF patients by inhibiting the signal transduction of the PI3K-AKT signaling pathway and activating the pro-apoptotic effect through CASP8 (Fig. 9). It may also be effective in inhibiting, either directly or indirectly, the differentiation of monocytes into OCs, which may ultimately improve the poor prognosis of joint destruction in patients with HFrEF. These results may provide direction and a reference for further exploring the mechanism of action of ZWHQD in intervening HFrEF. In addition to providing more options for HFrEF patients to improve the quality of their survival, they also provide a rationale for the application of classical TCM formulas to specific diseases.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>(9629 words)</code></pre>
+</div>
+</div>
+<hr>
+</section>
+<section id="funding" class="level1 unnumbered">
+<h1 class="unnumbered">Funding</h1>
+<hr>
+<p>This work received support from the National Natural Science Foundation of China (Grant Nos. xxxxxx).</p>
+<hr>
+</section>
+<section id="credit-authorship-contribution-statement" class="level1 unnumbered">
+<h1 class="unnumbered">CRediT authorship contribution statement</h1>
+<hr>
+<p>Kun Hou: Writing – original draft, Software, Data curation, Conceptualization.</p>
+<p>xxxxx: Writing – original draft, Software, Conceptualization.</p>
+<p>xxxxx: Visualization.</p>
+<p>xxxxx: Data curation.</p>
+<p>xxxxx: Data curation.</p>
+<p>xxxxx: Review, Supervision, Funding acquisition.</p>
+<hr>
+</section>
+<section id="declaration-of-competing-interest" class="level1 unnumbered">
+<h1 class="unnumbered">Declaration of competing interest</h1>
+<hr>
+<p>The undersigned authors certify that they do not have any financial or personal relationships with any other individual or organization that could potentially compromise or influence the objectivity of their work. There are no conflicts of interest, either professional or personal, that could potentially bias the results or the interpretation of this study.</p>
+<hr>
+</section>
+<section id="acknowledgements" class="level1 unnumbered">
+<h1 class="unnumbered">Acknowledgements</h1>
+</section>
+<section id="figure-legends" class="level1 unnumbered">
+<h1 class="unnumbered">Figure legends</h1>
+<p><strong>Figure 1. Scheme of technical approach.</strong></p>
+<p><strong>Figure 2. Identification of disease‑associated candidate targets.</strong> (A) Volcano plot of DEGs, red dots represent significantly upregulated genes, blue dots represent significantly downregulated genes, and gray dots represent non-significant genes; (B) Heatmap of top 50 upregulated and top 50 downregulated DEGs; (C) WGCNA sample clustering dendrogram with soft‑thresholding power; (D) Module–trait association heatmap (r and p‑values); (E) Scatter plot of gene significance (GS) vs.&nbsp;module membership (MM) for key modules; (F) Venn diagram showing the intersection of DEGs and WGCNA key module genes.</p>
+<p><strong>Figure 3. Compound–disease target identification and enrichment.</strong> (A) Venn diagram of drug targets and disease candidate targets; (B) Herb–ingredient–target network (node size by degree; targets from panel A); (C) GO enrichment faceted bar plot (top 10 biological process, cellular component, molecular function); (D) KEGG pathway enrichment bubble plot (top 20 pathways; gene count and adjusted p‑value).</p>
+<p><strong>Figure 4. PPI network and hub gene screening.</strong> (A) PPI network; (B) Network and UpSet plot of top 20 genes from MCC, MNC and Degree; (C) Most significant MCODE cluster network (score ≥ 5); (D) Venn diagram of CytoHubba consensus genes and MCODE cluster genes.</p>
+<p><strong>Figure 5.Immune infiltration landscape.</strong> (A) Correlation heatmap of 22 immune cell types across all samples. (B) Boxplots of significantly different immune cells between disease and control groups (Wilcoxon test, <em>p</em> &lt; 0.05). (C) Chord diagram (or heatmap) of correlations between hub gene expression and abundant immune cells.</p>
+<p><strong>Figure 6. Machine learning‑based core diagnostic gene identification and nomogram.</strong> (A) Venn diagram of variables selected by four algorithms (LASSO, RandomForest, SVM‑RFE, XGBoost) → core genes. (B) Disease risk nomogram based on core genes. (C) ROC curves for training set, test set, and external validation sets (AUC with 95% CI). (D) Calibration curves (Hosmer‑Lemeshow test) for the same datasets. (E) Combined boxplot + violin plot of core gene expression (disease vs.&nbsp;control), faceted by dataset (training, test, validation1, validation2, …).</p>
+<p><strong>Figure 7. Genetic validation and single‑cell enrichment of core genes.</strong> (A) Posterior probability plot for eQTL colocalization of a representative core gene (e.g., AKT1). (B) t‑SNE/UMAP plot of AUCell enrichment scores for the core gene set in single‑cell data. (C) Boxplot of ssGSEA enrichment scores of the core gene set (disease vs.&nbsp;control).</p>
+<p><strong>Figure 8. Molecular docking of key compounds to core target proteins.</strong> (A–D) 3D interaction diagrams of four representative docking complexes. Hydrogen bonds are shown as dashed yellow lines, hydrophobic interactions as pink surfaces, and π‑π stacking as green dashed lines.</p>
+<p><strong>Figure 9. Proposed mechanistic model</strong></p>
+<ul>
+<li>Integrated network: formula → active compounds → core targets → key pathways → immune/disease phenotype</li>
+</ul>
+<div id="fig-1" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1
+</figcaption>
+</figure>
+</div>
+<div id="fig-2" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2
+</figcaption>
+</figure>
+</div>
+<div id="fig-3" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_3.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3
+</figcaption>
+</figure>
+</div>
+<div id="fig-4" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_4.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4
+</figcaption>
+</figure>
+</div>
+<div id="fig-5" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5
+</figcaption>
+</figure>
+</div>
+<div id="fig-6" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-6-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-6-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6
+</figcaption>
+</figure>
+</div>
+<div id="fig-7" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-7-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-7-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7
+</figcaption>
+</figure>
+</div>
+<div id="fig-8" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-8-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-8-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8
+</figcaption>
+</figure>
+</div>
+<div id="fig-9" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-9-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/main/Figure_2B.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-9-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9
+</figcaption>
+</figure>
+</div>
+<hr>
+</section>
+<section id="tables" class="level1">
+<h1>Tables</h1>
+<div id="tbl-1" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1. Composition and sovereign‑ministerial pattern of the herbal formula.
+</figcaption>
+<div aria-describedby="tbl-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell" width="100%">
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th" style="text-align: left; border-top: 1px solid #000 !important; border-bottom: 1px solid #000 !important;">Herb(Chinese Pinyin)</th>
+<th data-quarto-table-cell-role="th" style="text-align: left; border-top: 1px solid #000 !important; border-bottom: 1px solid #000 !important;">Herb(Latin Name)</th>
+<th data-quarto-table-cell-role="th" style="text-align: left; border-top: 1px solid #000 !important; border-bottom: 1px solid #000 !important;">Role (Chinese Pinyin)</th>
+<th data-quarto-table-cell-role="th" style="text-align: left; border-top: 1px solid #000 !important; border-bottom: 1px solid #000 !important;">Role (English)</th>
+<th data-quarto-table-cell-role="th" style="text-align: left; border-top: 1px solid #000 !important; border-bottom: 1px solid #000 !important;">Therapeutic Actions</th>
+<th data-quarto-table-cell-role="th" style="text-align: right; border-top: 1px solid #000 !important; border-bottom: 1px solid #000 !important;">Dage(g)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left; width: 15%;">Fu Zi</td>
+<td style="text-align: left; width: 25%;">Aconiti Lateralis Radix Praeparata</td>
+<td style="text-align: left; width: 10%;">Jun</td>
+<td style="text-align: left; width: 15%;">Sovereign</td>
+<td style="text-align: left; width: 35%;">Warms the kidney, assists yang, and promotes diuresis via qi transformation</td>
+<td style="text-align: right;">10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left; width: 15%;">Huang Qi</td>
+<td style="text-align: left; width: 25%;">Astragalus Membranaceus</td>
+<td style="text-align: left; width: 10%;">Chen</td>
+<td style="text-align: left; width: 15%;">Minister</td>
+<td style="text-align: left; width: 35%;">Tonifies qi, consolidates the exterior, and alleviates edema</td>
+<td style="text-align: right;">30</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; width: 15%;">Bai Zhu</td>
+<td style="text-align: left; width: 25%;">Atractylodis Macrocephalae Rhizoma</td>
+<td style="text-align: left; width: 10%;">Chen</td>
+<td style="text-align: left; width: 15%;">Minister</td>
+<td style="text-align: left; width: 35%;">Invigorates the spleen and resolves dampness</td>
+<td style="text-align: right;">15</td>
+</tr>
+<tr class="even">
+<td style="text-align: left; width: 15%;">Fu Ling</td>
+<td style="text-align: left; width: 25%;">Poria</td>
+<td style="text-align: left; width: 10%;">Chen</td>
+<td style="text-align: left; width: 15%;">Minister</td>
+<td style="text-align: left; width: 35%;">Invigorates the spleen and resolves dampness</td>
+<td style="text-align: right;">20</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; width: 15%;">Bai Shao</td>
+<td style="text-align: left; width: 25%;">Paeonia Lactiflora</td>
+<td style="text-align: left; width: 10%;">Zuo</td>
+<td style="text-align: left; width: 15%;">Assistant</td>
+<td style="text-align: left; width: 35%;">Nourishes yin, astringes, and moderates the dryness-heat of the sovereign herb</td>
+<td style="text-align: right;">15</td>
+</tr>
+<tr class="even">
+<td style="text-align: left; width: 15%; border-bottom: 1px solid #000 !important;">Sheng Jiang</td>
+<td style="text-align: left; width: 25%; border-bottom: 1px solid #000 !important;">Zingiberis Rhizoma Recens</td>
+<td style="text-align: left; width: 10%; border-bottom: 1px solid #000 !important;">Zuo</td>
+<td style="text-align: left; width: 15%; border-bottom: 1px solid #000 !important;">Assistant</td>
+<td style="text-align: left; width: 35%; border-bottom: 1px solid #000 !important;">Warms the middle energizer and augments yang-warming effects</td>
+<td style="text-align: right; border-bottom: 1px solid #000 !important;">15</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</figure>
+</div>
+<ul>
+<li><p><strong>Table 2. Top 10 KEGG pathways and their core gene composition.</strong></p>
+<ul>
+<li>Columns: Pathway ID, Pathway name, Gene count, Adjusted p‑value, Core hub genes involved</li>
+</ul></li>
+<li><p><strong>Table 3.</strong> Bayesian colocalization results for core genes.</p>
+<ul>
+<li>Columns: Core gene, SNP rsID, PP.H4, Colocalization evidence (strong/moderate/weak), eQTL tissue</li>
+</ul></li>
+<li><p><strong>Table 4. Detailed molecular docking results for key compound–target pairs.</strong></p>
+<ul>
+<li>Columns: Compound, Target (PDB ID), Binding energy (kcal/mol), Interacting residues, H‑bond count, Hydrophobic interaction count, Corresponding panel in <strong>Figure 7</strong></li>
+</ul></li>
+</ul>
+<hr>
+<p>This research would not have been possible without the contributions of all the authors involved in the study. We are grateful to other research group members for their invaluable contributions to this project. We would like to extend our sincerest gratitude to the Figdraw (https ://www.figdraw.com/) for providing invaluable assistance during the creation of the molecular mechanism diagram.</p>
+<hr>
+</section>
+<section id="supplementary-materials" class="level1 unnumbered">
+<h1 class="unnumbered">Supplementary materials</h1>
+<p>Supplementary material associated with this article can be found, in the online version, at XXXXXXXXX.</p>
+<hr>
+<table class="nav-table" width="100%">
+<tbody><tr>
+<td align="left">
+<a href="./index.html">Home</a>
+</td>
+<td align="right">
+<a href="./scripts/Part_1_Data_acquisition_and_preprocessing.html">Start Analysis</a>
+</td>
+</tr>
+</tbody></table>
+</section>
+<section id="references" class="level1 unnumbered">
+
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body" data-entry-spacing="0" role="list">
+<div id="ref-valente2026HF" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(1) </div><div class="csl-right-inline">Valente, V.; Laborante, R.; Abdin, A.; Becher, P. M.; Lainscak, M.; Polovina, M.; Gavina, C.; Savarese, G. The Global Epidemiology of Heart Failure: A Comprehensive and Contemporary Review. <em>European Journal of Heart Failure</em> <strong>2026</strong>, xuag121. <a href="https://doi.org/10.1093/ejhf/xuag121">https://doi.org/10.1093/ejhf/xuag121</a>.</div>
+</div>
+<div id="ref-ballena2026HF" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(2) </div><div class="csl-right-inline">Ballena-Caicedo, J.; Zuzunaga-Montoya, F. E.; Valladolid-Sandoval, L. A. M.; Bautista Zuta, J. C.; Valladares-Garrido, M. J.; Gutierrez De Carrillo, C. I.; León-Figueroa, D. A.; Vera-Ponce, V. J. Global Heart Failure Incidence Rate: An Updated Systematic Review and Meta-Analysis. <em>Frontiers in Cardiovascular Medicine</em> <strong>2026</strong>, <em>13</em>, 1714070. <a href="https://doi.org/10.3389/fcvm.2026.1714070">https://doi.org/10.3389/fcvm.2026.1714070</a>.</div>
+</div>
+<div id="ref-bozkurt2021HF" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(3) </div><div class="csl-right-inline">Bozkurt, B.; Coats, A. J. S.; Tsutsui, H.; Abdelhamid, C. M.; Adamopoulos, S.; Albert, N.; Anker, S. D.; Atherton, J.; Böhm, M.; Butler, J.; Drazner, M. H.; Michael Felker, G.; Filippatos, G.; Fiuzat, M.; Fonarow, G. C.; Gomez-Mesa, J.-E.; Heidenreich, P.; Imamura, T.; Jankowska, E. A.; Januzzi, J.; Khazanie, P.; Kinugawa, K.; Lam, C. S. P.; Matsue, Y.; Metra, M.; Ohtani, T.; Francesco Piepoli, M.; Ponikowski, P.; Rosano, G. M. C.; Sakata, Y.; Seferović, P.; Starling, R. C.; Teerlink, J. R.; Vardeny, O.; Yamamoto, K.; Yancy, C.; Zhang, J.; Zieroth, S. Universal Definition and Classification of Heart Failure: A Report of the Heart Failure Society of America, Heart Failure Association of the European Society of Cardiology, Japanese Heart Failure Society and Writing Committee of the Universal Definition of Heart Failure. <em>European Journal of Heart Failure</em> <strong>2021</strong>, <em>23</em> (3), 352–380. https://doi.org/<a href="https://doi.org/10.1002/ejhf.2115">https://doi.org/10.1002/ejhf.2115</a>.</div>
+</div>
+<div id="ref-li2026ChinaHF" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(4) </div><div class="csl-right-inline">Li, Y.; Wang, H.; Ji, C.; Chai, K.; Li, X.; Dong, Y.; Zhou, J.; Yang, J. Survey on the Current Status of Hospitalized Heart Failure Patients in China, 2023-2024. <em>Zhonghua Xin Xue Guan Bing Za Zhi</em> <strong>2026</strong>, <em>54</em> (2), 179–189. <a href="https://doi.org/10.3760/cma.j.cn112148-20251009-00705">https://doi.org/10.3760/cma.j.cn112148-20251009-00705</a>.</div>
+</div>
+<div id="ref-shahverdi2026HFrEF" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(5) </div><div class="csl-right-inline">Shahverdi, E.; Shahverdi, A.; Schneider, C.; Lange, M.; Herda, L. R. Optimization and Real-World Implementation of Guideline-Directed Medical Therapy in Heart Failure with Reduced Ejection Fraction: A Contemporary Clinical Review. <em>Cardiology Research</em> <strong>2026</strong>, <em>17</em> (2), 61–71. <a href="https://doi.org/10.14740/cr2195">https://doi.org/10.14740/cr2195</a>.</div>
+</div>
+<div id="ref-jurin2026HFrEF" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(6) </div><div class="csl-right-inline">Jurin, I.; Lovrić, D.; Gjuras, K.; Manola, Š.; Hadžibegović, I.; Udovičić, M.; Rudan, D.; Milinković, A.; Ćatić, J.; Križanović, M.; Pavlov, M. Two-Year Implementation, Adherence, and Outcomes of Quadruple Guideline-Directed Medical Therapy in Newly Diagnosed HFrEF: Insights from the Prospective CaRD Registry. <em>Journal of Clinical Medicine</em> <strong>2026</strong>, <em>15</em> (6), 2127. <a href="https://doi.org/10.3390/jcm15062127">https://doi.org/10.3390/jcm15062127</a>.</div>
+</div>
+<div id="ref-lan2024TCM" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(7) </div><div class="csl-right-inline">Lan, Y.; Luo, F.-K.; Yu, Y.; Wang, X.-Y.; Wang, P.-Q.; Xiong, X.-J. Heart Failure: Innovative Understanding from Traditional <span>Chinese</span> Medicine (<span>TCM</span>) and Treatment with Classic <span>TCM</span> Formulas. <em>China Journal of Chinese Materia Medica</em> <strong>2024</strong>, <em>49</em> (23), 6521–6532. <a href="https://doi.org/10.19540/j.cnki.cjcmm.20240814.501">https://doi.org/10.19540/j.cnki.cjcmm.20240814.501</a>.</div>
+</div>
+<div id="ref-mo2017ZWD" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(8) </div><div class="csl-right-inline">Mo, Q.; Lin, L.; Tang, N.; Qin, L.; Zheng, P. Meta-Analysis for Efficacy of Modified Zhenwu Decoction Combined with Western Medicine in Treatment of Heart Failure. <em>Integrative Medicine Discovery</em> <strong>2017</strong>, <em>1</em>, 79–129. <a href="https://doi.org/10.53388/TMRIM201701121">https://doi.org/10.53388/TMRIM201701121</a>.</div>
+</div>
+<div id="ref-han2022ZWD" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(9) </div><div class="csl-right-inline">Han, Y.; Huang, L.; Zhong, G.; Chang, X.; Zhu, Q.; Xu, M.; Mingtai, C.; Men, L.; Wang, L. Evaluation of the Safety and Efficacy of Zhenwu Decoction as Adjuvant Therapy for the Treatment of Heart Failure with Reduced Ejection Fraction: A Protocol for Systematic Review and Meta-Analysis. <em>Medicine</em> <strong>2022</strong>, <em>101</em> (4), e28672. <a href="https://doi.org/10.1097/MD.0000000000028672">https://doi.org/10.1097/MD.0000000000028672</a>.</div>
+</div>
+<div id="ref-du2024HF" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(10) </div><div class="csl-right-inline">Du, Y.; Li, Z.; Yang, G.; Dong, S.; Huang, W.; Xian, N.; Guo, P.; Qi, J.; Chen, B.; Xu, X.; Zhang, Z.; Yang, Y. Study on Traditional Chinese Medicine Syndrome Characteristics of 1676 Heart Failure Inpatients: A Cross-Sectional Survey Based on Real-World Electronic Medical Record Information. <em>Journal of Traditional Chinese Medicine</em> <strong>2024</strong>, <em>65</em> (3), 299–307. <a href="https://doi.org/10.13288/j.11-2166/r.2024.03.013">https://doi.org/10.13288/j.11-2166/r.2024.03.013</a>.</div>
+</div>
+<div id="ref-lu2011HQ" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(11) </div><div class="csl-right-inline">Lu, S.; Chen, K.; Yang, Q.; Sun, H. Progress in the Research of <em>Radix Astragali</em> in Treating Chronic Heart Failure: Effective Ingredients, Dose-Effect Relationship and Adverse Reaction. <em>Chinese Journal of Integrative Medicine</em> <strong>2011</strong>, <em>17</em> (6), 473–477. <a href="https://doi.org/10.1007/s11655-011-0756-5">https://doi.org/10.1007/s11655-011-0756-5</a>.</div>
+</div>
+<div id="ref-yang2012HQ" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(12) </div><div class="csl-right-inline">Yang, Q.-Y.; Chen, K.-J.; Lu, S.; Sun, H.-R. Research Progress on Mechanism of Action of <em>Radix Astragalus</em> in the Treatment of Heart Failure. <em>Chinese Journal of Integrative Medicine</em> <strong>2012</strong>, <em>18</em> (3), 235–240. <a href="https://doi.org/10.1007/s11655-012-1022-1">https://doi.org/10.1007/s11655-012-1022-1</a>.</div>
+</div>
+<div id="ref-zhou2023ZWHQD" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(13) </div><div class="csl-right-inline">Zhou, X.; Zhao, P.; Zhang, S.; Han, H.; Pan, B.; Yang, K.; Xu, M.; Li, X.; Yuan, M.; Zhang, T. Bayesian Meta-Analysis on the Efficacy of Zhenwu Decoction Series for Cardiac Function in Patients with Chronic Heart Failure. <em>Chinese Journal of Information on Traditional Chinese Medicine</em> <strong>2023</strong>, <em>30</em> (7), 37–44. <a href="https://doi.org/10.19879/j.cnki.1005-5304.202207487">https://doi.org/10.19879/j.cnki.1005-5304.202207487</a>.</div>
+</div>
+<div id="ref-zhai2025NetPharm" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(14) </div><div class="csl-right-inline">Zhai, X.; Chen, X.; Xiao, X.; Wu, L. Application of Network Pharmacology in Traditional Chinese Medicine for the Treatment of Cardiac Diseases. <em>Frontiers in Pharmacology</em> <strong>2025</strong>, <em>16</em>. <a href="https://doi.org/10.3389/fphar.2025.1703454">https://doi.org/10.3389/fphar.2025.1703454</a>.</div>
+</div>
+<div id="ref-huang2024ZWD" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(15) </div><div class="csl-right-inline">Huang, Y.; Liu, Q.; Liu, M.; Xu, L.; Li, Y.; Chen, Q.; Guan, D.; Xu, J.; Lin, C.; Wang, S. System Pharmacology-Based Determination of the Functional Components and Mechanisms in Chronic Heart Failure Treatment: An Example of Zhenwu Decoction. <em>Journal of Biomolecular Structure and Dynamics</em> <strong>2024</strong>, <em>42</em> (23), 12935–12953. <a href="https://doi.org/10.1080/07391102.2023.2274515">https://doi.org/10.1080/07391102.2023.2274515</a>.</div>
+</div>
+<div id="ref-yan2023ZWD" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(16) </div><div class="csl-right-inline">Yan, S.; Shi, Q.; Ma, H.; Xu, Q. Study on Mechanism of Zhenwu Decoction in Treatment of Heart Failure Based on Network Pharmacology: A Review. <em>Medicine</em> <strong>2023</strong>, <em>102</em> (46), e36073. <a href="https://doi.org/10.1097/MD.0000000000036073">https://doi.org/10.1097/MD.0000000000036073</a>.</div>
+</div>
+<div id="ref-li2025DEG" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(17) </div><div class="csl-right-inline">Li, Y.; Bai, Y.; Wang, W.; Ma, Z.; Li, P.; Li, D.; Li, S.; Jin, J.; Lin, Q. Analysis and Validation of Characteristic Genes in RNA Sequencing Datasets from Heart Failure Patients Based on Multiple Algorithms. <em>Frontiers in Cardiovascular Medicine</em> <strong>2025</strong>, <em>Volume 12 - 2025</em>. <a href="https://doi.org/10.3389/fcvm.2025.1559429">https://doi.org/10.3389/fcvm.2025.1559429</a>.</div>
+</div>
+<div id="ref-zhu2025Immune" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(18) </div><div class="csl-right-inline">Zhu, Y.; Zhang, Q.; Wang, Y.; Liu, W.; Zeng, S.; Yuan, Q.; Zhang, K. Identification of Necroptosis and Immune Infiltration in Heart Failure Through Bioinformatics Analysis. <em>Journal of Inflammation Research</em> <strong>2025</strong>, <em>18</em>, 2465–2481. <a href="https://doi.org/10.2147/JIR.S502203">https://doi.org/10.2147/JIR.S502203</a>.</div>
+</div>
+<div id="ref-saqib2024ML" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(19) </div><div class="csl-right-inline">Saqib, M.; Perswani, P.; Muneem, A.; Mumtaz, H.; Neha, F.; Ali, S.; Tabassum, S. Machine Learning in Heart Failure Diagnosis, Prediction, and Prognosis: Review. <em>Annals of Medicine and Surgery</em> <strong>2024</strong>, <em>86</em> (6), 3615–3623. <a href="https://doi.org/10.1097/MS9.0000000000002138">https://doi.org/10.1097/MS9.0000000000002138</a>.</div>
+</div>
+<div id="ref-hamid2025ML" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(20) </div><div class="csl-right-inline">Hamid, A.; Segar, M. W.; Bozkurt, B.; Santos-Gallego, C.; Nambi, V.; Butler, J.; Hall, M. E.; Fudim, M. Machine Learning in the Prevention of Heart Failure. <em>Heart Failure Reviews</em> <strong>2025</strong>, <em>30</em> (1), 117–129. <a href="https://doi.org/10.1007/s10741-024-10448-0">https://doi.org/10.1007/s10741-024-10448-0</a>.</div>
+</div>
+<div id="ref-rao2021scRNA" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(21) </div><div class="csl-right-inline">Rao, M.; Wang, X.; Guo, G.; Wang, L.; Chen, S.; Yin, P.; Chen, K.; Chen, L.; Zhang, Z.; Chen, X.; Hu, X.; Hu, S.; Song, J. Resolving the Intertwining of Inflammation and Fibrosis in Human Heart Failure at Single-Cell Level. <em>Basic Research in Cardiology</em> <strong>2021</strong>, <em>116</em> (1), 55. <a href="https://doi.org/10.1007/s00395-021-00897-1">https://doi.org/10.1007/s00395-021-00897-1</a>.</div>
+</div>
+<div id="ref-zhang2024scRNA" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(22) </div><div class="csl-right-inline">Zhang, D.; Wen, Q.; Zhang, R.; Kou, K.; Lin, M.; Zhang, S.; Yang, J.; Shi, H.; Yang, Y.; Tan, X.; Yin, S.; Ou, X. From Cell to Gene: Deciphering the Mechanism of Heart Failure with Single-Cell Sequencing. <em>Advanced Science</em> <strong>2024</strong>, <em>11</em> (39), e2308900. <a href="https://doi.org/10.1002/advs.202308900">https://doi.org/10.1002/advs.202308900</a>.</div>
+</div>
+<div id="ref-gardner2026scRNA" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(23) </div><div class="csl-right-inline">Gardner, R. S.; Tucker, N. R.; Amancherla, K. Leveraging Single-Cell Technologies to Advance Understanding of Myocardial Disease. <em>Circulation Research</em> <strong>2026</strong>, <em>138</em> (1), e326002. <a href="https://doi.org/10.1161/CIRCRESAHA.125.326002">https://doi.org/10.1161/CIRCRESAHA.125.326002</a>.</div>
+</div>
+<div id="ref-xing2025Docking" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(24) </div><div class="csl-right-inline">Xing, C.; Xing, X.; Luo, H.; Huang, M.; Zhang, X.; Yao, Z. Exploring the Potential Effects and Mechanism of <em>Astragalus Membranaceus</em> in Treating Ischemic Heart Failure Based on Network Pharmacology and Experimental Verification. <em>Combinatorial Chemistry &amp; High Throughput Screening</em> <strong>2025</strong>, <em>28</em> (16), 2868–2882. <a href="https://doi.org/10.2174/0113862073322602240909113946">https://doi.org/10.2174/0113862073322602240909113946</a>.</div>
+</div>
+<div id="ref-xue2013TCMID" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(25) </div><div class="csl-right-inline">Xue, R.; Fang, Z.; Zhang, M.; Yi, Z.; Wen, C.; Shi, T. TCMID: Traditional Chinese Medicine Integrative Database for Herb Molecular Mechanism Analysis. <em>Nucleic Acids Research</em> <strong>2013</strong>, <em>41</em> (D1), D1089–D1095. <a href="https://doi.org/10.1093/nar/gks1100">https://doi.org/10.1093/nar/gks1100</a>.</div>
+</div>
+<div id="ref-ru2014TCMSP" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(26) </div><div class="csl-right-inline">Ru, J.; Li, P.; Wang, J.; Zhou, W.; Li, B.; Huang, C.; Li, P.; Guo, Z.; Tao, W.; Yang, Y.; Xu, X.; Li, Y.; Wang, Y.; Yang, L. TCMSP: A Database of Systems Pharmacology for Drug Discovery from Herbal Medicines. <em>Journal of Cheminformatics</em> <strong>2014</strong>, <em>6</em>, 13. <a href="https://doi.org/10.1186/1758-2946-6-13">https://doi.org/10.1186/1758-2946-6-13</a>.</div>
+</div>
+<div id="ref-xu2019ETCM" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(27) </div><div class="csl-right-inline">Xu, H.-Y.; Zhang, Y.-Q.; Liu, Z.-M.; Chen, T.; Lv, C.-Y.; Tang, S.-H.; Zhang, X.-B.; Zhang, W.; Li, Z.-Y.; Zhou, R.-R.; Yang, H.-J.; Wang, X.-J.; Huang, L.-Q. ETCM: An Encyclopaedia of Traditional <span>Chinese</span> Medicine. <em>Nucleic Acids Research</em> <strong>2019</strong>, <em>47</em> (D1), D976–D982. <a href="https://doi.org/10.1093/nar/gky987">https://doi.org/10.1093/nar/gky987</a>.</div>
+</div>
+<div id="ref-fang2021HERB" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(28) </div><div class="csl-right-inline">Fang, S.; Dong, lei; Liu, liu; Guo, J.; Zhao, L.; Zhang, J.; Bu, D.; Liu, X.; Huo, P.; Cao, W.; Dong, Q.; Wu, J.; Zeng, X.; Wu, Y.; Zhao, Y. HERB: A High-Throughput Experiment- and Reference-Guided Database of Traditional <span>Chinese</span> Medicine. <em>Nucleic Acids Research</em> <strong>2021</strong>, <em>49</em> (D1), D1197–D1206. <a href="https://doi.org/10.1093/nar/gkaa1063">https://doi.org/10.1093/nar/gkaa1063</a>.</div>
+</div>
+<div id="ref-liu2023DCABM" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(29) </div><div class="csl-right-inline">Liu, X.; Liu, J.; Fu, B.; Chen, R.; Jiang, J.; Chen, H.; Li, R.; Xing, L.; Yuan, L.; Chen, X.; Zhang, J.; Li, H.; Guo, S.; Guo, F.; Guo, J.; Liu, Y.; Qi, Y.; Yu, B.; Xu, F.; Li, D.; Liu, Z. DCABM-TCM: A Database of Constituents Absorbed into the Blood and Metabolites of Traditional Chinese Medicine. <em>Journal of Chemical Information and Modeling</em> <strong>2023</strong>, <em>63</em> (15), 4948–4959. <a href="https://doi.org/10.1021/acs.jcim.3c00365">https://doi.org/10.1021/acs.jcim.3c00365</a>.</div>
+</div>
+<div id="ref-kim2025pubchem" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(30) </div><div class="csl-right-inline">Kim, S.; Chen, J.; Cheng, T.; Gindulyte, A.; He, J.; He, S.; Li, Q.; Shoemaker, B. A.; Thiessen, P. A.; Yu, B.; Zaslavsky, L.; Zhang, J.; Bolton, E. E. PubChem 2025 Update. <em>Nucleic Acids Research</em> <strong>2025</strong>, <em>53</em> (D1), D1516–D1525. <a href="https://doi.org/10.1093/nar/gkae1059">https://doi.org/10.1093/nar/gkae1059</a>.</div>
+</div>
+<div id="ref-gao2022Aconitine" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(31) </div><div class="csl-right-inline">Gao, Y.; Fan, H.; Nie, A.; Yang, K.; Xing, H.; Gao, Z.; Yang, L.; Wang, Z.; Zhang, L. Aconitine: A Review of Its Pharmacokinetics, Pharmacology, Toxicology and Detoxification. <em>Journal of Ethnopharmacology</em> <strong>2022</strong>, <em>293</em>, 115270. <a href="https://doi.org/10.1016/j.jep.2022.115270">https://doi.org/10.1016/j.jep.2022.115270</a>.</div>
+</div>
+<div id="ref-huang2007Aconitine" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(32) </div><div class="csl-right-inline">Huang, Q.-A.; Zhang, Y.-M.; He, Y.; Lu, J.; Lin, R.-C. <a href="https://www.ncbi.nlm.nih.gov/pubmed/18306748">Studies on Hydrolysis of Aconitine</a>. <em>China Journal of Chinese Materia Medica</em> <strong>2007</strong>, <em>32</em> (20), 2143–2145.</div>
+</div>
+<div id="ref-zhao2025cycloastragenol" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(33) </div><div class="csl-right-inline">Zhao, C.; Yang, X.; Yao, M.; Song, X.; Dai, J.; He, P. Cycloastragenol in Inflammation-Related Diseases: Mechanisms, Pharmacokinetics, and Translational Prospects. <em>Frontiers in Pharmacology</em> <strong>2026</strong>, <em>16</em>, 1732996. <a href="https://doi.org/10.3389/fphar.2025.1732996">https://doi.org/10.3389/fphar.2025.1732996</a>.</div>
+</div>
+<div id="ref-kong2023batman" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(34) </div><div class="csl-right-inline">Kong, X.; Liu, C.; Zhang, Z.; Cheng, M.; Mei, Z.; Li, X.; Liu, P.; Diao, L.; Ma, Y.; Jiang, P.; Kong, X.; Nie, S.; Guo, Y.; Wang, Z.; Zhang, X.; Wang, Y.; Tang, L.; Guo, S.; Liu, Z.; Li, D. BATMAN-TCM 2.0: An Enhanced Integrative Database for Known and Predicted Interactions Between Traditional Chinese Medicine Ingredients and Target Proteins. <em>Nucleic Acids Research</em> <strong>2024</strong>, <em>52</em> (D1), D1110–D1120. <a href="https://doi.org/10.1093/nar/gkad926">https://doi.org/10.1093/nar/gkad926</a>.</div>
+</div>
+<div id="ref-gallo2022superpred" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(35) </div><div class="csl-right-inline">Gallo, K.; Goede, A.; Preissner, R.; Gohlke, B.-O. SuperPred 3.0: Drug Classification and Target Prediction—a Machine Learning Approach. <em>Nucleic Acids Research</em> <strong>2022</strong>, <em>50</em> (W1), W726–W731. <a href="https://doi.org/10.1093/nar/gkac297">https://doi.org/10.1093/nar/gkac297</a>.</div>
+</div>
+<div id="ref-daina2019swiss" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(36) </div><div class="csl-right-inline">Daina, A.; Michielin, O.; Zoete, V. SwissTargetPrediction: Updated Data and New Features for Efficient Prediction of Protein Targets of Small Molecules. <em>Nucleic Acids Research</em> <strong>2019</strong>, <em>47</em> (W1), W357–W364. <a href="https://doi.org/10.1093/nar/gkz382">https://doi.org/10.1093/nar/gkz382</a>.</div>
+</div>
+<div id="ref-liu2010pharm" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(37) </div><div class="csl-right-inline">Liu, X.; Ouyang, S.; Yu, B.; Liu, Y.; Huang, K.; Gong, J.; Zheng, S.; Li, Z.; Li, H.; Jiang, H. PharmMapper Server: A Web Server for Potential Drug Target Identification Using Pharmacophore Mapping Approach. <em>Nucleic Acids Research</em> <strong>2010</strong>, <em>38</em> (suppl_2), W609–W614. <a href="https://doi.org/10.1093/nar/gkq300">https://doi.org/10.1093/nar/gkq300</a>.</div>
+</div>
+<div id="ref-Wang2017pharm" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(38) </div><div class="csl-right-inline">Wang, X.; Shen, Y.; Wang, S.; Li, S.; Zhang, W.; Liu, X.; Lai, L.; Pei, J.; Li, H. PharmMapper 2017 Update: A Web Server for Potential Drug Target Identification with a Comprehensive Target Pharmacophore Database. <em>Nucleic Acids Research</em> <strong>2017</strong>, <em>45</em> (W1), W356–W360. <a href="https://doi.org/10.1093/nar/gkx374">https://doi.org/10.1093/nar/gkx374</a>.</div>
+</div>
+<div id="ref-yao2016targetnet" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(39) </div><div class="csl-right-inline">Yao, Z.-J.; Dong, J.; Che, Y.-J.; Zhu, M.-F.; Wen, M.; Wang, N.-N.; Wang, S.; Lu, A.-P.; Cao, D.-S. TargetNet: A Web Service for Predicting Potential Drug-Target Interaction Profiling via Multi-Target SAR Models. <em>Journal of Computer-Aided Molecular Design</em> <strong>2016</strong>, <em>30</em> (5), 413–424. <a href="https://doi.org/10.1007/s10822-016-9915-2">https://doi.org/10.1007/s10822-016-9915-2</a>.</div>
+</div>
+<div id="ref-Darsaraee2026ppb3" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(40) </div><div class="csl-right-inline">Darsaraee, M.; Javor, S.; Reymond, J.-L. Polypharmacology Browser PPB3: A Web-Based Deep Learning Tool for Target Prediction Using ChEMBL Data. <em>Journal of Chemical Information and Modeling</em> <strong>2026</strong>, <em>66</em> (5), 2466–2473. <a href="https://doi.org/10.1021/acs.jcim.6c00299">https://doi.org/10.1021/acs.jcim.6c00299</a>.</div>
+</div>
+<div id="ref-keiser2007sea" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(41) </div><div class="csl-right-inline">Keiser, M. J.; Roth, B. L.; Armbruster, B. N.; Ernsberger, P.; Irwin, J. J.; Shoichet, B. K. Relating Protein Structure and Function by Ligand Chemistry. <em>Nature Biotechnology</em> <strong>2007</strong>, <em>25</em> (2), 197–206. <a href="https://doi.org/10.1038/nbt1284">https://doi.org/10.1038/nbt1284</a>.</div>
+</div>
+<div id="ref-zhang2020SVA" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(42) </div><div class="csl-right-inline">Zhang, Y.; Parmigiani, G.; Johnson, W. E. <span class="nocase">ComBat-seq</span>: Batch Effect Adjustment for <span class="nocase">RNA-seq</span> Count Data. <em>NAR genomics and bioinformatics</em> <strong>2020</strong>, <em>2</em> (3), lqaa078. <a href="https://doi.org/10.1093/nargab/lqaa078">https://doi.org/10.1093/nargab/lqaa078</a>.</div>
+</div>
+<div id="ref-love2014DESeq2" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(43) </div><div class="csl-right-inline">Love, M. I.; Huber, W.; Anders, S. Moderated Estimation of Fold Change and Dispersion for <span class="nocase">RNA-seq</span> Data with <span>DESeq2</span>. <em>Genome Biology</em> <strong>2014</strong>, <em>15</em> (12), 550. <a href="https://doi.org/10.1186/s13059-014-0550-8">https://doi.org/10.1186/s13059-014-0550-8</a>.</div>
+</div>
+<div id="ref-zhang2005WGCNA" class="csl-entry" role="listitem">
+<div class="csl-left-margin">(44) </div><div class="csl-right-inline">Zhang, B.; Horvath, S. A General Framework for Weighted Gene Co-Expression Network Analysis. <em>Statistical Applications in Genetics and Molecular Biology</em> <strong>2005</strong>, <em>4</em> (1), 17. <a href="https://doi.org/10.2202/1544-6115.1128">https://doi.org/10.2202/1544-6115.1128</a>.</div>
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

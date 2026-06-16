@@ -1,0 +1,320 @@
+---
+title: "01. Collection and characterization of bioactive Constituents in ZWHQD"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+# Global chunk settings for reproducible output
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+# Extended timeout for large file download
+options(timeout = 36000)
+
+# Disable automatic string-to-factor conversion
+options(stringsAsFactors = FALSE)
+
+# Download settings for stable HTTPS requests
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+# Set Bioconductor & CRAN mirrors (Tsinghua)
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+---
+# Load Packages
+```{r}
+library(tidyverse)  #Core toolkit for data manipulation, pipe operations, and data cleaning
+library(data.table) # Fast, memory-efficient handling of large datasets
+library(openxlsx)   # Read and write Excel files
+library(future)     # Parallel processing framework for batch API queries
+library(furrr)      # Parallel processing framework for batch API queries
+library(progressr)  # Real-time progress tracking for parallel operations
+library(httr)       # HTTP request handling for file downloads
+```
+
+# Step 1: Load Raw Compound Data from DCABM-TCM Database
+```{r dcabm}
+# Clear all objects from the working environment
+rm(list = ls())
+
+# Import raw compound data
+compounds_raw <- read.xlsx("../data/raw/tcm/zwhqd_compound_dcabm.xlsx")
+
+# Save raw data backup for reproducibility
+save(
+  compounds_raw,
+  file = "../data/processed/tcm/01_compounds_raw.RData"
+)
+```
+
+---
+
+# Step 2: Raw Data Preprocessing & Standardization
+
+Description: Parse compound metadata, clean formatting, extract core fields (compound name, CID, molecular formula),and standardize all character values.
+
+```{r}
+# Load custom utility functions (required for CID cleaning, PubChem data fetching, and SDF downloading)
+source("utils.R")
+
+# Data cleaning pipeline
+compounds_clean <- compounds_raw %>%
+  # Trim leading/trailing whitespace from all character columns
+  mutate(across(where(is.character), trimws)) %>%
+  
+  # Split multiple compounds separated by "|" into individual rows
+  separate_rows(Compounds, sep = "\\|") %>%
+  
+  # Extract core metadata from the unstructured Compounds string
+  mutate(
+    CID = str_extract(Compounds, "(?<=Pubchem CID:)[^)]+") %>% str_trim(),
+    DCABM.ID = str_extract(Compounds, "(?<=DCABM ID:)[^)]+") %>% str_trim(),
+    temp = str_remove(Compounds, "\\s+\\(Pubchem CID:[^)]+\\)")
+  ) %>%
+  
+  # Extract clean compound name and molecular formula
+  mutate(
+    temp2 = str_remove(temp, "\\([^)]+\\)$") %>% str_trim(),
+    Compound = str_remove(temp2, "\\([^)]+\\)$") %>% str_trim(),
+    Formula = str_match(temp2, "\\(([^)]+)\\)$")[, 2] %>% str_trim()
+  ) %>%
+  
+  # Remove redundant intermediate columns
+  dplyr::select(-Compounds, -temp, -temp2, -DCABM.ID) %>%
+  
+  # Final whitespace standardization for all character columns
+  mutate(across(where(is.character), trimws))
+
+# Save cleaned dataset
+save(
+  compounds_clean,
+  file = "../data/processed/tcm/02_compounds_clean.RData"
+)
+```
+
+---
+
+# Step 3: Manually Add Cycloastragenol Entry
+
+Description: Add cycloastragenol (a key bioactive metabolite from *Astragali Radix*) missing from the raw dataset, then re-sort the dataset for consistent ordering.
+
+```{r}
+compounds_add <- compounds_clean %>%
+  add_row(
+    Herb.Name.Chinese = "黄芪",
+    Herb.Name.Pinyin = "HUANG QI",
+    Herb.Name.English = "Astragali Radix",
+    Herb.Name.Latin = "Astragalus membranaceus",
+    Type = "Metabolite",
+    CID = "13943286",
+    Compound = "cycloastragenol",
+    Formula = "C30H50O5"
+  ) %>%
+  arrange(Herb.Name.Pinyin, CID)
+
+# Save augmented dataset
+save(
+  compounds_add,
+  file = "../data/processed/tcm/03_compounds_add_cycloastragenol.RData"
+)
+```
+
+---
+
+# Step 4: Filter Invalid & Duplicate Compounds
+
+Description: Remove entries with invalid/empty CIDs, standardize CID format, and deduplicate entries to ensure one unique entry per herb-CID and herb-compound name pair.
+
+```{r}
+compounds_filtered <- compounds_add %>%
+  # Remove entries with invalid, missing, or empty CIDs
+  filter(CID != "-", !is.na(CID), CID != "") %>%
+  
+  # Standardize CID format using custom utility function
+  mutate(CID = clean_cids(CID)) %>%
+  
+  # Primary deduplication: keep one unique entry per herb-CID pair
+  distinct(Herb.Name.Chinese, CID, .keep_all = TRUE) %>%
+  
+  # Secondary deduplication: keep one unique entry per herb-compound name pair
+  distinct(Herb.Name.Chinese, Compound, .keep_all = TRUE)
+
+# Save filtered dataset
+save(
+  compounds_filtered,
+  file = "../data/processed/tcm/04_compounds_filtered.RData"
+)
+```
+
+---
+
+# Step 5: Merge Manually Curated Properties & Final Filter
+
+Description: Load manually annotated compound properties, filter out entries marked for removal, merge with standardized herb metadata, and generate the final curated compound list.
+
+Input:
+
+- Manually annotated Excel file: "../data/raw/tcm/compounds_properties_manual.xlsx"
+
+```{r}
+# Load manually curated compound properties
+compounds_manual <- read.xlsx("../data/raw/tcm/compounds_properties_manual.xlsx")
+
+# Extract unique, standardized herb metadata from the filtered dataset
+herbs <- compounds_filtered %>%
+  dplyr::select(Herb.Name.Chinese,Herb.Name.Pinyin,Herb.Name.Latin,Herb.Name.English) %>%
+  distinct(Herb.Name.Pinyin, .keep_all = TRUE)
+
+# Merge manual annotations with herb metadata, filter, and deduplicate
+compounds_final_filtered <- compounds_manual %>%
+  dplyr::filter(Drop == "No") %>%
+  dplyr::select(
+    -c(Note, Compound.Toxic, Drop)
+  ) %>% 
+  left_join(herbs, by = c("Herb.Name.Pinyin")) %>%
+  distinct(Herb.Name.Pinyin, CID, .keep_all = TRUE) %>%
+  dplyr::select(Herb.Name.Chinese,Herb.Name.Pinyin,Herb.Name.Latin,Herb.Name.English,CID, Compound.Name, Compound.Category)
+
+# Save final curated dataset
+save(
+  compounds_final_filtered,
+  file = "../data/processed/tcm/05_compounds_final_filtered.RData"
+)
+```
+
+---
+
+# Step 6: Batch Retrieve PubChem Compound Annotations
+
+Description: Use parallel processing to batch-retrieve standardized compound annotations from PubChem, including IUPAC name, molecular formula, molecular weight, and SMILES structure.
+
+```{r}
+# load("../data/processed/tcm/05_compounds_final_filtered.RData")
+
+# Standardize CID format and isolate unique CIDs for efficient PubChem queries
+compounds_pubchem <- compounds_final_filtered %>%
+  mutate(`CID` = clean_cids(CID)) %>%
+  filter(!is.na(CID)) %>%
+  distinct(CID, .keep_all = TRUE)
+
+# Define PubChem properties to retrieve
+properties <- c("IUPACName", "MolecularFormula", "MolecularWeight",
+                "SMILES")
+
+# Split unique CIDs into batches of 20 to comply with PubChem API rate limits
+unique_cids <- unique(compounds_pubchem$CID)
+cid_batches <- split(unique_cids, ceiling(seq_along(unique_cids)/20))
+
+# Set up parallel processing: use all available cores minus 2 to avoid system overload
+plan(multisession, workers = availableCores() - 2)
+
+# Execute parallel batch queries with real-time progress tracking
+with_progress({
+  p <- progressor(steps = length(cid_batches))
+  chem_info <- future_map_dfr(cid_batches, function(b) {
+    p()
+    fetch_batch(properties, b)
+  })
+})
+
+# Reset to sequential processing mode
+plan(sequential)
+
+# Merge PubChem annotations with the curated compound list and standardize final output
+compounds_final <- compounds_final_filtered %>%
+  left_join(chem_info, by = "CID") %>%
+  dplyr::select(
+    Herb.Name.Chinese,
+    Herb.Name.Pinyin, 
+    Herb.Name.Latin,
+    Herb.Name.English,
+    Compound.Name, 
+    IUPACName, 
+    Compound.Category,
+    MolecularFormula, 
+    MolecularWeight, 
+    CID, 
+    SMILES
+  ) %>%
+  mutate(across(where(is.character), trimws))
+```
+
+---
+
+# Step 7: Calculate Cross-Herb Compound Sharing Statistics
+
+Description: Identify compounds shared across multiple herbs, count the number of herbs each compound appears in, and generate a sorted list of shared compounds for downstream analysis.
+
+```{r}
+compound_sharing <- compounds_final %>%
+  distinct(Herb.Name.Pinyin, CID,.keep_all = TRUE) %>%
+  group_by(CID) %>%
+  summarise(
+    Herb_Count = n(),
+    Herbs = paste(unique(Herb.Name.Pinyin), collapse = ", ")
+  ) %>%
+  filter(Herb_Count >= 2) %>%
+  arrange(desc(Herb_Count))  %>%
+  left_join(compounds_final[,c("CID","Compound.Name")],by="CID") %>%
+  distinct(CID,.keep_all = TRUE)
+
+# Save all final results
+save(
+  compounds_final, compound_sharing,
+  file = "../data/processed/tcm/06_compounds_final.RData"
+)
+```
+
+---
+
+# Step 8: Batch Download PubChem SDF Structure Files
+
+Description: Download 3D or 2D structure SDF files for all unique compounds from PubChem, with automatic directory creation and download summary reporting.
+
+```{r}
+unique_cids <- unique(compounds_pubchem$CID)
+sdf_files <- "../data/raw/tcm/sdf/"
+
+results <- download_all_sdf(unique_cids, sdf_files)
+```
+
+# Table S1. Bioactive Constituents of ZWHQD.
+
+Description: Rename columns to publication-ready format and export the final compound list as an Excel file.
+
+```{r}
+load("../data/processed/tcm/06_compounds_final.RData")
+
+table_s1_data <- compounds_final %>%
+  dplyr::rename(
+   ` Herb(Chinese)` = Herb.Name.Chinese,
+    `Herb(Pinyin)` = Herb.Name.Pinyin,
+    `Herb(Latin)` = Herb.Name.Latin,
+   `Herb(English)` = Herb.Name.English,
+   `Compound` = Compound.Name,
+   `Compound(IUPAC)` = IUPACName,
+   `Category` = Compound.Category,
+   `Molecular Formula (g/mol)` = MolecularFormula,
+   `Pubchme CID` = CID,
+   `SMILES` = SMILES
+  )
+
+# Export to publication-ready Excel file
+write.xlsx(
+  list(`Bioactive Constituents of ZWHQD` = table_s1_data), 
+  "../tables/Table_S1.xlsx"
+)
+
+cat("Table S1 has been successfully generated and saved to `../tables/Table_S1.xlsx`\n")
+```

@@ -1,0 +1,1111 @@
+---
+title: "Part 3: Mechanism exploration of ZWHQD against HFrEF"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+---
+
+# Identification of Candidate Targets
+
+## Load Packages
+```{r}
+library(ggvenn)
+library(tidyverse)
+library(openxlsx)
+library(ggsci)
+```
+
+## Candidate Genes
+```{r}
+rm(list = ls())
+
+load("../data/processed/geo/GSE141910/degs_results.RData")
+
+deg_sig <- deg_all %>% filter(padj < 0.05, abs(log2FoldChange) > lfc)
+
+deg_genes <- rownames(deg_sig) 
+
+load("../data/processed/tcm/14_compound_target_final.RData")
+
+herb_targets <- unique(compound_target_final$Symbol)
+
+load("../data/processed/geo/GSE141910/wgcna_candidates_genes.RData")
+
+# disease_genes: intersecting DEGs and WGCNA
+disease_genes <- intersect(deg_genes,wgcna_candidates_genes$Gene)
+
+# candidate_genes: intersecting herb_targets and disease_genes
+candidate_genes <-intersect(herb_targets, disease_genes)
+
+herb_targets_df <- data.frame(Gene = herb_targets) %>%
+  arrange(Gene)
+
+deg_genes_df <- data.frame(Gene = deg_genes) %>%
+  arrange(Gene)
+
+wgcna_genes_df <- data.frame(Gene = wgcna_candidates_genes$Gene) %>%
+  arrange(Gene)
+
+disease_genes_df <- data.frame(Gene = disease_genes) %>%
+  arrange(Gene)
+
+candidate_genes_df <- data.frame(Gene = candidate_genes) %>%
+  arrange(Gene)
+
+gene_list <- list(
+  DEGs = deg_genes,
+  `Herb targets` = herb_targets,
+  `WGCNA Genes` = wgcna_candidates_genes$Gene
+)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(4),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=10))
+
+# save
+ggsave("../figures/main/Figure_3A.pdf", p, width=6, height=6, dpi=300)
+ggsave("../figures/main/Figure_3A.png", p, width=6, height=6, dpi=300)
+
+
+save(herb_targets_df, deg_genes_df, wgcna_genes_df,disease_genes_df, candidate_genes_df, file = "../data/processed/network/01_herb_disease_genes.RData")
+
+write.xlsx(
+  list(
+    HerbTargets = herb_targets_df,
+    DEGs = deg_genes_df,
+    WGCNAGenes = wgcna_genes_df,
+    DiseaseGenes = disease_genes_df,
+    CandidateGenes = candidate_genes_df
+  ),
+  "../tables/candidate_genes.xlsx"
+)
+
+deg_candidate <- deg_all[rownames(deg_all) %in% candidate_genes, ]
+ 
+deg_candidate$regulation <- ifelse(
+  deg_candidate$log2FoldChange >= lfc, "Up",
+  ifelse(deg_candidate$log2FoldChange <= -lfc, "Down", "NS")
+)
+
+deg_candidate$Gene <- rownames(deg_candidate)
+
+up_genes <- deg_candidate$Gene[deg_candidate$regulation == "Up"]
+down_genes <- deg_candidate$Gene[deg_candidate$regulation == "Down"]
+
+cat("Up genes: ", length(up_genes), "\n")
+print(up_genes)
+
+cat("\nDown genes: ", length(down_genes), "\n")
+print(down_genes)
+```
+
+---
+
+# Herb-Ingredient-Target (HIT) Network
+## Load Packages
+
+```{r}
+library(tidyverse)
+library(openxlsx)
+library(data.table)
+
+library(clusterProfiler)
+library(igraph)
+library(centiserve)
+library(RCy3)
+```
+
+## Step 1: Loading data
+```{r}
+rm(list = ls())
+
+load("../data/processed/network/01_herb_disease_genes.RData")
+load("../data/processed/tcm/14_compound_target_final.RData")
+
+herb_ingredient_target <- candidate_genes_df %>%
+  left_join(compound_target_final, by = c("Gene" = "Symbol"),relationship = "many-to-many") %>%
+  dplyr::select(Herb.Name.Pinyin, Compound.Name, Gene) %>%
+  dplyr:: rename(Herb = Herb.Name.Pinyin, Ingredient = Compound.Name, Target = Gene)  %>%
+  distinct() %>%
+  arrange(Herb,Target)
+
+save(herb_ingredient_target,file = "../data/processed/network/02_herb_ingredient_target.RData")
+
+```
+
+## Step 2: Build herb-compound-target network
+```{r}
+herb_ingredient <- herb_ingredient_target %>%
+  dplyr::select(Herb, Ingredient) %>%
+  distinct()
+  
+ingredient_target <- herb_ingredient_target %>%
+  dplyr::select(Ingredient, Target) %>%
+  distinct()
+  
+# edges
+edges <- bind_rows(
+  herb_ingredient %>% 
+    dplyr::rename(source = Herb, target = Ingredient) %>% 
+    mutate(interaction = "herb_ingredient"),
+  ingredient_target %>%
+    dplyr::rename(source = Ingredient, target = Target) %>%
+    mutate(interaction = "ingredient_target")
+)
+
+# nodes
+nodes <- data.frame(id = unique(c(edges$source, edges$target))) %>%
+  mutate(type = case_when(
+    id %in% herb_ingredient$Herb        ~ "Herb",
+    id %in% ingredient_target$Ingredient  ~ "Ingredient",
+    id %in% ingredient_target$Target    ~ "Target",
+    TRUE                              ~ "Other"
+  ))
+
+save(nodes,edges,file = "../data/processed/network/03_HIT_network.RData")
+```
+
+## Step 3: HIT network visualization
+```{r}
+rm(list = ls())
+
+load("../data/processed/network/03_HIT_network.RData")
+
+cytoscapePing()  
+
+deleteAllNetworks() 
+
+createNetworkFromDataFrames(
+  nodes = nodes,
+  edges = edges,
+  title = "HFrEF_HIT_Network",
+  collection = "HIT_Network"
+)
+
+# layout
+layoutNetwork("force-directed")
+
+# style
+style_name <- "HIT_Style_By_Nodes_Type"
+try(deleteVisualStyle(style_name), silent = TRUE)
+
+# default style
+defaults <- list(
+  NODE_SHAPE = "RECTANGLE",
+  NODE_SIZE = 30,
+  NODE_FILL_COLOR = "#CCCCCC",
+  NODE_LABEL_FONT_FACE = "Arial,plain,12",
+  EDGE_WIDTH = 0.5,
+  EDGE_STROKE_COLOR = "#E0E0E0",
+  EDGE_TRANSPARENCY = 200         
+)
+
+# mapping style
+mappings <- list(
+  # node shape
+  mapVisualProperty(
+    visual.prop = 'node shape', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c("ROUND RECTANGLE","ELLIPSE", "DIAMOND")
+  ),
+  
+  # node color
+  mapVisualProperty(
+    visual.prop = 'node fill color', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c("#fe9acc", "#fe0000", "#0401b9")
+  ),
+  
+  # node size
+  mapVisualProperty(
+    visual.prop = 'node size',
+    table.column = 'type',
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c(30, 20, 30)
+  ),
+  
+  # node label
+  mapVisualProperty(
+    visual.prop = 'node label', 
+    table.column = 'name', 
+    mapping.type = 'p'
+  ),
+  
+  mapVisualProperty(
+    visual.prop = 'node label color', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c("#000000", "#000000", "#FFFFFF")
+  )
+)
+
+# apply style
+createVisualStyle(
+  style.name = style_name, 
+  defaults = defaults, 
+  mappings = mappings
+)
+
+setVisualStyle(style_name)
+
+# Figure_3B.pdf / Figure_3B.png
+```
+
+---
+
+# Functional Enrichment Analysis
+
+## Load packages
+```{r}
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(enrichplot)
+library(ggplot2)
+library(STRINGdb)
+library(dplyr)
+library(ggvenn)
+```
+
+## Step 1: SYMBOL to ENTREZID
+
+```{r}
+rm(list = ls())
+load("../data/processed/network/01_herb_disease_genes.RData")
+
+# candidate_genes
+gene_id_map <- bitr(
+  geneID = candidate_genes_df$Gene,
+  fromType = "SYMBOL",
+  toType = "ENTREZID",
+  OrgDb = org.Hs.eg.db
+)
+gene_entrez <- gene_id_map$ENTREZID
+```
+
+## Step 2: GO
+```{r}
+go_enrich <- enrichGO(
+  gene = gene_entrez,
+  OrgDb = org.Hs.eg.db,
+  keyType = "ENTREZID",
+  ont = "ALL",
+  pAdjustMethod = "fdr",
+  qvalueCutoff = 0.05,
+  readable = TRUE
+)
+
+```
+
+## Step 3: KEGG
+```{r}
+kegg_enrich <- enrichKEGG(
+  gene = gene_entrez,
+  organism = "hsa",
+  pAdjustMethod = "fdr",
+  qvalueCutoff = 0.05
+)
+
+save(kegg_enrich,go_enrich, file = "../data/processed/functional/enrich.RData")
+```
+
+## Step 4: visualization
+```{r}
+load("../data/processed/functional/enrich.RData")
+
+go_top <- go_enrich %>%
+  as.data.frame() %>%
+  group_by(ONTOLOGY) %>%
+  slice_max(-log10(p.adjust), n = 5, with_ties = FALSE) %>% 
+  ungroup() %>%
+  mutate(
+    Description_wrapped = str_wrap(Description, width = 30),
+    Description_wrapped = as.factor(Description_wrapped),
+    Description_wrapped = fct_reorder(Description_wrapped, p.adjust, .desc = FALSE),
+    ONTOLOGY = factor(ONTOLOGY, levels = c("BP", "CC", "MF"))
+  )
+
+go_plot <- ggplot(go_top, aes(x = Count, y = Description_wrapped)) +
+  geom_col(aes(fill = -log10(p.adjust)), width = 0.7) +
+  facet_grid(ONTOLOGY ~ ., scales = "free_y", space = "free_y") +
+  scale_fill_gradient(low = "#fde725", high = "#21918c", name = "-log10(p.adjust)") +
+  labs(x = "Gene Count", y = "") +
+  theme_bw(base_size = 12) +
+  theme(
+    strip.text.y = element_text(angle = 0, face = "bold", size = 11),
+    axis.text.y = element_text(size = 8),          
+    axis.title = element_text(size = 10),
+    panel.grid = element_blank(),
+    legend.position = "bottom",
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 8)
+  ) +
+  guides(fill = guide_colorbar(title.position = "top", barwidth = 10, barheight = 0.6))
+
+ggsave("../figures/main/Figure_3C.pdf", go_plot, width = 7, height = 10, dpi = 300)
+ggsave("../figures/main/Figure_3C.png", go_plot, width = 7, height = 10, dpi = 300)
+
+
+# KEGG plot
+kegg_plot <- dotplot(kegg_enrich, showCategory = 15) + theme_bw()
+ggsave("../figures/main/Figure_3D.pdf", kegg_plot, width = 7, height = 10, dpi = 300)
+ggsave("../figures/main/Figure_3D.png", kegg_plot, width = 7, height = 10, dpi = 300)
+```
+
+---
+
+# Figure 3
+```{r}
+library(magick)
+
+total_width_cm <- 14        
+dpi <- 300                    
+px_per_cm <- dpi / 2.54     
+total_width_px <- round(total_width_cm * px_per_cm) 
+
+ratios_row1 <- c(1, 2)
+ratios_row2 <- c(1, 1)   # 修改为 1:1
+
+width_row1_left  <- round(total_width_px * ratios_row1[1] / sum(ratios_row1))
+width_row1_right <- round(total_width_px * ratios_row1[2] / sum(ratios_row1))
+width_row2_left  <- round(total_width_px * ratios_row2[1] / sum(ratios_row2))
+width_row2_right <- round(total_width_px * ratios_row2[2] / sum(ratios_row2))
+
+ratio <- c(width_row1_left,width_row1_right,width_row2_left,width_row2_right)
+
+files <- c(
+  "../figures/main/Figure_3A.pdf",
+  "../figures/main/Figure_3B.pdf",
+  "../figures/main/Figure_3C.pdf",
+  "../figures/main/Figure_3D.pdf"
+)
+
+labels <- c("A", "B", "C", "D")
+
+label_size <- 12   
+
+pdfs <- list()
+for (i in seq_along(files)) {
+  img <- image_read_pdf(files[i], density = 300)
+  img <- image_resize(img,ratio[i])
+  img <- image_annotate(img, labels[i], 
+                        gravity = "northwest",  
+                        location = "+10+10",    
+                        size = label_size,     
+                        weight = 700,    
+                        color = "black")
+  pdfs[[i]] <- img
+}
+
+row1 <- image_append(c(pdfs[[1]], pdfs[[2]]), stack = FALSE)
+row2 <- image_append(c(pdfs[[3]], pdfs[[4]]), stack = FALSE)
+
+combined <- image_append(c(row1, row2), stack = TRUE)
+
+
+image_write(combined, "../figures/main/Figure_3.pdf", format = "pdf")
+image_write(combined, "../figures/main/Figure_3.png", format = "png", density = dpi)
+```
+
+---
+
+
+# PPI Network
+
+## Step 1: Obtain the PPI network from the STRING database
+```{r}
+rm(list = ls())
+
+load("../data/processed/network/01_herb_disease_genes.RData")
+
+gene_list <- candidate_genes_df$Gene
+ppi_list <- clusterProfiler::getPPI(gene_list, taxID = "9606",required_score = 400)
+
+save(ppi_list,file = "../data/processed/network/04_ppi_list.RData")
+```
+
+## Step 2: PPI network construction data preparation
+```{r}
+nodes <- data.frame(id = igraph::V(ppi_list)$name)
+nodes$degree <- igraph::degree(ppi_list)
+
+edges <- igraph::as_data_frame(ppi_list, what = "edges")
+colnames(edges)[colnames(edges) == "from"] <- "source"
+colnames(edges)[colnames(edges) == "to"]   <- "target"
+# add an "interaction" column to edges
+if(!"interaction" %in% colnames(edges)){
+    edges$interaction <- "interacts with"
+}
+
+save(nodes,edges,file = "../data/processed/network/05_ppi_network.RData")
+```
+
+## Step 3: PPI network visualization
+```{r}
+# Ping Cytoscape 
+cytoscapePing() 
+
+try(deleteNetwork("HFrEF_PPI_Network"), silent = TRUE)
+deleteAllNetworks() 
+
+createNetworkFromDataFrames(
+  nodes = nodes,  
+  edges = edges,  
+  title = "HFrEF_PPI_Network", 
+  collection = "PPI_Network" 
+)
+
+# Create based on degree values, node attributes must be synchronized into Cytoscape first
+
+loadTableData(nodes, data.key.column = "id", table = "node")
+
+# New style
+try(deleteVisualStyle("PPI_Style_By_Nodes_Degree"), silent = TRUE)
+style_name <- "PPI_Style_By_Nodes_Degree"
+
+# default style
+default_lists <- list(
+  NODE_SHAPE = "ellipse",           
+  NODE_SIZE = 40,                   
+  NODE_FILL_COLOR = "#88CCEE",      
+  # NODE_LABEL_FONT_SIZE = 12,
+  NODE_LABEL_FONT_FACE = "Arial,plain,12",  
+  EDGE_WIDTH = 0.5,
+  EDGE_STROKE_COLOR = "#E0E0E0",
+  EDGE_TRANSPARENCY = 200          
+)
+
+mapping_lists <- list(
+  # Node size: small degree → 20, large degree → 100
+  mapVisualProperty(
+    visual.prop = 'node size', 
+    table.column = 'degree', 
+    mapping.type = 'c',  
+    table.column.values = c(min(nodes$degree), max(nodes$degree)), 
+    visual.prop.values = c(20, 100)
+  ),
+  # Node fill color mapping: small degree → light yellow, large degree → red
+  mapVisualProperty(
+    visual.prop = 'node fill color', 
+    table.column = 'degree', 
+    mapping.type = 'c',
+    table.column.values = c(min(nodes$degree), max(nodes$degree)),
+    visual.prop.values = c("#FFFFCC", "#CC0000")
+  )
+)
+
+createVisualStyle(
+  style.name = style_name,
+  defaults = default_lists,
+  mappings = mapping_lists
+)
+
+setVisualStyle(style_name)
+
+# Node Label
+setNodeLabelMapping(table.column = 'id', style.name = style_name)
+
+layoutNetwork("force-directed")
+```
+
+---
+
+# Identification of Hub Genes
+## Step 1: Cytohubba
+```{r}
+cytohubba_res <- read_csv("../data/processed/network/06_cytohubba_res.csv") %>%
+  column_to_rownames(var = colnames(.)[1])
+
+cytohubba_res <- read_csv("../tables/cytohubba.csv") %>%
+  column_to_rownames(var = colnames(.)[1])
+
+# cytohubba
+n <- min(20, nrow(cytohubba_res))
+
+top_mcc <- rownames(cytohubba_res[order(cytohubba_res$MCC, decreasing = TRUE), ])[1:n]
+
+top_degree <- rownames(cytohubba_res[order(cytohubba_res$Degree,decreasing = T),])[1:n]
+
+top_mnc <- rownames(cytohubba_res[order(cytohubba_res$MNC,decreasing = T),])[1:n]
+
+cytohubba_hub <- Reduce(intersect, list(top_mcc, top_degree, top_mnc))
+
+cytohubba_hub
+
+# Figure 4B_d
+gene_list <- list(
+  MCC = top_mcc,
+  MNC = top_mnc,
+  Degree = top_degree
+)
+
+library(ggsci)
+library(ggvenn)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(3),
+  stroke_color = "white",
+  stroke_size = 0.5,
+  set_name_size = 2.5,
+  text_size = 2.5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=4))
+
+ggsave("../figures/main/Figure_4B_d.pdf", p, width=1.38, height=1.38, units="in", dpi=300)
+ggsave("../figures/main/Figure_4B_d.png", p, width=2.76, height=1.38, units="in", dpi=300)
+
+
+# Figure 4B
+
+library(magick)
+
+total_width_cm <- 7        
+dpi <- 300                    
+px_per_cm <- dpi / 2.54  
+
+files <- c(
+  "../figures/main/Figure_4B_a.pdf",
+  "../figures/main/Figure_4B_b.pdf",
+  "../figures/main/Figure_4B_c.pdf",
+  "../figures/main/Figure_4B_d.pdf"
+)
+
+labels <- c("a", "b", "c", "d")
+
+label_size <- 8   
+
+pdfs <- list()
+for (i in seq_along(files)) {
+  img <- image_read_pdf(files[i], density = 300)
+  img <- image_annotate(img, labels[i], 
+                        gravity = "northwest",  
+                        location = "+5+5",    
+                        size = label_size,     
+                        weight = 700,    
+                        color = "black")
+  pdfs[[i]] <- img
+}
+
+row1 <- image_append(c(pdfs[[1]], pdfs[[2]]), stack = FALSE)
+row2 <- image_append(c(pdfs[[3]], pdfs[[4]]), stack = FALSE)
+
+combined <- image_append(c(row1, row2), stack = TRUE)
+
+
+image_write(combined, "../figures/main/Figure_4B.pdf", format = "pdf")
+image_write(combined, "../figures/main/Figure_4B.png", format = "png", density = dpi)
+```
+
+## Step 2: MCODE
+```{r}
+mcode_hub <- data.table::fread("../data/processed/network/07_mcode_res.txt") %>%
+  dplyr::slice(1) %>%                   
+  dplyr::select(last_col()) %>%          
+  dplyr::pull(1) %>%                     
+  strsplit(",\\s*") %>%         
+  unlist() 
+
+# intersect
+hub_genes <- Reduce(intersect, list(top_mcc, top_degree, top_mnc,mcode_hub))
+
+hub_genes_tbl <- cytohubba_res[rownames(cytohubba_res) %in% hub_genes, c("MCC","MNC","Degree")] %>%
+  mutate(MCC = as.numeric(MCC)) %>%
+  arrange(desc(MCC)) %>%
+    rownames_to_column("Gene")
+
+hub_genes_tbl
+
+hub_genes <- hub_genes_tbl$Gene
+
+hub_genes
+
+save(hub_genes_tbl,hub_genes,top_mcc,top_degree,top_mnc, 
+     file = "../data/processed/network/08_hub_genes.RData")
+
+write.xlsx(
+  hub_genes_tbl,
+  "../tables/Table_S5.xlsx"
+)
+```
+
+## Step 3: Visualization
+```{r}
+gene_list <- list(
+  MCC = top_mcc,
+  MNC = top_mnc,
+  Degree = top_degree,
+  MCODE = mcode_hub
+)
+
+library(ggsci)
+library(ggvenn)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(4),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(
+    text = element_text(family = "serif", size = 10)
+    plot.title = element_text(hjust = 0.5, size=10)
+    )
+
+# save
+ggsave("../figures/main/Figure_4D.pdf", p, width=2.76, height=2.76, units="in", dpi=300)
+ggsave("../figures/main/Figure_4D.png", p, width=2.76, height=2.76, units="in", dpi=300)
+```
+
+# Figure 4
+```{r}
+library(magick)
+
+total_width_cm <- 14        
+dpi <- 300                    
+px_per_cm <- dpi / 2.54     
+total_width_px <- round(total_width_cm * px_per_cm) 
+
+ratios_row1 <- c(1, 1)
+ratios_row2 <- c(1, 1)  
+
+width_row1_left  <- round(total_width_px * ratios_row1[1] / sum(ratios_row1))
+width_row1_right <- round(total_width_px * ratios_row1[2] / sum(ratios_row1))
+width_row2_left  <- round(total_width_px * ratios_row2[1] / sum(ratios_row2))
+width_row2_right <- round(total_width_px * ratios_row2[2] / sum(ratios_row2))
+
+ratio <- c(width_row1_left,width_row1_right,width_row2_left,width_row2_right)
+
+files <- c(
+  "../figures/main/Figure_4A.pdf",
+  "../figures/main/Figure_4B.pdf",
+  "../figures/main/Figure_4C.pdf",
+  "../figures/main/Figure_4D.pdf"
+)
+
+labels <- c("A", "B", "C", "D")
+
+label_size <- 12   
+
+pdfs <- list()
+for (i in seq_along(files)) {
+  img <- image_read_pdf(files[i], density = 300)
+  img <- image_resize(img,ratio[i])
+  img <- image_annotate(img, labels[i], 
+                        gravity = "northwest",  
+                        location = "+10+10",    
+                        size = label_size,     
+                        weight = 700,    
+                        color = "black")
+  pdfs[[i]] <- img
+}
+
+row1 <- image_append(c(pdfs[[1]], pdfs[[2]]), stack = FALSE)
+row2 <- image_append(c(pdfs[[3]], pdfs[[4]]), stack = FALSE)
+
+combined <- image_append(c(row1, row2), stack = TRUE)
+
+
+image_write(combined, "../figures/main/Figure_4.pdf", format = "pdf")
+image_write(combined, "../figures/main/Figure_4.png", format = "png", density = dpi)
+```
+
+
+# Immune Infiltration Profiling
+
+## Load Package
+```{r}
+library(GSVA)
+library(GSEABase)
+library(msigdbr)
+library(pheatmap) 
+library(tidyverse) 
+library(rstatix) 
+library(corrplot) 
+library(ggpubr) 
+library(ggsci)
+library(ggsignif)
+library(ggplot2)
+library(IOBR)
+library(openxlsx)
+library(Seurat)
+```
+
+https://www.medrxiv.org/content/10.1101/2024.04.26.24306471v1
+
+We first determined the levels of immune cells in failing myocardium using five immune infiltration algorithms: Cibersort, xCell, ssGSEA, MCPcounter, and QuanTIseq.
+
+## Step 1: FPKM & group
+
+```{r}
+rm(list = ls())
+load("../data/processed/geo/GSE141910/GSE141910_preprocessed_final.RData")
+
+group <- pheno_final %>% 
+  rownames_to_column("Sample") %>%
+  dplyr::select(Sample,group) %>%
+  dplyr::rename(Group = group)
+
+
+fpkm <- 2^expr_fpkm_corr - 1
+fpkm[fpkm < 0] <- 0
+```
+
+## Step 2: deconvo_tme
+```{r}
+# MCPcounter
+res_mcp   <- deconvo_tme(eset = fpkm, method = "mcpcounter")
+
+# xCell
+res_xcell <- deconvo_tme(eset = fpkm, method = "xcell")
+
+# quanTIseq
+res_quant <- deconvo_tme(eset = fpkm, method = "quantiseq")
+
+# EPIC
+res_epic  <- deconvo_tme(eset = fpkm, method = "epic")
+
+save(res_mcp, res_xcell, res_quant, res_epic, file = "../data/processed/ime/res.RData")
+```
+
+## Step 3: Extracting data
+```{r}
+export_table <- function(res, name){
+  out <- res %>% rename(Sample=ID) %>% left_join(group,by="Sample")
+}
+
+xCell <- export_table(res_xcell,  "xCell")
+MCPcounter <- export_table(res_mcp,    "MCPcounter")
+quanTIseq <- export_table(res_quant,  "quanTIseq")
+EPIC <- export_table(res_epic,   "EPIC")
+
+mcp_mat <- res_mcp %>% column_to_rownames("ID")
+colnames(mcp_mat) <- gsub("_MCPcounter", "", names(mcp_mat))
+
+df_all <- mcp_mat %>% 
+  rownames_to_column("Sample") %>%
+  left_join(group,by="Sample")
+
+# Stacking data
+df_stack <- df_all %>%
+  pivot_longer(cols=-c(Sample,Group), names_to="Cell", values_to="Abundance") %>% 
+  group_by(Group, Cell) %>% 
+  summarise(Mean = mean(Abundance), .groups = "drop")
+
+pvals <- apply(df_all[,2:(ncol(df_all)-1)], 2, function(x) {
+  wilcox.test(x ~ df_all$Group)$p.value
+})
+
+sig_cells <- names(pvals)[pvals < 0.05]
+
+df_plot <- df_all[,c("Sample","Group",sig_cells)] %>%
+  pivot_longer(cols=-c(Sample,Group), names_to="Cell", values_to="Abundance")
+
+group_levels <- unique(df_plot$Group)
+comparison_list <- list(c(group_levels[1], group_levels[2]))
+```
+
+## Step 4: Figure 5A~E
+```{r}
+# Figure A: Differential immune cell box plot
+df_clean <- df_plot %>%
+  group_by(Cell) %>%
+  mutate(
+    Q1 = quantile(Abundance, 0.25),
+    Q3 = quantile(Abundance, 0.75),
+    IQR = Q3 - Q1,
+    upper_limit = Q3 + 1.5 * IQR
+  ) %>%
+  filter(Abundance <= upper_limit) %>% 
+  ungroup()
+
+pA <- ggplot(df_clean, aes(x = Group, y = Abundance, fill = Group)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  stat_compare_means(
+    method = "wilcox.test",
+    aes(label = paste0("p = ", ..p.format..)),
+    # parse = TRUE,  
+    size = 2.5,                 
+    vjust = 0.6,               
+    hjust = 0.5,
+    label.x.npc = 0.5,          
+    hide.ns = FALSE      
+  ) +
+  
+  facet_wrap(~Cell, ncol = 4, scales = "free_y") +
+
+  scale_fill_jco() +
+  
+  theme_bw(base_size = 10, base_family = "serif") +
+  theme(
+    axis.text.x = element_text(size = 7),
+    strip.background = element_rect(fill = "gray90"),
+    strip.text = element_text(face = "bold", size = 7),
+    legend.title = element_text(size = 7),
+    legend.text = element_text(size = 6),
+    legend.position = "bottom"
+  ) +
+  labs(x = NULL, y = "Abundance")
+
+ggsave("../figures/main/Figure_5A.pdf",pA,width=14, height=10, units="cm",dpi=300)
+
+# Figure B: Stacking
+pB <- ggplot(df_stack, 
+       aes(x = Group,                
+           y = Mean, 
+           fill = Cell)) +
+  geom_col(position = "fill", width = 0.6) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  ggsci::scale_fill_jco() +
+  labs(x = NULL, y = "Proportion", fill = "Cell") +
+  theme_bw(base_size = 8, base_family = "serif") +
+  theme(
+    axis.text.x = element_text(size = 7),
+    axis.text.y = element_text(size = 7),
+    axis.title = element_text(size = 8),
+    legend.title = element_text(size = 7),  
+    legend.text  = element_text(size = 6), 
+    legend.key.size = unit(0.25, "cm"), 
+    legend.spacing.x = unit(0.15, "cm"),
+    legend.spacing.y = unit(0.05, "cm"),
+    legend.margin = margin(2,2,2,2), 
+    legend.box.margin = margin(0,0,0,0),
+    legend.position = "right",  
+    legend.direction = "vertical"
+  )
+
+ggsave("../figures/main/Figure_5B.pdf", pB, width=7, height=5, units="cm", dpi=300)
+
+# Figure C: Bar chart of differential immune cell sorting
+df_mean <- df_plot %>% 
+  group_by(Cell, Group) %>%
+  summarise(Mean = mean(Abundance), .groups = "drop") %>%
+  pivot_wider(names_from = Group, values_from = Mean)
+
+# FC = DCM-HFrEF / Normal
+df_mean$FoldChange <- df_mean[[2]] / df_mean[[3]]
+df_mean <- df_mean %>% arrange(FoldChange)  
+
+pC <- ggplot(df_mean, 
+             aes(x = FoldChange, 
+                 y = reorder(Cell, FoldChange), 
+                 fill = Cell)) + 
+  geom_col(width = 0.65) +
+  geom_vline(xintercept = 1, color = "red", linetype = "dashed", linewidth = 0.5) +
+  ggsci::scale_fill_aaas() +   
+  labs(x = "Fold Change (DCM-HFrEF/Normal)", y = "") +
+  theme_bw(base_size = 7, base_family = "serif") + 
+  scale_x_continuous(
+    breaks = seq(0, 1.2, 0.2),
+    expand = c(0, 0) 
+  ) + 
+  theme(
+    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(size = 7),
+    axis.title.x = element_text(size = 7),
+    axis.ticks.y = element_blank(),
+    plot.margin = margin(t = 1, r = 1, b = 1, l = -2, unit = "mm"),
+    legend.position = "none"
+  )
+
+ggsave("../figures/main/Figure_5C.pdf", pC, width=7, height=5, units="cm", dpi=300)
+
+# Figure D: Heat map of immune cell correlation
+library(corrplot)
+imm_exp  <- mcp_mat[, sig_cells] %>%
+  rownames_to_column("Sample") %>%
+  left_join(group,by="Sample") %>%
+  column_to_rownames("Sample") %>%
+  dplyr::filter(Group=="DCM_HFrEF") %>%
+  dplyr::select(-Group)
+
+cor_mat_cell <- cor(imm_exp, method = "spearman")
+
+pdf("../figures/main/Figure_5D.pdf", width=7, height=5)
+corrplot(
+  cor_mat_cell,
+  method = "color",
+  type = "upper",   
+  diag = FALSE,    
+  order = "original",
+  col = colorRampPalette(c("navy","white","red3"))(100),
+  tl.cex = 0.7,      
+  cl.cex = 0.6,
+  tl.srt = 45,
+  tl.col = "black",
+  mar = c(1, 0, 1, 0),    
+  cl.offset = 0.2,        
+  t.pos = "left",
+  addCoef.col = "black",
+  number.cex = 0.6,
+)
+dev.off()
+
+# Figure E: Hub genes-immune cell correlation heatmap
+load("../data/processed/network/08_hub_genes.Rdata")
+
+hub_exp  <- expr_fpkm_corr[hub_genes, ] %>%
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column("Sample") %>%
+  left_join(group,by="Sample") %>%
+  column_to_rownames("Sample") %>%
+  dplyr::filter(Group=="DCM_HFrEF") %>%
+  dplyr::select(-Group)
+
+cor_mat <- cor(imm_exp, hub_exp, method="spearman")
+p_mat <- matrix(NA, nrow = ncol(imm_exp), ncol = ncol(hub_exp),
+                dimnames = list(colnames(imm_exp), colnames(hub_exp)))
+
+for(i in 1:ncol(imm_exp)){
+  for(j in 1:ncol(hub_exp)){
+    p_mat[i,j] <- cor.test(imm_exp[,i], hub_exp[,j], method = "spearman")$p.value
+  }
+}
+
+library(ggplot2)
+library(ggsci)
+library(reshape2)
+
+cor_long <- melt(cor_mat)
+p_long <- melt(p_mat)
+cor_long$p <- p_long$value
+colnames(cor_long) <- c("Cell","HubGene","Corr","Pvalue")
+
+pE <- ggplot(cor_long, aes(x = HubGene, y = Cell)) +
+  geom_tile(aes(fill = Corr), color = "gray90", size = 0.1) +
+  scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",midpoint = 0, limits = c(-1,1)) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "serif", size = 7),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 6,margin = margin(t = 0.5, unit = "mm")),
+    axis.text.y = element_text(size = 6,margin = margin(r = 0.5, unit = "mm")),
+    axis.title = element_blank(),
+    legend.position = "right",
+    legend.key.size = unit(0.15, "cm"),  
+    legend.title = element_text(size = 5),
+    legend.text  = element_text(size = 4), 
+    legend.box.spacing = unit(0.01, "cm"), 
+    legend.margin = margin(0,0,0,0),       
+    plot.margin = margin(0.5,0.5,0.5,0.5, "mm"),
+    panel.grid = element_blank()
+  ) +
+  labs(fill = "Correlation")
+
+ggsave("../figures/main/Figure_5E.pdf", pE, width = 7, height = 5, units = "cm", dpi = 300)
+```
+
+## Figure 5
+
+```{r}
+library(magick)
+
+total_width_cm <- 14        
+dpi <- 300                    
+px_per_cm <- dpi / 2.54     
+total_width_px <- round(total_width_cm * px_per_cm) 
+
+ratios_row1 <- c(1)
+ratios_row2 <- c(1, 1) 
+ratios_row3 <- c(1, 1) 
+
+width_row1_left  <- round(total_width_px * ratios_row1[1] / sum(ratios_row1))
+width_row2_left  <- round(total_width_px * ratios_row2[1] / sum(ratios_row2))
+width_row2_right <- round(total_width_px * ratios_row2[2] / sum(ratios_row2))
+
+width_row3_left  <- round(total_width_px * ratios_row3[1] / sum(ratios_row3))
+width_row3_right <- round(total_width_px * ratios_row3[2] / sum(ratios_row3))
+
+ratio <- c(width_row1_left,width_row2_left,width_row2_right,width_row3_left,width_row3_right)
+
+files <- c(
+  "../figures/main/Figure_5A.pdf",
+  "../figures/main/Figure_5B.pdf",
+  "../figures/main/Figure_5C.pdf",
+  "../figures/main/Figure_5D.pdf",
+  "../figures/main/Figure_5E.pdf"
+)
+
+labels <- c("A", "B", "C", "D", "E")
+
+label_size <- 12   
+
+pdfs <- list()
+for (i in seq_along(files)) {
+  img <- image_read_pdf(files[i], density = 300)
+  img <- image_resize(img,ratio[i])
+  img <- image_annotate(img, labels[i], 
+                        gravity = "northwest",  
+                        location = "+10+10",    
+                        size = label_size,     
+                        weight = 700,    
+                        color = "black")
+  pdfs[[i]] <- img
+}
+
+row1 <- image_append(c(pdfs[[1]]), stack = FALSE)
+row2 <- image_append(c(pdfs[[2]], pdfs[[3]]), stack = FALSE)
+row3 <- image_append(c(pdfs[[4]], pdfs[[5]]), stack = FALSE)
+
+combined <- image_append(c(row1, row2, row3), stack = TRUE)
+
+
+image_write(combined, "../figures/main/Figure_5.pdf", format = "pdf")
+image_write(combined, "../figures/main/Figure_5.png", format = "png", density = dpi)
+
+```
+
+---
+
+<table class="nav-table" width="100%">
+  <tr>
+    <td align="left">
+      [Home](../index.qmd) 
+    </td>
+    <td align="right">
+      [Previous](Part_2_Screening_of_HFrEF_related_genes.qmd) | [Next](Part_4_Mechanism_validation_via_bioinformatics_and_docking.qmd)
+    </td>
+  </tr>
+</table>
+
+# References {-}
