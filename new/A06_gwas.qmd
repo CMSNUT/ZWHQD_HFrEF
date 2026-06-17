@@ -30,7 +30,7 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 ```{r}
 if (!require("tidyverse")) install.packages("tidyverse")
 if (!require("data.table")) install.packages("data.table")
-
+if (!require("openxlsx")) install.packages("openxlsx", dependencies = TRUE)
 
 if (!require("GenomicRanges")) BiocManager::install("GenomicRanges")
 
@@ -40,11 +40,10 @@ if (!require("TxDb.Hsapiens.UCSC.hg19.knownGene")) BiocManager::install("TxDb.Hs
 
 if (!require("CMplot")) install.packages("CMplot")
 
-
-
 library(tidyverse)
 library(data.table)
 library(openxlsx)
+
 library(org.Hs.eg.db)
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 library(GenomicRanges)
@@ -70,12 +69,12 @@ cat(sprintf("显著SNP数量: %d\n", nrow(sig_snps)))
 # 4. 获取基因注释
 ```{r}
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene  
-genes_gr <- genes(txdb, single.strand.genes.only = FALSE)  # 返回GRanges对象
+genes_gr <- genes(txdb, single.strand.genes.only = FALSE) 
 
 gene_ids <- names(genes_gr)
 
 gene_sym <- AnnotationDbi::select(org.Hs.eg.db, keys = gene_ids, columns = "SYMBOL", keytype = "ENTREZID")
-# 转换为命名字符向量
+
 gene_sym_vec <- setNames(gene_sym$SYMBOL, gene_sym$ENTREZID)
 
 ```
@@ -106,7 +105,6 @@ gwas_genes <- unique(neighbor_genes$Gene_SYMBOL[!is.na(neighbor_genes$Gene_SYMBO
 writeLines(gwas_genes, "../data/processed/opengwas/GWAS_neighbor_genes.txt")
 ```
 
-
 # 6. 已知DCM致病基因
 ```{r}
 known_dcm_genes <- c(
@@ -133,8 +131,8 @@ write.xlsx(neighbor_genes, "../data/processed/opengwas/GWAS_significant_SNPs_nei
 
 # 10. 输出结果
 ```{r}
-writeLines(setB, "./results/05_setB_gwas_genes.txt")
-write.csv(data.frame(Gene = setB), "./results/05_setB_gwas_genes.csv", row.names = FALSE)
+write.xlsx(
+  list(gwas_genes = data.frame(Gene = setB)), "../tables/Table_S3_gwas_genes.xlsx")
 ```
 
 # 11. 曼哈顿图

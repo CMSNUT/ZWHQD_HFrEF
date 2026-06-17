@@ -163,7 +163,7 @@ dev.off()
 enableWGCNAThreads()
 powers <- c(c(1:10), seq(from = 12, to=30, by=2))
 
-R2_cut <- 0.85
+R2_cut <- 0.80
 
 sft <- pickSoftThreshold(
   datExpr,
@@ -177,8 +177,6 @@ disableWGCNAThreads()
 power <- sft$powerEstimate
 if(is.na(power)) power <- 8  
 cat("power = ", power, "\n")
-
-
 
 save(sft,file="../data/processed/geo/gse57338_sft.RData")
 
@@ -224,7 +222,6 @@ net <- blockwiseModules(
 disableWGCNAThreads()
 
 save(net,file = "../data/processed/geo/gse57338_net.RData")
-
 ```
 
 # Step 5: Clustering
@@ -352,9 +349,9 @@ geneInfo <- data.frame(
 )
 geneInfo <- cbind(geneInfo, kME)
 
-# Screening Hub genes (Key Modules + |kME| > 0.7 + |GS| > 0.2)
+# Screening Hub genes (Key Modules + |kME| > 0.6 + |GS| > 0.2)
 
-mm_cut <- 0.7
+mm_cut <- 0.6
 gs_cut <- 0.2
 
 # hub genes

@@ -26,9 +26,18 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 
 # Load Packages
 ```{r}
-library(ggvenn)
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("data.table")) install.packages("data.table")
+if (!require("openxlsx")) install.packages("openxlsx", dependencies = TRUE)
+
+if (!require("ggvenn")) install.packages("ggvenn", dependencies = TRUE)
+if (!require("ggsci")) install.packages("ggsci", dependencies = TRUE)
+
 library(tidyverse)
+library(data.table)
 library(openxlsx)
+
+library(ggvenn)
 library(ggsci)
 ```
 

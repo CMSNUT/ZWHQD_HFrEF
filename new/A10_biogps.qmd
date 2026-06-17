@@ -1,0 +1,165 @@
+---
+title: "biogps"
+format: html
+---
+
+# Load Package and Example Data
+```{r}
+if (!require("devtools")) install.packages("devtools")
+if (!require("remotes")) install.packages("remotes")
+
+if (!require("OrgHeatmap"))
+remotes::install_github("QiruiShen439/OrgHeatmap", dependencies = TRUE)
+
+library(OrgHeatmap)
+```
+
+# Load Example Data
+```{r}
+# Load built-in example dataset
+data_path <- system.file("extdata", "exampledata.Rdata", package = "OrgHeatmap")
+load(data_path)
+
+# Inspect data structure
+head(example_Data3)
+```
+
+# Basic Human Organ Visualization
+```{r}
+# Create basic organ visualization with default settings
+result <- OrgHeatmap(data = example_Data3)
+print(result$plot)
+```
+
+# Mouse Organ Visualization
+```{r}
+# Visualize mouse digestive system
+mouse_result <- OrgHeatmap(
+  data = example_Data1,
+  species = "mouse",
+  system = "digestive",
+  palette = "PuBu",
+  title = "Mouse Digestive System"
+)
+print(mouse_result$plot)
+```
+
+# Organelle Visualization
+```{r}
+# Create organelle data
+organelle_data <- data.frame(
+  organ = c("mitochondrion", "nucleus", "endoplasmic_reticulum", "cell_membrane"),
+  value = c(15.2, 8.7, 6.3, 6.8)
+)
+
+# Visualize organelles
+organelle_result <- OrgHeatmap(
+  data = organelle_data,
+  species = "organelle",
+  title = "Organelle Expression"
+)
+print(organelle_result$plot)
+```
+
+# System-Specific Visualization
+```{r}
+# Focus on specific organ systems
+circulatory_plot <- OrgHeatmap(
+  data = example_Data3,
+  system = "circulatory",
+  title = "Circulatory System Data",
+  showall = TRUE  # Show all organ outlines for context
+)
+print(circulatory_plot$plot)
+```
+
+# Multi-System Visualization
+```{r}
+# Visualize both digestive and respiratory systems simultaneously
+multi_system_plot <- OrgHeatmap(
+  data = example_Data3,
+  system = c("digestive", "respiratory"),
+  title = "Digestive & Respiratory Systems"
+)
+print(multi_system_plot$plot)
+```
+
+# Custom Color Configuration
+```{r}
+# Using RColorBrewer Palettes
+respiratory_plot <- OrgHeatmap(
+  data = example_Data3,
+  system = "respiratory",
+  palette = "PuBuGn",           # RColorBrewer palette
+  reverse_palette = TRUE,       # Reverse color order
+  color_mid = "#87CEEB",        # Custom middle color
+  organbar = TRUE,
+  organbar_title = "Mean Value",
+  title = "Respiratory System (PuBuGn Palette)"
+)
+
+# Custom Gradient Colors
+custom_plot <- OrgHeatmap(
+  data = example_Data3,
+  color_low = "#F7FBFF",        # Light blue for low values
+  color_high = "#08306B",       # Dark blue for high values
+  color_mid = "#6BAED6",        # Medium blue for middle values
+  organbar_low = "#FFF7BC",     # Light yellow for bar chart low
+  organbar_high = "#D95F0E",    # Dark orange for bar chart high
+  title = "Custom Color Gradient"
+)
+```
+
+# Organ Name Mapping
+```{R}
+# Custom organ name standardization
+custom_mapping <- c(
+  "adrenal" = "adrenal_gland",
+  "lymph node" = "lymph_node",
+  "soft tissue" = "muscle"
+)
+
+mapped_plot <- OrgHeatmap(
+  data = expr_data,
+  organ_name_mapping = custom_mapping,
+  value_col = "expression",
+  title = "TP53 Expression with Custom Mapping"
+)
+```
+
+# Custom Organ System Mapping
+```{r}
+# Extend default organ system mapping
+prostate_organ_systems <- rbind(
+  human_organ_systems,
+  data.frame(
+    organ = c("prostate", "bone", "lymph_node", "adrenal_gland"),
+    system = c("reproductive", "musculoskeletal", "lymphatic", "endocrine"),
+    stringsAsFactors = FALSE
+  )
+)
+
+extended_plot <- OrgHeatmap(
+  data = example_Data3,
+  organ_system_map = prostate_organ_systems,
+  system = "reproductive",
+  title = "Extended Organ System Mapping"
+)
+```
+
+# Output and Saving
+```{r}
+# Save Plot and Data
+result <- OrgHeatmap(
+  data = example_Data3,
+  system = "circulatory",
+  save_plot = TRUE,
+  plot_path = file.path(getwd(), "circulatory_system.png"),
+  plot_width = 12,
+  plot_height = 10,
+  plot_dpi = 300,
+  plot_device = "png",
+  save_clean_data = TRUE,
+  clean_data_path = file.path(getwd(), "cleaned_data.rds")
+)
+```
