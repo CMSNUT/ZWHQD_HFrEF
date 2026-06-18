@@ -1,0 +1,171 @@
+---
+title: "01_data_acquisition"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+# Load packages
+```{r}
+# Install required packages if missing
+if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager", dependencies = TRUE)
+if (!require("GEOquery", quietly = TRUE)) BiocManager::install("GEOquery", dependencies = TRUE)
+if (!require("limma", quietly = TRUE)) BiocManager::install("limma", dependencies = TRUE)
+if (!require("sva", quietly = TRUE)) BiocManager::install("sva", dependencies = TRUE)
+
+if (!require("tidyverse", quietly = TRUE)) install.packages("tidyverse", dependencies = TRUE)
+if (!require("data.table", quietly = TRUE)) install.packages("data.table", dependencies = TRUE)
+if (!require("openxlsx", quietly = TRUE)) install.packages("openxlsx", dependencies = TRUE)
+if (!require("curl", quietly = TRUE)) install.packages("curl", dependencies = TRUE)
+
+library(GEOquery)
+library(limma)
+library(sva)
+
+library(tidyverse)
+library(data.table)
+library(openxlsx)
+library(curl)
+```
+
+# GEO datasets
+
+## GSE57338: GPL11532
+
+313 individuals with/without Heart Failure
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE57338
+
+```{r warning=FALSE}
+rm(list=ls())
+
+raw_dir <- "../data/raw/geo/GSE57338"
+if (!dir.exists(raw_dir)) dir.create(raw_dir, recursive = TRUE)
+
+Sys.setlocale("LC_ALL", "C")
+gse57338 <- getGEO("GSE57338", destdir = raw_dir, getGPL = TRUE, AnnotGPL = F)
+Sys.setlocale("LC_ALL", "")
+
+gse57338_pheno_raw <- pData(gse57338[[1]])
+gse57338_exprs_raw <- exprs(gse57338[[1]])
+gse57338_gpl <- gse57338[[1]]@annotation
+
+save(
+  gse57338_pheno_raw,
+  gse57338_exprs_raw,
+  gse57338_gpl,
+  file = "../data/raw/geo/gse57338_raw.RData"
+)
+```
+
+## GSE116250: high throughput sequencing, GPL16791
+
+64 samples from human left ventricle tissue: 14 non-failing donors, 37 dilated cardiomyopathy, and 13 ischemic cardiomyopathy
+
+N_DCM/N_NF = 37 / 14
+
+
+## GSE5406: array, GPL96
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE5406
+
+n_DCM = 86, n_IDC = 108, n_HF = 16
+
+```{r,warning=FALSE}
+rm(list=ls())
+
+raw_dir <- "../data/raw/geo/GSE5406"
+if (!dir.exists(raw_dir)) dir.create(raw_dir, recursive = TRUE)
+
+Sys.setlocale("LC_ALL", "C")
+gse5406 <- getGEO("GSE5406", destdir = raw_dir, getGPL = TRUE, AnnotGPL = F)
+Sys.setlocale("LC_ALL", "")
+
+gse5406_pheno_raw <- pData(gse5406[[1]])
+gse5406_exprs_raw <- exprs(gse5406[[1]])
+gse5406_gpl <- gse5406[[1]]@annotation
+
+save(
+  gse5406_pheno_raw,
+  gse5406_exprs_raw,
+  gse5406_gpl,
+  file = "../data/raw/geo/gse5406_raw.RData"
+)
+```
+
+## GSE141910: high throughput sequencing
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE141910
+
+left ventricular transcriptomes of non-failing healthy donors, Peripartum cardiomyopathy (PPCM), Hypertrophic cardiomyopathy (HCM) and Dilated cardiomyopathy (DCM) samples
+```{r}
+
+```
+
+## GSE183852: scRNA-Seq
+
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183852
+
+
+```{r}
+rm(list=ls())
+
+raw_dir <- "../data/raw/geo/GSE183852"
+if (!dir.exists(raw_dir)) dir.create(raw_dir, recursive = TRUE)
+
+Sys.setlocale("LC_ALL", "C")
+gse183852  <- getGEO("GSE183852",  destdir = raw_dir, getGPL = TRUE, AnnotGPL = F)
+Sys.setlocale("LC_ALL", "")
+
+gse183852_pheno_raw <- pData(gse183852[[1]])
+gse183852_gpl <- gse183852[[1]]@annotation
+
+save(
+  gse183852_gpl,
+  gse183852_pheno_raw,
+  file = "../data/raw/geo/gse183852_raw.RData"
+)
+```
+
+**NOTE**: **Proceed with caution!** GSE183852_DCM_Integrated.Robj.gz is 11.7GB. Long download time.
+Alternative: download directly via browser from https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183852
+
+```{r}
+url <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE183852&format=file&file=GSE183852%5FIntegrated%5FCounts%2Ecsv%2Egz"
+h <- new_handle()
+curl_fetch_disk(url, path = "../data/raw/geo/GSE183852/GSE183852_Integrated_Counts.csv.gz",handle = h)
+
+# 11.7 GB
+url <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE183852&format=file&file=GSE183852%5FDCM%5FIntegrated%2ERobj%2Egz" 
+
+h <- new_handle()
+curl_fetch_disk(url, path = "../data/raw/geo/GSE183852/GSE183852_DCM_Integrated.Robj.gz",handle = h)
+
+rm(list=ls())
+gc()
+```
+
+# GWAS
+
+# 
+
+
+

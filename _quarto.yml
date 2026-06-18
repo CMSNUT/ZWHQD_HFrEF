@@ -75,11 +75,11 @@ website:
       - text: Scripts
         menu:
           - text: "Module 1: Data Acquisition and Preprocessing"
-            href: "modules/01_data_acquisition_and_preprocessing.qmd"
+            href: "modules/01_data_acquisition.qmd"
           - text: "Module 2: Compound Screening and Target Prediction"
             href: "modules/02_compound_target_prediction.qmd"
           - text: "Module 3: Disease Target Identification"
-            href: "modules/03_disease_target_construction.qmd"
+            href: "modules/03_disease_target_identification.qmd"
           - text: "Module 4: Common Targets and PPI Network"
             href: "modules/04_common_targets_ppi.qmd"
           - text: "Module 5: Multi-tissue Expression and Organ-Target Network"

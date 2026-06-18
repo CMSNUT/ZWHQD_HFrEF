@@ -1,0 +1,65 @@
+---
+title: "03_disease_target_identification"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+# Load packages
+```{r}
+if (!require("tidyverse", quietly = TRUE)) install.packages("tidyverse", dependencies = TRUE)
+if (!require("data.table", quietly = TRUE)) install.packages("data.table", dependencies = TRUE)
+if (!require("openxlsx", quietly = TRUE)) install.packages("openxlsx", dependencies = TRUE)
+
+if (!require("RColorBrewer", quietly = TRUE)) install.packages("RColorBrewer", dependencies = TRUE)
+if (!require("patchwork", quietly = TRUE)) install.packages("patchwork", dependencies = TRUE)
+if (!require("pheatmap", quietly = TRUE)) install.packages("pheatmap", dependencies = TRUE)
+if (!require("ggsci", quietly = TRUE)) install.packages("ggsci", dependencies = TRUE)
+
+if (!require("AnnoProbe", quietly = TRUE)) install.packages("AnnoProbe", dependencies = TRUE)
+if (!require("genefilter", quietly = TRUE)) BiocManager::install("genefilter", dependencies = TRUE)
+
+if (!require("limma", quietly = TRUE)) install.packages("limma", dependencies = TRUE)
+if (!require("org.Hs.eg.db", quietly = TRUE)) BiocManager::install("org.Hs.eg.db", dependencies = TRUE)
+
+
+library(tidyverse)
+library(data.table)
+library(openxlsx)
+
+library(RColorBrewer)
+library(patchwork)
+library(pheatmap)
+library(ggsci)
+
+library(AnnoProbe)
+library(genefilter)
+library(limma)
+library(org.Hs.eg.db)
+```
+
+# DEG
+
+# WGCNA
+
+# 
+

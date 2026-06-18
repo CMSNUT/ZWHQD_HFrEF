@@ -394,6 +394,6 @@ save(herb_compound_target, file = "../data/processed/tcm/16_herb_compound_target
 # Export Table S2
 write.xlsx(
   list(`Potential Targets of ZWHQD` = herb_compound_target),
-  "../tables/Table_S2.xlsx"
+  "../supplementary/tables/Table_S2.xlsx"
 )
 ```
