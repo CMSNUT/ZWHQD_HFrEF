@@ -72,22 +72,28 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: manuscript.qmd
-        text: Main
-      - href: supplementary/supp_info.qmd
-        text: Supp
       - text: Scripts
         menu:
-          - text: "Part 1: Data acquisition and preprocessing"
-            href: "scripts/Part_1_Data_acquisition_and_preprocessing.qmd"
-          - text: "Part 2: Screening of HFrEF-related genes"
-            href: "scripts/Part_2_Screening_of_HFrEF_related_genes.qmd"
-          - text: "Part 3: Mechanism exploration of ZWHQD against HFrEF"
-            href: "scripts/Part_3_Mechanism_exploration_of_ZWHQD_against_HFrEF.qmd"
-          - text: "Part 4: Mechanism validation via bioinformatics and docking"
-            href: "scripts/Part_4_Mechanism_validation_via_bioinformatics_and_docking.qmd"
-          - text: "Part 5: TF-miRNA regulatory network"
-            href: "scripts/Part_5_TF_miRNA_regulatory_network.qmd"
+          - text: "Module 1: Data Acquisition and Preprocessing"
+            href: "modules/01_data_acquisition_and_preprocessing.qmd"
+          - text: "Module 2: Compound Screening and Target Prediction"
+            href: "modules/02_compound_target_prediction.qmd"
+          - text: "Module 3: Disease Target Identification"
+            href: "modules/03_disease_target_construction.qmd"
+          - text: "Module 4: Common Targets and PPI Network"
+            href: "modules/04_common_targets_ppi.qmd"
+          - text: "Module 5: Multi-tissue Expression and Organ-Target Network"
+            href: "modules/05_organ_target_network.qmd"
+          - text: "Module 6: Functional Enrichment and Immune Infiltration"
+            href: "modules/06_functional_enrichment_immune.qmd"
+          - text: "Module 7: Bidirectional MR and Colocalization"
+            href: "modules/07_mr_colocalization.qmd"
+          - text: "Module 8: scRNA-seq AUCell and ssGSEA"
+            href: "modules/08_scRNA_AUCell_ssGSEA.qmd"
+          - text: "Module 9: Molecular Docking Results"
+            href: "modules/09_molecular_docking.qmd"
+          - text: "Module 10: External Validation"
+            href: "modules/10_external_validation.qmd"
 format:
   # docx:
   #   toc: false

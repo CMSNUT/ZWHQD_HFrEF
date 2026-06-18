@@ -1,0 +1,51 @@
+---
+title: "01_data_acquisition_and_preprocessing"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.dpi = 300,
+  fig.align = "center"
+)
+
+options(timeout = 36000)
+options(stringsAsFactors = FALSE)
+options(download.file.method = "curl")
+options(download.file.extra = "-k -L")
+
+options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+```
+
+# Load packages
+```{r}
+# Install required packages if missing
+if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager", dependencies = TRUE)
+if (!require("GEOquery", quietly = TRUE)) BiocManager::install("GEOquery", dependencies = TRUE)
+if (!require("limma", quietly = TRUE)) BiocManager::install("limma", dependencies = TRUE)
+if (!require("sva", quietly = TRUE)) BiocManager::install("sva", dependencies = TRUE)
+
+if (!require("tidyverse")) install.packages("tidyverse", dependencies = TRUE)
+if (!require("data.table")) install.packages("data.table", dependencies = TRUE)
+if (!require("openxlsx")) install.packages("openxlsx", dependencies = TRUE)
+
+library(GEOquery)
+library(limma)
+library(sva)
+
+library(tidyverse)
+library(data.table)
+library(openxlsx)
+```
+
+
+
+
+
