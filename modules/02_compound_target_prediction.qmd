@@ -241,7 +241,7 @@ sdf_files <- "../data/raw/tcm/sdf/"
 results <- download_all_sdf(unique_cids, sdf_files)
 ```
 
-## Table S1. Bioactive Constituents of ZWHQD.
+## Table S1. Bioactive Compounds of ZWHQD.
 
 Description: Rename columns to publication-ready format and export the final compound list as an Excel file.
 
@@ -270,6 +270,13 @@ write.xlsx(
 )
 
 cat("Table S1 has been successfully generated and saved to `../supplementary/tables/Table_S1.xlsx`\n")
+```
+
+## Report
+```{r}
+# load("../data/processed/tcm/05_compounds_final.RData")
+
+print(table(compounds_final$Herb.Name.Pinyin))
 ```
 
 
@@ -519,7 +526,7 @@ compound_target <- rbind(
     .groups = "drop"
   )
 
-# Filter high-confidence targets (known or predicted by ≥2  databases)
+# Filter high-confidence targets (known or predicted by ≥1  databases)
 compound_target_final <- compound_target %>%
   mutate(
     is_known = str_detect(Source, "Known"),
@@ -639,5 +646,16 @@ write.xlsx(
     `Compound_Target_Final` = compound_target_final),
   "../supplementary/tables/Table_S2.xlsx"
 )
+```
+
+## Report
+```{r}
+num_compound_known <- length(unique(compound_target_known_batman$Symbol,compound_target_known_super$Symbol))
+
+num_compound_pred <- length(unique(herb_compound_target$Symbol)) - num_compound_known
+
+cat("Number of Known targets: ", num_compound_known,"\n")
+
+cat("Number of Predicted targets: ", num_compound_pred,"\n")
 ```
 

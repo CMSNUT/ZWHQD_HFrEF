@@ -26,12 +26,535 @@ options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 
 # Load packages
 ```{r}
-if (!require("tidyverse")) install.packages("tidyverse", dependencies = TRUE)
-if (!require("data.table")) install.packages("data.table", dependencies = TRUE)
-if (!require("openxlsx")) install.packages("openxlsx", dependencies = TRUE)
+if (!require("tidyverse", quietly = TRUE)) install.packages("tidyverse", dependencies = TRUE)
+if (!require("data.table", quietly = TRUE)) install.packages("data.table", dependencies = TRUE)
+if (!require("openxlsx", quietly = TRUE)) install.packages("openxlsx", dependencies = TRUE)
 
+if (!require("igraph", quietly = TRUE)) install.packages("igraph", dependencies = TRUE)
+if (!require("centiserve", quietly = TRUE)) install.packages("centiserve", dependencies = TRUE)
+
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", dependencies = TRUE)
+
+if (!require("clusterProfiler", quietly = TRUE)) BiocManager::install("clusterProfiler", dependencies = TRUE)
+if (!require("RCy3", quietly = TRUE)) BiocManager::install("RCy3", dependencies = TRUE)
 
 library(tidyverse)
 library(data.table)
 library(openxlsx)
+
+library(clusterProfiler)
+library(igraph)
+library(centiserve)
+library(RCy3)
+```
+
+# Candidate genes
+
+## Step 1: Load data
+```{r}
+rm(list = ls())
+gc()
+
+load("../data/processed/disease_genes_df.RData")
+load("../data/processed/tcm/13_herb_compound_target.RData")
+```
+
+## Step 2: Candidate genes
+```{r}
+candidate_genes <- intersect(herb_compound_target$Symbol, disease_genes_df$Gene)
+
+candidate_genes_df <- data.frame(Gene = candidate_genes)
+
+save(candidate_genes_df,file ="../data/processed/network/01_candidate_genes.RData")
+
+```
+
+## Figure 3A
+```{r}
+gene_list <- list(
+  `Herb Targets` = herb_compound_target$Symbol,
+  `Disease Genes` = disease_genes_df$Gene
+)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(2),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE,
+  show_elements = FALSE
+) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size=10)
+  ) + 
+  scale_x_continuous(limits = c(-1.8, 1.8), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(-1.8, 1.8), expand = c(0, 0))
+
+# save
+ggsave("../main/figures/Figure_3A.pdf", p, width=7, height=7, dpi=300)
+```
+
+## Table S4
+```{r}
+write.xlsx(candidate_genes_df, file = "../supplementary/tables/Table_S4.xlsx")
+```
+
+# Herb-Compound-Target Network (HCT Network)
+
+## Step 1: HCT data
+```{r}
+rm(list = ls())
+gc()
+
+load("../data/processed/tcm/13_herb_compound_target.RData")
+load("../data/processed/network/01_candidate_genes.RData")
+
+hct_df <- herb_compound_target %>%
+  dplyr::filter(Symbol %in% candidate_genes_df$Gene) %>%
+  dplyr::select(Herb.Name.Pinyin, Compound, Symbol) %>%
+  dplyr:: rename(Herb = Herb.Name.Pinyin, Target = Symbol)  %>%
+  distinct() %>%
+  arrange(Herb,Target)
+
+cat("\nHerbs: ", paste(unique(hct_df$Herb), collapse = ", "), "\n")
+
+cat("Number of Compounds", length(unique(hct_df$Compound)), "\n")
+
+cat("Number of Targets", length(unique(hct_df$Target)), "\n")
+
+save(hct_df,file = "../data/processed/network/02_herb_compound_target.RData")
+```
+
+## Step 2: Build herb-compound-target network
+```{r}
+herb_compound <- hct_df %>%
+  dplyr::select(Herb, Compound) %>%
+  distinct()
+  
+compound_target <- hct_df %>%
+  dplyr::select(Compound, Target) %>%
+  distinct()
+  
+# edges
+edges <- bind_rows(
+  herb_compound %>% 
+    dplyr::rename(source = Herb, target = Compound) %>% 
+    mutate(interaction = "herb_compound"),
+  compound_target %>%
+    dplyr::rename(source = Compound, target = Target) %>%
+    mutate(interaction = "compound_target")
+)
+
+# nodes
+nodes <- data.frame(id = unique(c(edges$source, edges$target))) %>%
+  mutate(type = case_when(
+    id %in% herb_compound$Herb        ~ "Herb",
+    id %in% compound_target$Compound  ~ "Compound",
+    id %in% compound_target$Target    ~ "Target",
+    TRUE                              ~ "Other"
+  ))
+
+save(nodes,edges,file = "../data/processed/network/03_hct_network.RData")
+```
+
+## Figure_3B. HIT network.
+
+```{r}
+rm(list = ls())
+
+load("../data/processed/network/03_hct_network.RData")
+
+cytoscapePing()  
+
+deleteAllNetworks() 
+
+createNetworkFromDataFrames(
+  nodes = nodes,
+  edges = edges,
+  title = "HCT_Network",
+  collection = "HCT_Network"
+)
+
+# layout
+layoutNetwork("force-directed")
+
+# style
+style_name <- "HCT_Style_By_Nodes_Type"
+try(deleteVisualStyle(style_name), silent = TRUE)
+
+# default style
+defaults <- list(
+  NODE_SHAPE = "RECTANGLE",
+  NODE_SIZE = 30,
+  NODE_FILL_COLOR = "#CCCCCC",
+  NODE_LABEL_FONT_FACE = "Arial,plain,12",
+  EDGE_WIDTH = 0.5,
+  EDGE_STROKE_COLOR = "#E0E0E0",
+  EDGE_TRANSPARENCY = 200         
+)
+
+# mapping style
+mappings <- list(
+  # node shape
+  mapVisualProperty(
+    visual.prop = 'node shape', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Compound", "Target"),
+    visual.prop.values = c("ROUND RECTANGLE","ELLIPSE", "DIAMOND")
+  ),
+  
+  # node color
+  mapVisualProperty(
+    visual.prop = 'node fill color', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Compound", "Target"),
+    visual.prop.values = c("#fe9acc", "#fe0000", "#0401b9")
+  ),
+  
+  # node size
+  mapVisualProperty(
+    visual.prop = 'node size',
+    table.column = 'type',
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c(30, 20, 30)
+  ),
+  
+  # node label
+  mapVisualProperty(
+    visual.prop = 'node label', 
+    table.column = 'name', 
+    mapping.type = 'p'
+  ),
+  
+  mapVisualProperty(
+    visual.prop = 'node label color', 
+    table.column = 'type', 
+    mapping.type = 'd',
+    table.column.values = c("Herb", "Ingredient", "Target"),
+    visual.prop.values = c("#000000", "#000000", "#FFFFFF")
+  )
+)
+
+# apply style
+createVisualStyle(
+  style.name = style_name, 
+  defaults = defaults, 
+  mappings = mappings
+)
+
+setVisualStyle(style_name)
+
+# Figure_3B.pdf / Figure_3B.png
+```
+
+## Step 4: Degree
+```{r}
+hct_cytohubba <- read.xlsx("../data/processed/network/hct_cytohubba.xlsx")
+
+target_degree <- hct_cytohubba[1:134,c("node_name","Degree")] %>%
+  arrange(desc(Degree))
+
+compound_degree <- hct_cytohubba[135:238,c("node_name","Degree")] %>%
+  arrange(desc(Degree))
+
+herb_degree <- hct_cytohubba[239:nrow(hct_cytohubba),c("node_name","Degree")] %>%
+  arrange(desc(Degree))
+
+save(hct_cytohubba, target_degree, compound_degree, herb_degree, file = "../data/processed/network/04_hct_degree.RData" )
+```
+
+# Protein-protein interaction network (PPI network)
+## Step 1: Obtain the PPI network from the STRING database
+```{r}
+rm(list = ls())
+gc()
+
+ppi_list <- fread("../data/raw/string/string_interactions_short.tsv") %>%
+  dplyr::select(`#node1`, node2, combined_score) %>%
+  dplyr::rename(source = `#node1`, target = node2, score = combined_score)
+
+save(ppi_list,file = "../data/processed/network/05_ppi_list.RData")
+```
+
+## Step 2: PPI network visualization
+```{r}
+# Ping Cytoscape 
+cytoscapePing() 
+
+try(deleteNetwork("PPI_Network"), silent = TRUE)
+deleteAllNetworks() 
+
+createNetworkFromDataFrames(
+  edges = ppi_list,
+  title = "PPI_Network", 
+  collection = "PPI_Network" 
+)
+
+# Create based on degree values, node attributes must be synchronized into Cytoscape first
+
+loadTableData(nodes, data.key.column = "id", table = "node")
+
+# New style
+try(deleteVisualStyle("PPI_Style_By_Nodes_Degree"), silent = TRUE)
+style_name <- "PPI_Style_By_Nodes_Degree"
+
+# default style
+default_lists <- list(
+  NODE_SHAPE = "ellipse",           
+  NODE_SIZE = 40,                   
+  NODE_FILL_COLOR = "#88CCEE",      
+  # NODE_LABEL_FONT_SIZE = 12,
+  NODE_LABEL_FONT_FACE = "Arial,plain,12",  
+  EDGE_WIDTH = 0.5,
+  EDGE_STROKE_COLOR = "#E0E0E0",
+  EDGE_TRANSPARENCY = 200          
+)
+
+mapping_lists <- list(
+  # Node size: small degree → 20, large degree → 100
+  mapVisualProperty(
+    visual.prop = 'node size', 
+    table.column = 'degree', 
+    mapping.type = 'c',  
+    table.column.values = c(min(nodes$degree), max(nodes$degree)), 
+    visual.prop.values = c(20, 100)
+  ),
+  # Node fill color mapping: small degree → light yellow, large degree → red
+  mapVisualProperty(
+    visual.prop = 'node fill color', 
+    table.column = 'degree', 
+    mapping.type = 'c',
+    table.column.values = c(min(nodes$degree), max(nodes$degree)),
+    visual.prop.values = c("#FFFFCC", "#CC0000")
+  )
+)
+
+createVisualStyle(
+  style.name = style_name,
+  defaults = default_lists,
+  mappings = mapping_lists
+)
+
+setVisualStyle(style_name)
+
+# Node Label
+setNodeLabelMapping(table.column = 'id', style.name = style_name)
+
+layoutNetwork("force-directed")
+```
+
+# Identification of Hub Genes
+
+- input: cytohubba_res.csv
+
+## Step 1: Cytohubba
+```{r}
+cytohubba_res <- read_csv("../data/processed/network/ppi_cytohubba.csv") %>%
+  column_to_rownames(var = colnames(.)[1])
+
+# cytohubba
+top_n <- 20
+n <- min(top_n, nrow(cytohubba_res))
+
+top_mcc <- rownames(cytohubba_res[order(cytohubba_res$MCC, decreasing = TRUE), ])[1:n]
+
+top_degree <- rownames(cytohubba_res[order(cytohubba_res$Degree,decreasing = T),])[1:n]
+
+top_mnc <- rownames(cytohubba_res[order(cytohubba_res$MNC,decreasing = T),])[1:n]
+
+cytohubba_hub <- Reduce(intersect, list(top_mcc, top_degree, top_mnc))
+
+cytohubba_hub
+```
+
+## Figure 3D
+
+- input: Figure_3D_a, Figure_3D_b,Figure_3D_c
+```{r}
+# Figure 4B_d
+gene_list <- list(
+  MCC = top_mcc,
+  MNC = top_mnc,
+  Degree = top_degree
+)
+
+library(ggsci)
+library(ggvenn)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(3),
+  stroke_color = "white",
+  stroke_size = 0.5,
+  set_name_size = 2.5,
+  text_size = 2.5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(plot.title = element_text(hjust = 0.5, size=4))
+
+ggsave("../main/figures/Figure_3D_d.pdf", p, width=1.38, height=1.38, units="in", dpi=300)
+
+# Figure 4B
+
+library(magick)
+
+total_width_cm <- 7        
+dpi <- 300                    
+px_per_cm <- dpi / 2.54  
+
+files <- c(
+  "../figures/main/nFigure_3D_a.pdf",
+  "../figures/main/nFigure_3D_b.pdf",
+  "../figures/main/nFigure_3D_c.pdf",
+  "../figures/main/nFigure_3D_d.pdf"
+)
+
+labels <- c("a", "b", "c", "d")
+
+label_size <- 8   
+
+pdfs <- list()
+for (i in seq_along(files)) {
+  img <- image_read_pdf(files[i], density = 300)
+  img <- image_annotate(img, labels[i], 
+                        gravity = "northwest",  
+                        location = "+5+5",    
+                        size = label_size,     
+                        weight = 700,    
+                        color = "black")
+  pdfs[[i]] <- img
+}
+
+row1 <- image_append(c(pdfs[[1]], pdfs[[2]]), stack = FALSE)
+row2 <- image_append(c(pdfs[[3]], pdfs[[4]]), stack = FALSE)
+
+combined <- image_append(c(row1, row2), stack = TRUE)
+
+
+image_write(combined, "../figures/main/nFigure_3D.pdf", format = "pdf")
+image_write(combined, "../figures/main/nFigure_3D.png", format = "png", density = dpi)
+```
+
+## Step 2: MCODE
+```{r}
+mcode_hub <- data.table::fread("../data/processed/network/07_mcode_res.txt") %>%
+  dplyr::slice(1) %>%                   
+  dplyr::select(last_col()) %>%          
+  dplyr::pull(1) %>%                     
+  strsplit(",\\s*") %>%         
+  unlist() 
+
+# intersect
+hub_genes <- Reduce(intersect, list(top_mcc, top_degree, top_mnc,mcode_hub))
+
+hub_genes_tbl <- cytohubba_res[rownames(cytohubba_res) %in% hub_genes, c("MCC","MNC","Degree")] %>%
+  mutate(MCC = as.numeric(MCC)) %>%
+  arrange(desc(MCC)) %>%
+    rownames_to_column("Gene")
+
+hub_genes_tbl
+
+hub_genes <- hub_genes_tbl$Gene
+
+hub_genes
+
+save(hub_genes_tbl,hub_genes,top_mcc,top_degree,top_mnc, 
+     file = "../data/processed/network/08_hub_genes.RData")
+
+write.xlsx(
+  hub_genes_tbl,
+  "../tables/Table_S5.xlsx"
+)
+```
+
+## Step 3: Visualization
+```{r}
+gene_list <- list(
+  MCC = top_mcc,
+  MNC = top_mnc,
+  Degree = top_degree,
+  MCODE = mcode_hub
+)
+
+library(ggsci)
+library(ggvenn)
+
+p <- ggvenn(
+  gene_list,
+  fill_color = pal_aaas()(4),
+  stroke_color = "white",
+  stroke_size = 1,
+  set_name_size = 5,
+  text_size = 5,
+  text_color = "white",
+  show_percentage = FALSE
+) +
+  theme(
+    text = element_text(family = "serif", size = 10),
+    plot.title = element_text(hjust = 0.5, size=10)
+    )
+
+# save
+ggsave("../figures/main/Figure_4D.pdf", p, width=2.76, height=2.76, units="in", dpi=300)
+ggsave("../figures/main/Figure_4D.png", p, width=2.76, height=2.76, units="in", dpi=300)
+```
+
+# Figure 4
+```{r}
+library(magick)
+
+total_width_cm <- 14        
+dpi <- 300                    
+px_per_cm <- dpi / 2.54     
+total_width_px <- round(total_width_cm * px_per_cm) 
+
+ratios_row1 <- c(1, 1)
+ratios_row2 <- c(1, 1)  
+
+width_row1_left  <- round(total_width_px * ratios_row1[1] / sum(ratios_row1))
+width_row1_right <- round(total_width_px * ratios_row1[2] / sum(ratios_row1))
+width_row2_left  <- round(total_width_px * ratios_row2[1] / sum(ratios_row2))
+width_row2_right <- round(total_width_px * ratios_row2[2] / sum(ratios_row2))
+
+ratio <- c(width_row1_left,width_row1_right,width_row2_left,width_row2_right)
+
+files <- c(
+  "../figures/main/Figure_4A.pdf",
+  "../figures/main/Figure_3D.pdf",
+  "../figures/main/Figure_4C.pdf",
+  "../figures/main/Figure_4D.pdf"
+)
+
+labels <- c("A", "B", "C", "D")
+
+label_size <- 12   
+
+pdfs <- list()
+for (i in seq_along(files)) {
+  img <- image_read_pdf(files[i], density = 300)
+  img <- image_resize(img,ratio[i])
+  img <- image_annotate(img, labels[i], 
+                        gravity = "northwest",  
+                        location = "+10+10",    
+                        size = label_size,     
+                        weight = 700,    
+                        color = "black")
+  pdfs[[i]] <- img
+}
+
+row1 <- image_append(c(pdfs[[1]], pdfs[[2]]), stack = FALSE)
+row2 <- image_append(c(pdfs[[3]], pdfs[[4]]), stack = FALSE)
+
+combined <- image_append(c(row1, row2), stack = TRUE)
+
+
+image_write(combined, "../figures/main/Figure_4.pdf", format = "pdf")
+image_write(combined, "../figures/main/Figure_4.png", format = "png", density = dpi)
 ```
